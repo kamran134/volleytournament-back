@@ -17,7 +17,7 @@ export const createDistrict = async (req: Request, res: Response) => {
         const savedDistrict = await district.save();
         res.status(201).json(savedDistrict);
     } catch (error) {
-        res.status(500).json({ message: "Rayonun yaradılmasında xəta", error });
+        res.status(500).json({ message: "Rayonun yaradılmasında xəta!", error });
     }
 };
 
