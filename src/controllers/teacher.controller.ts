@@ -116,8 +116,6 @@ export const createAllTeachers = async (req: Request, res: Response) => {
             fullname: item.fullname
         }));
 
-        // const savedTeachers = await Teacher.insertMany(teachersToSave);
-        // res.status(201).json({ message: "Fayl uğurla yükləndi!", savedTeachers });
         const results = await Teacher.collection.bulkWrite(
             teachersToSave.map(teacher => ({
                 updateOne: {
@@ -127,8 +125,7 @@ export const createAllTeachers = async (req: Request, res: Response) => {
                 }
             }))
         );
-      
-        // Analyze results for success and failures
+
         const numCreated = results.upsertedCount;
         const numUpdated = results.modifiedCount;
         res.status(201).json({ message: "Fayl uğurla yükləndi!", details: `Yeni müəllimlər: ${numCreated}\nYenilənən müəllimlər: ${numUpdated}` });
