@@ -3,7 +3,7 @@ FROM node:18
 WORKDIR /app
 
 COPY package.json packer-lock.json ./
-RUN npm install
+RUN npm install --omit=dev
 
 COPY . .
 
