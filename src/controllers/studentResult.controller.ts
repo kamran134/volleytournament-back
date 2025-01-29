@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
 import xlsx from "xlsx";
 import Student, { IStudent, IStudentInput } from "../models/student.model";
-import StudentResult, { IStudentResult, IStudentResultFileInput, IStudentResultInput } from "../models/studentResult.model";
+import StudentResult, { IStudentResultFileInput, IStudentResultInput } from "../models/studentResult.model";
 import { Types } from "mongoose";
+import fs from "fs";
+import path from "path";
 
 export const getStudentResults = async (req: Request, res: Response) => {
     try {
@@ -75,11 +77,18 @@ export const createAllResults = async (req: Request, res: Response) => {
             level: result.level
         }));
 
-        console.log("Results to insert:", resultsToInsert[resultReadedData.length - 1]);
+        // Remove the uploaded file
+        const filePath = path.join(__dirname, `../../${req.file.path}`);
 
-        const results = await StudentResult.insertMany(resultsToInsert)
-            .then((data) => console.log("Results inserted successfully!", data))
-            .catch((error) => console.error("Error while inserting results:", error));
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                console.error(`Ошибка при удалении файла: ${err.message}`);
+            } else {
+                console.log(`Файл ${filePath} успешно удалён.`);
+            }
+        });
+
+        const results = await StudentResult.insertMany(resultsToInsert);
         res.status(201).json({ message: "Şagirdin nəticələri uğurla yaradıldı!", results });
     } catch (error) {
         res.status(500).json({ message: "Şagirdlərin nəticələrinin yaradılmasında xəta!", error });

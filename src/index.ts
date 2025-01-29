@@ -7,6 +7,7 @@ import schoolRoutes from "./routes/school.routes";
 import teacherRoutes from "./routes/teacher.routes";
 import bookletRoutes from "./routes/booklet.routes";
 import examRoutes from "./routes/exam.routes";
+import studentRoutes from "./routes/student.routes";
 import studentResultRoutes from "./routes/studentResult.routes";
 
 dontenv.config();
@@ -32,6 +33,7 @@ app.use("/api/schools", schoolRoutes);
 app.use("/api/teachers", teacherRoutes);
 app.use("/api/booklets", bookletRoutes);
 app.use("/api/exams", examRoutes);
+app.use("/api/students", studentRoutes);
 app.use("/api/student-results", studentResultRoutes);
 
 app.use((req, res, next) => {
