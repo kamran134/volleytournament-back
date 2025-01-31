@@ -1,12 +1,19 @@
+# Базовый образ
 FROM node:18
 
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-COPY package.json packer-lock.json ./
-RUN npm install --omit=dev
+# Копируем файлы проекта
+COPY package.json package-lock.json ./
+RUN npm install --omit-dev
 
+# Копируем весь код
 COPY . .
 
+# Собираем TypeScript-код
 RUN npm run build
 
-CMD ["npm", "run", "start"]
+# Указываем порт и команду запуска
+EXPOSE 4000
+CMD ["node", "dist/index.js"]
