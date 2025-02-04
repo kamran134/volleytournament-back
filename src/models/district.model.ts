@@ -10,6 +10,7 @@ const DistrictSchema: Schema = new Schema({
     code: { type: Number, required: true },
     region: { type: String, required: false },
     name: { type: String, required: true },
+    score: { type: Number, required: false }
 });
 
 export default mongoose.model<IDistrict>("District", DistrictSchema);

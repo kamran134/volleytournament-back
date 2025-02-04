@@ -21,7 +21,8 @@ const SchoolSchema: Schema = new Schema({
     address: { type: String, required: false },
     code: { type: Number, required: true, unique: true },
     districtCode: { type: Number, required: true },
-    district: { type: String, ref: 'District' }
+    district: { type: String, ref: 'District' },
+    score: { type: Number, required: false }
 });
 
 export default mongoose.model<ISchool>("School", SchoolSchema);

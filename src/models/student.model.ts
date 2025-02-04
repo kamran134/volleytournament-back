@@ -24,7 +24,9 @@ const StudentSchema: Schema = new Schema({
     firstName: { type: String, required: true },
     middleName: { type: String },
     grade: { type: Number },
-    teacher: { type: Schema.Types.ObjectId, ref: "Teacher" }
+    teacher: { type: Schema.Types.ObjectId, ref: "Teacher" },
+    score: { type: Number, required: false },
+    maxLevel: { type: Number, required: false }
 });
 
 export default mongoose.model<IStudent>("Student", StudentSchema);
