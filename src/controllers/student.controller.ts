@@ -16,11 +16,9 @@ export const getStudents = async (req: Request, res: Response) => {
             filter.school = { $in: schoolIds };
         }
 
-        //console.log('debug 1: ', filter, '\ndebug2: page:', page, 'size:', size, 'skip:', skip);
-
         const [data, totalCount] = await Promise.all([
             Student.find(filter)
-                //.populate('school')
+                .populate('teacher')
                 .sort({ code: 1 })
                 .skip(skip)
                 .limit(size),

@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import xlsx from "xlsx";
 import Student, { IStudent, IStudentInput } from "../models/student.model";
+import Teacher, { ITeacher } from "../models/teacher.model";
 import StudentResult, { IStudentResultFileInput, IStudentResultInput } from "../models/studentResult.model";
-import { Types } from "mongoose";
+import { Error, Types } from "mongoose";
 import fs from "fs";
 import path from "path";
 
@@ -58,12 +59,15 @@ export const createAllResults = async (req: Request, res: Response) => {
             lastName: String(row[4]),
             firstName: String(row[5]),
             middleName: String(row[6]),
-            grade: Number(row[2])
+            grade: Number(row[2]),
         }));
 
-        const students = await processStudentResults(studentDataToInsert);
+        const {students, studentsWithoutTeacher} = await processStudentResults(studentDataToInsert);
 
-        const resultsToInsert: IStudentResultInput[] = resultReadedData.map(result => ({
+        // нужны только те студенты, которые есть в базе
+        const filtredResults = resultReadedData.filter(result => students.map(student => student.code).includes(result.studentCode));
+
+        const resultsToInsert: IStudentResultInput[] = filtredResults.map(result => ({
             student: students.find(student => student.code === result.studentCode)!._id as Types.ObjectId,
             exam: result.examId as Types.ObjectId,
             grade: result.grade,
@@ -82,28 +86,58 @@ export const createAllResults = async (req: Request, res: Response) => {
 
         fs.unlink(filePath, (err) => {
             if (err) {
-                console.error(`Ошибка при удалении файла: ${err.message}`);
+                console.error(`Fayl silinən zamanı xəta baş verdi: ${err.message}`);
             } else {
-                console.log(`Файл ${filePath} успешно удалён.`);
+                console.log(`Fayl ${filePath} uğurla silindi.`);
             }
         });
 
         const results = await StudentResult.insertMany(resultsToInsert);
-        res.status(201).json({ message: "Şagirdin nəticələri uğurla yaradıldı!", results });
+        res.status(201).json({ message: "Şagirdin nəticələri uğurla yaradıldı!", results, studentsWithoutTeacher });
     } catch (error) {
         res.status(500).json({ message: "Şagirdlərin nəticələrinin yaradılmasında xəta!", error });
     }
 }
 
-export const processStudentResults = async (studentDataToInsert: IStudentInput[]): Promise<IStudent[]> => {
+export const processStudentResults = async (studentDataToInsert: IStudentInput[]): 
+    Promise<{students: IStudent[], studentsWithoutTeacher: IStudentInput[]}> => {
     try {
         const studentCodes = studentDataToInsert.map(item => item.code);
         const existingStudents = await Student.find({ code: { $in: studentCodes } });
         const newStudents = studentDataToInsert.filter(student => !existingStudents.map(d => d.code).includes(student.code));
-        const newStudentsIds = await Student.insertMany(newStudents);
+
+        // Assign teacher to student
+        await Promise.all(newStudents.map(async (student) => {
+            await assignTeacherToStudent(student);
+        }));
+
+        const studentsWithTeacher: IStudentInput[] = newStudents.filter(student => student.teacher);
+        const studentsWithoutTeacher: IStudentInput[] = newStudents.filter(student => !student.teacher);
+        
+        const newStudentsIds = await Student.insertMany(studentsWithTeacher);
         const allStudents: IStudent[] = existingStudents.concat(newStudentsIds);
-        return allStudents;
+        return {students: allStudents, studentsWithoutTeacher};
     } catch (error) {
         throw error;
+    }
+}
+
+// у каждого студента есть свой уникальный код, который используется для идентификации студента, он десятизначный, первые семь цифр - это код школы, а последние три цифры - это порядковый номер студента в школе
+// это код учителя. Последние три цифры это порядковый номер студента у этого учителя
+// соответственно функция ниже должна по первым семи цифрам найти учителя и присвоить его id студенту
+// если учителя нет, то написать в логах коды этих студентов и не добавлять их в базу
+export const assignTeacherToStudent = async (student: IStudentInput) => {
+    try {
+        const teacher = await Teacher.findOne({ code: Math.floor(student.code / 1000) }) as ITeacher;
+        if (teacher) {
+            //console.log(`Uğurlu: ${JSON.stringify(teacher)}`);
+            student.teacher = teacher._id as Types.ObjectId;
+        } else {
+            console.log(`Uğursuz: ${student.code}`);
+        }
+
+        console.log(`Tələbə: ${JSON.stringify(student)} - Müəllim: ${JSON.stringify(teacher)}`);
+    } catch (error) {
+        console.error(`Xəta: ${error}`);
     }
 }

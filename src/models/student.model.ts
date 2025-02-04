@@ -6,6 +6,7 @@ export interface IStudentInput {
     firstName: string;
     middleName: string;
     grade: number;
+    teacher?: mongoose.Types.ObjectId;
 }
 
 export interface IStudent extends Document {
@@ -14,6 +15,7 @@ export interface IStudent extends Document {
     firstName: string;
     middleName: string;
     grade: number; // sinif
+    teacher?: mongoose.Types.ObjectId;
 }
 
 const StudentSchema: Schema = new Schema({
@@ -21,7 +23,8 @@ const StudentSchema: Schema = new Schema({
     lastName: { type: String },
     firstName: { type: String, required: true },
     middleName: { type: String },
-    grade: { type: Number }
+    grade: { type: Number },
+    teacher: { type: Schema.Types.ObjectId, ref: "Teacher" }
 });
 
 export default mongoose.model<IStudent>("Student", StudentSchema);
