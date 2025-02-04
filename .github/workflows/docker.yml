@@ -6,16 +6,17 @@ on:
       - main
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v2
+  build-and-push:
+    runs-on: ubuntu-latest
 
-            - name: Login to GitHub Container Registry
-              run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
-            - name: Build and Push Docker Image
-              run: |
-                docker build -t ghcr.io/kamran134/education-system-backend:latest .
-                docker push ghcr.io/kamran134/education-system-backend:latest
+      - name: Login to GitHub Container Registry
+        run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t ghcr.io/kamran134/education-system-backend:latest .
+          docker push ghcr.io/kamran134/education-system-backend:latest
