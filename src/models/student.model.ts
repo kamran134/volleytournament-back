@@ -27,7 +27,7 @@ const StudentSchema: Schema = new Schema({
     teacher: { type: Schema.Types.ObjectId, ref: "Teacher" },
     score: { type: Number, required: false },
     maxLevel: { type: Number, required: false },
-    status: { type: Number, required: false },
+    status: { type: String, required: false },
 });
 
 export default mongoose.model<IStudent>("Student", StudentSchema);

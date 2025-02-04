@@ -17,7 +17,8 @@ const TeacherSchema: Schema = new Schema({
     school: { type: String, ref: 'School' },
     code: { type: Number, required: true, unique: true},
     fullname: { type: String, required: true },
-    score: { type: Number, required: false }
+    score: { type: Number, required: false },
+    status: { type: String, required: false },
 });
 
 export default mongoose.model<ITeacher>("Teacher", TeacherSchema);

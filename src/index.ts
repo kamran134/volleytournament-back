@@ -9,6 +9,7 @@ import bookletRoutes from "./routes/booklet.routes";
 import examRoutes from "./routes/exam.routes";
 import studentRoutes from "./routes/student.routes";
 import studentResultRoutes from "./routes/studentResult.routes";
+import statRoutes from "./routes/stat.routes";
 
 dontenv.config();
 connectDB();
@@ -35,6 +36,7 @@ app.use("/api/booklets", bookletRoutes);
 app.use("/api/exams", examRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/student-results", studentResultRoutes);
+app.use("/api/stats", statRoutes);
 
 app.use((req, res, next) => {
     res.status(404).json({ message: 'Məlumat tapılmadı' });
