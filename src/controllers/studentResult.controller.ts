@@ -102,8 +102,8 @@ export const createAllResults = async (req: Request, res: Response) => {
 export const processStudentResults = async (studentDataToInsert: IStudentInput[]): 
     Promise<{students: IStudent[], studentsWithoutTeacher: IStudentInput[]}> => {
     try {
-        const studentCodes = studentDataToInsert.map(item => item.code);
-        const existingStudents = await Student.find({ code: { $in: studentCodes } });
+        const studentCodes: number[] = studentDataToInsert.map(item => item.code);
+        const existingStudents: IStudent[] = await Student.find({ code: { $in: studentCodes } });
         const newStudents = studentDataToInsert.filter(student => !existingStudents.map(d => d.code).includes(student.code));
 
         // Assign teacher to student
@@ -130,7 +130,6 @@ export const assignTeacherToStudent = async (student: IStudentInput) => {
     try {
         const teacher = await Teacher.findOne({ code: Math.floor(student.code / 1000) }) as ITeacher;
         if (teacher) {
-            //console.log(`Uğurlu: ${JSON.stringify(teacher)}`);
             student.teacher = teacher._id as Types.ObjectId;
         } else {
             console.log(`Uğursuz: ${student.code}`);
@@ -139,5 +138,21 @@ export const assignTeacherToStudent = async (student: IStudentInput) => {
         console.log(`Tələbə: ${JSON.stringify(student)} - Müəllim: ${JSON.stringify(teacher)}`);
     } catch (error) {
         console.error(`Xəta: ${error}`);
+    }
+}
+
+const calculateLevel = (totalScore: number): string => {
+    if (totalScore >= 16 && totalScore <= 25) {
+        return "D";
+    } else if (totalScore >= 26 && totalScore <= 34) {
+        return "C";
+    } else if (totalScore >= 35 && totalScore <= 41) {
+        return "B";
+    } else if (totalScore >= 42 && totalScore <= 46) {
+        return "A";
+    } else if (totalScore >= 47) {
+        return "Lisey";
+    } else {
+        return "E";
     }
 }

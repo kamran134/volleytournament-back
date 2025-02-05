@@ -16,6 +16,9 @@ export interface IStudent extends Document {
     middleName: string;
     grade: number; // sinif
     teacher?: mongoose.Types.ObjectId;
+    score: number;
+    maxLevel: number;
+    status: string;
 }
 
 const StudentSchema: Schema = new Schema({
