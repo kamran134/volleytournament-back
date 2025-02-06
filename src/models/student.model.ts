@@ -12,6 +12,7 @@ export interface IStudentInput {
 }
 
 export interface IStudent extends Document {
+    _id: mongoose.Types.ObjectId;
     code: number;
     lastName: string;
     firstName: string;
@@ -34,7 +35,6 @@ const StudentSchema: Schema = new Schema({
     teacher: { type: Schema.Types.ObjectId, ref: "Teacher" },
     school: { type: Schema.Types.ObjectId, ref: "School" },
     district: { type: Schema.Types.ObjectId, ref: "District" },
-    score: { type: Number, required: false },
     maxLevel: { type: Number, required: false },
     status: { type: String, required: false },
 });

@@ -1,8 +1,10 @@
 import express from "express";
-import { updateStatistics } from "../controllers/stat.controller";
+import { calculateAndSaveScores, updateStatistics, updateStatisticsByRepublic } from "../controllers/stat.controller";
 
 const router = express.Router();
 
 router.route("/").post(updateStatistics);
+router.route("/by-republic").post(updateStatisticsByRepublic);
+router.route("/calculate-scores").post(calculateAndSaveScores);
 
 export default router;

@@ -79,7 +79,8 @@ export const createAllResults = async (req: Request, res: Response) => {
                 logic: Number(result.logic) || 0
             },
             totalScore: result.totalScore,
-            level: result.level
+            level: result.level,
+            score: 1
         }));
 
         // Remove the uploaded file

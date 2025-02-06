@@ -41,3 +41,13 @@ export const getStudent = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Tələbə tapılmadı!", error });
     }
 }
+
+export const deleteResult = async (req: Request, res: Response) => {
+    try {
+        const student = await Student.findByIdAndDelete(req.params.id);
+        res.status(200).json(student);
+    }
+    catch (error) {
+        res.status(500).json({ message: "Tələbə silinməsində xəta!", error });
+    }
+}

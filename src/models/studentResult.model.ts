@@ -39,6 +39,7 @@ export interface IStudentResult extends Document {
     };
     totalScore: number;
     level: string;
+    score?: number;
 }
 
 const StudentResultSchema: Schema = new Schema({
@@ -52,6 +53,7 @@ const StudentResultSchema: Schema = new Schema({
         logic: { type: Number, required: true },
     },
     totalScore: { type: Number, required: true },
+    score: { type: Number, required: true },
     level: { type: String, required: true },
 });
 
