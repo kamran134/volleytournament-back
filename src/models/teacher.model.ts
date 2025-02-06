@@ -11,6 +11,7 @@ export interface ITeacher extends Document {
     school: ISchool;
     code: number;
     fullname: string;
+    score: number;
 }
 
 const TeacherSchema: Schema = new Schema({

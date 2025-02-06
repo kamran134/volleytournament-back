@@ -4,6 +4,7 @@ export interface IDistrict extends Document {
     code: number;
     region: string;
     name: string;
+    score: number;
 }
 
 const DistrictSchema: Schema = new Schema({

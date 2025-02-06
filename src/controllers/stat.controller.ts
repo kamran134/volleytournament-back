@@ -66,8 +66,82 @@ export const updateStatistics = async (req: Request, res: Response) => {
             }
         }
 
+
+        const lastExam = await StudentResult.find()
+            .populate("exam")
+            .sort({ "exam.date": -1 }) // Сортируем по убыванию даты
+            .limit(1);
+
+        if (!lastExam.length) {
+            console.log("В базе нет результатов");
+            return;
+        }
+
+        const lastExamDate = new Date(lastExam[0].exam.date);
+        const lastYear = lastExamDate.getFullYear();
+        const lastMonth = lastExamDate.getMonth() + 1; // Январь — 0, поэтому +1
+
+        const studentResultsByDate: IStudentResult[] = await StudentResult.find()
+            .populate("student")
+            .populate("exam")
+            .where("exam.date")
+            .gte(new Date(lastYear, lastMonth - 1, 1).getTime()) // Первый день месяца
+            .lt(new Date(lastYear, lastMonth, 1).getTime()) // Первый день следующего месяца
+            .sort({ totalScore: -1 }); // Сортируем по убыванию totalScore
+
         // 6. Если студент в своём районе набрал самый высокий балл по последнему экзамену, то в его статус пишем (добавляем) "ayın şagirdi". А также добавляем в его score 5, в его район, школу и учителю тоже 5
-        // 7. Если студент среди всех набрал самый высокий балл по последнему экзамену, то в его статус пишем (добавляем) "Respublika üzrə ayın şagirdi". А также добавляем в его score 5, в его район, школу и учителю тоже 5
+        if (studentResultsByDate.length) {
+            const districtResults: any = {};
+            studentResultsByDate.forEach((studentResult: any) => {
+                const districtId = studentResult.student.school.district;
+                if (!districtResults[districtId]) {
+                    districtResults[districtId] = [];
+                }
+
+                districtResults[districtId].push(studentResult);
+            });
+
+            for (const districtId in districtResults) {
+                const districtResult = districtResults[districtId];
+                // сначала выясняем самый высокий бал по всем студентам
+                const maxTotalScore = districtResult.reduce((maxTotalScore: number, studentResult: any) => {
+                    return Math.max(maxTotalScore, studentResult.totalScore);
+                }, 0);
+                
+                // теперь всем студентам с этим баллом добавляем статус "ayın şagirdi"
+                // это вынести в отдельную функцию
+                for (const studentResult of districtResult) {
+                    if (studentResult.totalScore === maxTotalScore) {
+                        const student = students[studentResult.student._id];
+                        // student.student.status.push("Ayın şagirdi");
+                        student.student.status = student.student.status.split(", ").concat("Ayın şagirdi").join(", ");
+                        student.student.score += 5;
+                        // также добавляем в его район, школу и учителю тоже 5
+                        // добавляем к району +5
+                        const district = await District.findById(districtId);
+                        if (district) district.score += 5;
+                        // добавляем к школе +5
+                        const school = await School.findById(student.student.school);
+                        if (school) school.score += 5;
+                        // добавляем к учителю +5
+                        const teacher = await Teacher.findById(student.student.teacher);
+                        if (teacher) teacher.score += 5;
+
+                        // обновляем в базе данных статус студента
+                        await Student.findByIdAndUpdate(studentResult.student._id, { status: student.student.status, score: student.student.score }, { new: true });
+                        if (district) {
+                            await District.findByIdAndUpdate(districtId, { score: district.score }, { new: true });
+                        }
+                        if (school) {
+                            await School.findByIdAndUpdate(student.student.school, { score: school.score }, { new: true });
+                        }
+                    }
+                }
+            }
+        }
+        
+        /*
+        
         const districts: IDistrict[] = await District.find();
         const schools: ISchool[] = await School.find();
         const teachers: ITeacher[] = await Teacher.find();
@@ -89,6 +163,7 @@ export const updateStatistics = async (req: Request, res: Response) => {
             }
             
         }
+        */
         res.status(200).json({ message: "Statistika yeniləndi" });
     } catch (error) {
         res.status(500).json({ message: "Statistikaların yenilənməsində xəta", error });

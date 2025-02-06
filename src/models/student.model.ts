@@ -7,6 +7,8 @@ export interface IStudentInput {
     middleName: string;
     grade: number;
     teacher?: mongoose.Types.ObjectId;
+    school?: mongoose.Types.ObjectId;
+    district?: mongoose.Types.ObjectId;
 }
 
 export interface IStudent extends Document {
@@ -16,6 +18,8 @@ export interface IStudent extends Document {
     middleName: string;
     grade: number; // sinif
     teacher?: mongoose.Types.ObjectId;
+    school?: mongoose.Types.ObjectId;
+    district?: mongoose.Types.ObjectId;
     score: number;
     maxLevel: number;
     status: string;
@@ -28,6 +32,8 @@ const StudentSchema: Schema = new Schema({
     middleName: { type: String },
     grade: { type: Number },
     teacher: { type: Schema.Types.ObjectId, ref: "Teacher" },
+    school: { type: Schema.Types.ObjectId, ref: "School" },
+    district: { type: Schema.Types.ObjectId, ref: "District" },
     score: { type: Number, required: false },
     maxLevel: { type: Number, required: false },
     status: { type: String, required: false },
