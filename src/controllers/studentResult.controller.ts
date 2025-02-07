@@ -161,3 +161,23 @@ const calculateLevel = (totalScore: number): string => {
         return "E";
     }
 }
+
+export const deleteResults = async (req: Request, res: Response) => {
+    try {
+        const { examId } = req.params;
+        if (!examId) {
+            res.status(400).json({ message: "İmtahan seçilməyib!" });
+        }
+
+        const objectId = new Types.ObjectId(examId);
+        const deletedResults = await StudentResult.deleteMany({ exam: objectId });
+
+        if (deletedResults.deletedCount === 0) {
+            res.status(404).json({ message: "Bu imtahan üçün nəticələr tapılmadı!" });
+        }
+
+        res.status(200).json({ message: "İmtahan nəticələri uğurla silindi!", deletedCount: deletedResults.deletedCount });
+    } catch (error) {
+        res.status(500).json({ message: "İmtahan nəticələrini silərkən xəta baş verdi!", error });
+    }
+};

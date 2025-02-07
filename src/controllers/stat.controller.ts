@@ -127,7 +127,6 @@ export const updateStatistics = async (req: Request, res: Response) => {
     }
 }
 
-
 export const updateStatisticsByRepublic = async (req: Request, res: Response) => {
     // 1. Пробегаемся по всем результатам экзаменов (StudentResult)
     const studentResults: IStudentResult[] = await StudentResult.find()
