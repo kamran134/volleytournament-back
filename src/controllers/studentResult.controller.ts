@@ -170,13 +170,30 @@ export const deleteResults = async (req: Request, res: Response) => {
         }
 
         const objectId = new Types.ObjectId(examId);
+
+        // Шаг 1: Найти всех студентов, у которых есть результаты по этому экзамену
+        const studentResults = await StudentResult.find({ exam: objectId }).select("student");
+        const studentIds = studentResults.map(result => result.student);
+
+        // Шаг 2: Удалить результаты экзамена
         const deletedResults = await StudentResult.deleteMany({ exam: objectId });
 
         if (deletedResults.deletedCount === 0) {
             res.status(404).json({ message: "Bu imtahan üçün nəticələr tapılmadı!" });
         }
 
-        res.status(200).json({ message: "İmtahan nəticələri uğurla silindi!", deletedCount: deletedResults.deletedCount });
+        // Шаг 3: Очистить поле `status` у найденных студентов
+        if (studentIds.length > 0) {
+            await Student.updateMany(
+                { _id: { $in: studentIds } }, // Найти всех студентов по их _id
+                { $unset: { status: "" } } // Удалить поле `status`
+            );
+        }
+
+        res.status(200).json({ 
+            message: "İmtahan nəticələri uğurla silindi!", 
+            deletedCount: deletedResults.deletedCount 
+        });
     } catch (error) {
         res.status(500).json({ message: "İmtahan nəticələrini silərkən xəta baş verdi!", error });
     }

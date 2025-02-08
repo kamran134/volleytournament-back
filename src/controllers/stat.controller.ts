@@ -123,48 +123,56 @@ export const updateStatistics = async (req: Request, res: Response) => {
         
         res.status(200).json({ message: "Statistika yeniləndi" });
     } catch (error) {
-        res.status(500).json({ message: "Statistikaların yenilənməsində xəta", error });
+        res.status(500).json({ message: "Statistikanın yenilənməsində xəta", error });
     }
 }
 
 export const updateStatisticsByRepublic = async (req: Request, res: Response) => {
-    // 1. Пробегаемся по всем результатам экзаменов (StudentResult)
-    const studentResults: IStudentResult[] = await StudentResult.find()
-    .populate("student")
-    .populate("exam")
-    .sort({ examDate: 1 });
+    try {
+        // 1. Пробегаемся по всем результатам экзаменов (StudentResult)
+        const studentResults: IStudentResult[] = await StudentResult.find()
+        .populate("student")
+        .populate("exam")
+        .sort({ examDate: 1 });
 
-    // 2. Группируем результаты по студентам (Student)
-    const students: any = {};
-    studentResults.forEach((studentResult: any) => {
-        if (!students[studentResult.student._id]) {
-            students[studentResult.student._id] = {
-                student: studentResult.student,
-                results: [],
-            };
+        // 2. Группируем результаты по студентам (Student)
+        const students: any = {};
+        studentResults.forEach((studentResult: any) => {
+            if (!students[studentResult.student._id]) {
+                students[studentResult.student._id] = {
+                    student: studentResult.student,
+                    results: [],
+                };
+            }
+
+            students[studentResult.student._id].results.push(studentResult);
+        });
+
+        // сначала выясняем самый высокий бал по всем студентам
+        let maxTotalScore = 0;
+        for (const studentId in students) {
+            const student = students[studentId];
+            maxTotalScore = Math.max(maxTotalScore, student.results[0].totalScore);
         }
 
-        students[studentResult.student._id].results.push(studentResult);
-    });
+        console.log('max score: ', maxTotalScore);
 
-    // сначала выясняем самый высокий бал по всем студентам
-    let maxTotalScore = 0;
-    for (const studentId in students) {
-        const student = students[studentId];
-        maxTotalScore = Math.max(maxTotalScore, student.results[0].totalScore);
-    }
-    // теперь всем студентам с этим баллом добавляем статус "Respublika üzrə ayın şagirdi"
-    for (const studentId in students) {
-        const student = students[studentId];
-        if (student.results[0].totalScore === maxTotalScore && maxTotalScore >= 47) {
-            // student.student.status.push("Respublika üzrə ayın şagirdi");
-            student.student.status = student.student.status ? `${student.student.status}, Respublika üzrə ayın şagirdi` : "Respublika üzrə ayın şagirdi";
-            student.result[0].score += 5;
-            // обновляем в базе данных статус студента
-            await Student.findByIdAndUpdate(studentId, { status: student.student.status }, { new: true });
-            await StudentResult.findByIdAndUpdate(student.results[0]._id, { score: student.results[0].score });
+        // теперь всем студентам с этим баллом добавляем статус "Respublika üzrə ayın şagirdi"
+        for (const studentId in students) {
+            const student = students[studentId];
+            if (student.results[0].totalScore === maxTotalScore && maxTotalScore >= 47) {
+                // student.student.status.push("Respublika üzrə ayın şagirdi");
+                student.student.status = student.student.status ? `${student.student.status}, Respublika üzrə ayın şagirdi` : "Respublika üzrə ayın şagirdi";
+                student.result[0].score += 5;
+                // обновляем в базе данных статус студента
+                await Student.findByIdAndUpdate(studentId, { status: student.student.status }, { new: true });
+                await StudentResult.findByIdAndUpdate(student.results[0]._id, { score: student.results[0].score });
+            }
         }
+    } catch (error) {
+        res.status(500).json({ message: "Respublika üzrə statistikanın yenilənməsində xəta", error });
     }
+    
 }
 
 export const calculateAndSaveScores = async (req: Request, res: Response) => {
