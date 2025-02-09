@@ -5,7 +5,6 @@ import Student, { IStudent } from "../models/student.model";
 import District, { IDistrict } from "../models/district.model";
 import School, { ISchool } from "../models/school.model";
 import Teacher, { ITeacher } from "../models/teacher.model";
-import Exam, { IExam } from "../models/exam.model";
 
 export const updateStatistics = async (req: Request, res: Response) => {
     try {
@@ -44,7 +43,9 @@ export const updateStatistics = async (req: Request, res: Response) => {
         //    Уровни: 0-15: E, 16-25: D, 26-34: C, 35-41: B, 42-46: A, 47-50: Lisey
         for (const studentId in students) {
             const student = students[studentId];
-            
+            student.student.status = "";
+            // console.log('student: ', student);
+            if (student.results.length <= 1) continue;
             // исключаем последний экзамен, так как он определяет статус студента
             student.student.maxLevel = student.results.slice(1).reduce((maxLevel: number, result: any) => {
                 return Math.max(maxLevel, result.totalScore);
@@ -69,13 +70,15 @@ export const updateStatistics = async (req: Request, res: Response) => {
         const districtResults: any = {};
         for (const studentId in students) {
             const student = students[studentId];
-            const districtId = student.student.school.district;
+            const districtId = student.student.district;
             if (!districtResults[districtId]) {
                 districtResults[districtId] = [];
             }
 
             districtResults[districtId].push(student);
         }
+
+        console.log("district: ", JSON.stringify(districtResults));
 
         // берём districtResults, пробегаемся по последним результатам каждого студента, выясняем кто набрал самый высокий балл
         // и добавляем статус "ayın şagirdi" и +5 к score
@@ -86,6 +89,8 @@ export const updateStatistics = async (req: Request, res: Response) => {
                 return Math.max(maxTotalScore, student.results[0].totalScore);
             }, 0);
             
+            console.log(`District: ${districtId}: ${maxTotalScore}`);
+
             // теперь всем студентам с этим баллом добавляем статус "ayın şagirdi"
             for (const student of districtResult) {
                 if (student.results[0].totalScore === maxTotalScore && maxTotalScore >= 47) {
@@ -169,6 +174,8 @@ export const updateStatisticsByRepublic = async (req: Request, res: Response) =>
                 await StudentResult.findByIdAndUpdate(student.results[0]._id, { score: student.results[0].score });
             }
         }
+
+        res.status(200).json({ message: "Respublika üzrə statistika uğurla yeniləndi!" });
     } catch (error) {
         res.status(500).json({ message: "Respublika üzrə statistikanın yenilənməsində xəta", error });
     }

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import Student from "../models/student.model";
+import Student, { IStudent, IStudentDetails } from "../models/student.model";
+import StudentResult from "../models/studentResult.model";
 
 export const getStudents = async (req: Request, res: Response) => {
     try {
@@ -34,8 +35,32 @@ export const getStudents = async (req: Request, res: Response) => {
 
 export const getStudent = async (req: Request, res: Response) => {
     try {
-        const student = await Student.findById(req.params.id).populate('school');
-        res.status(200).json(student);
+        const student = await Student
+            .findById(req.params.id)
+            .populate('school')
+            .populate('teacher')
+            .populate('district');
+
+        if (!student) {
+            res.status(404).json({ message: "Tələbə tapılmadı!" });
+        }
+        else {
+            let studentWithResults;
+            const studentResults = await StudentResult.find({ student: student._id });
+            if (studentResults) {
+                studentWithResults = {
+                    ...student.toObject(),
+                    results: studentResults
+                }
+            }
+            else {
+                studentWithResults = {
+                    ...student.toObject(), results: []
+                }
+            }
+
+            res.status(200).json(studentWithResults);
+        }
     }
     catch (error) {
         res.status(500).json({ message: "Tələbə tapılmadı!", error });

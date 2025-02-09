@@ -1,4 +1,8 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { ITeacher } from "./teacher.model";
+import { ISchool } from "./school.model";
+import { IDistrict } from "./district.model";
+import { IStudentResult } from "./studentResult.model";
 
 export interface IStudentInput {
     code: number;
@@ -24,6 +28,21 @@ export interface IStudent extends Document {
     score: number;
     maxLevel: number;
     status: string;
+}
+
+export interface IStudentDetails extends Document {
+    _id: mongoose.Types.ObjectId;
+    code: number;
+    lastName: string;
+    firstName: string;
+    middleName: string;
+    grade: number;
+    teacher: ITeacher;
+    school: ISchool;
+    district: IDistrict;
+    score: number;
+    status: string;
+    results: IStudentResult[];
 }
 
 const StudentSchema: Schema = new Schema({

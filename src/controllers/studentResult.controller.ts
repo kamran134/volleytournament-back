@@ -2,7 +2,8 @@ import { Request, Response } from "express";
 import xlsx from "xlsx";
 import Student, { IStudent, IStudentInput } from "../models/student.model";
 import Teacher, { ITeacher } from "../models/teacher.model";
-import School from "../models/school.model";
+import School, { ISchool } from "../models/school.model";
+import District, { IDistrict } from "../models/district.model";
 import StudentResult, { IStudentResultFileInput, IStudentResultInput } from "../models/studentResult.model";
 import { Error, Types } from "mongoose";
 import fs from "fs";
@@ -124,23 +125,40 @@ export const processStudentResults = async (studentDataToInsert: IStudentInput[]
     }
 }
 
-// у каждого студента есть свой уникальный код, который используется для идентификации студента, он десятизначный, первые семь цифр - это код учителя, а последние три цифры - это порядковый номер студента в школе
+// у каждого студента есть свой уникальный код, который используется для идентификации студента, он десятизначный, 
+// первые семь цифр - это код учителя, а последние три цифры - это порядковый номер студента в школе
 // это код учителя. Последние три цифры это порядковый номер студента у этого учителя
 // соответственно функция ниже должна по первым семи цифрам найти учителя и присвоить его id студенту
 // если учителя нет, то написать в логах коды этих студентов и не добавлять их в базу
 // если учитель есть, то брать первые две цифры слева и найти район и первые 5 слева и найти школу
-export const assignTeacherToStudent = async (student: IStudentInput) => {
+const assignTeacherToStudent = async (student: IStudentInput) => {
     try {
         const teacher = await Teacher.findOne({ code: Math.floor(student.code / 1000) }) as ITeacher;
         if (teacher) {
             student.teacher = teacher._id as Types.ObjectId;
-            student.school = await Teacher.findById(teacher._id).select("school") as Types.ObjectId;
-            student.district = await School.findById(student.school).select("district") as Types.ObjectId;
+            const studentSchool = await School.findById(teacher.school);
+            if (studentSchool) {
+                student.school = studentSchool._id as Types.ObjectId;
+                const studentDistrict = await District.findById(studentSchool.district);
+                if (studentDistrict) {
+                    student.district = studentDistrict._id as Types.ObjectId;
+                }
+            }
         } else {
             console.log(`Uğursuz: ${student.code}`);
         }
+    } catch (error) {
+        console.error(`Xəta: ${error}`);
+    }
+}
 
-        console.log(`Tələbə: ${JSON.stringify(student)} - Müəllim: ${JSON.stringify(teacher)}`);
+const assignSchoolToStudent = async (student: IStudentInput) => {
+    try {
+        const school = await School.findOne({ code: Math.floor(student.code / 100000) }) as ISchool;
+        if (school) {
+            student.school = school._id as Types.ObjectId;
+
+        }
     } catch (error) {
         console.error(`Xəta: ${error}`);
     }
