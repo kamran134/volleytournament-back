@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import Exam from "../models/exam.model";
+import StudentResult from "../models/studentResult.model";
 
 export const getExams = async (req: Request, res: Response) => {
     try {
@@ -37,5 +38,31 @@ export const createExam = async (req: Request, res: Response) => {
         res.status(201).json(savedExam);
     } catch (error) {
         res.status(500).json({ message: "İmtahanın yaradılmasında xəta!", error });
+    }
+}
+
+export const deleteAllExams = async (req: Request, res: Response) => {
+    try {
+        await StudentResult.deleteMany();
+        const result = await Exam.deleteMany();
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json(error);
+    }
+}
+
+export const deleteExam = async (req: Request, res: Response) => {
+    try {
+        const examId = req.params.id;
+
+        await StudentResult.deleteMany({ exam: examId });
+        const result = await Exam.findByIdAndDelete(req.params.id);
+
+        if (!result) {
+            res.status(404).json({ message: "İmtahan tapılmadı" });
+        }
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json(error);
     }
 }

@@ -67,12 +67,21 @@ export const getStudent = async (req: Request, res: Response) => {
     }
 }
 
-export const deleteResult = async (req: Request, res: Response) => {
+export const deleteAllStudents = async (req: Request, res: Response) => {
     try {
-        const student = await Student.findByIdAndDelete(req.params.id);
-        res.status(200).json(student);
+        const result = await Student.deleteMany();
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json(error);
+    }
+}
+
+export const deleteStudent = async (req: Request, res: Response) => {
+    try {
+        const result = await Student.findByIdAndDelete(req.params.id);
+        res.status(200).json(result);
     }
     catch (error) {
-        res.status(500).json({ message: "Tələbə silinməsində xəta!", error });
+        res.status(500).json(error);
     }
 }
