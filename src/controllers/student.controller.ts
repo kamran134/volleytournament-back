@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import Student, { IStudent, IStudentDetails } from "../models/student.model";
-import StudentResult from "../models/studentResult.model";
+import StudentResult, { IStudentResult } from "../models/studentResult.model";
 
 export const getStudents = async (req: Request, res: Response) => {
     try {
@@ -46,7 +46,7 @@ export const getStudent = async (req: Request, res: Response) => {
         }
         else {
             let studentWithResults;
-            const studentResults = await StudentResult.find({ student: student._id });
+            const studentResults: IStudentResult[] = await StudentResult.find({ student: student._id }).populate('exam');
             if (studentResults) {
                 studentWithResults = {
                     ...student.toObject(),

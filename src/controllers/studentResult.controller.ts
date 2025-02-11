@@ -8,6 +8,7 @@ import StudentResult, { IStudentResultFileInput, IStudentResultInput } from "../
 import { Error, Types } from "mongoose";
 import fs from "fs";
 import path from "path";
+import { updateStatistics } from "./stat.controller";
 
 export const getStudentResults = async (req: Request, res: Response) => {
     try {
@@ -96,6 +97,9 @@ export const createAllResults = async (req: Request, res: Response) => {
         });
 
         const results = await StudentResult.insertMany(resultsToInsert);
+
+        await updateStatistics(req, res);
+
         res.status(201).json({ message: "Şagirdin nəticələri uğurla yaradıldı!", results, studentsWithoutTeacher });
     } catch (error) {
         res.status(500).json({ message: "Şagirdlərin nəticələrinin yaradılmasında xəta!", error });
@@ -146,18 +150,6 @@ const assignTeacherToStudent = async (student: IStudentInput) => {
             }
         } else {
             console.log(`Uğursuz: ${student.code}`);
-        }
-    } catch (error) {
-        console.error(`Xəta: ${error}`);
-    }
-}
-
-const assignSchoolToStudent = async (student: IStudentInput) => {
-    try {
-        const school = await School.findOne({ code: Math.floor(student.code / 100000) }) as ISchool;
-        if (school) {
-            student.school = school._id as Types.ObjectId;
-
         }
     } catch (error) {
         console.error(`Xəta: ${error}`);
