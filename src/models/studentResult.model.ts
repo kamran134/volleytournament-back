@@ -39,7 +39,13 @@ export interface IStudentResult extends Document {
     };
     totalScore: number;
     level: string;
-    score?: number;
+    score: number;
+    status?: string;
+}
+
+export interface IStudentResultsGrouped {
+    student: IStudent;
+    results: IStudentResult[];
 }
 
 const StudentResultSchema: Schema = new Schema({
@@ -55,6 +61,7 @@ const StudentResultSchema: Schema = new Schema({
     totalScore: { type: Number, required: true },
     score: { type: Number, required: true },
     level: { type: String, required: true },
+    status: { type: String, required: false }
 });
 
 StudentResultSchema.index({ student: 1, exam: 1 }, { unique: true });

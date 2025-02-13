@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
-import StudentResult, { IStudentResult } from "../models/studentResult.model";
+import StudentResult, { IStudentResult, IStudentResultsGrouped } from "../models/studentResult.model";
 import Student, { IStudent } from "../models/student.model";
 import District, { IDistrict } from "../models/district.model";
 import School, { ISchool } from "../models/school.model";
@@ -8,48 +8,27 @@ import Teacher, { ITeacher } from "../models/teacher.model";
 
 export const updateStatistics = async (req: Request, res: Response) => {
     try {
-        // Statistikaları yenilə
-        /**
-         * 1. Пробегаемся по всем результатам экзаменов (StudentResult)
-         * 2. Группируем результаты по студентам (Student)
-         * 3. Каждому студенту в maxLevel записываем максимальный уровень, который он прошел
-         *    Уровни: 0-15: E, 16-25: D, 26-34: C, 35-41: B, 42-46: A, 47-50: Lisey
-         * 4. Каждому студенту в status записываем статус: если уровень поднялся (по хронологии экзаменов), то в статус пишем "inkişaf edən şagird". А также добавляем в его score 10, в его район, школу и учителю тоже 10
-         * 5. Если студент в своём районе набрал самый высокий балл по последнему экзамену, то в его статус пишем (добавляем) "ayın şagirdi". А также добавляем в его score 5, в его район, школу и учителю тоже 5
-         * 7. В score районов, школ и учителей добавляем сумму баллов всех студентов
-         * 8. Сохраняем все изменения в базе данных
-         */
-
         // 1. Пробегаемся по всем результатам экзаменов (StudentResult)
-        const studentResults: IStudentResult[] = await StudentResult.find()
-            .populate("student")
-            .populate("exam")
-            .sort({ examDate: 1 });
+        const studentResultsGrouped: IStudentResultsGrouped[] = await getStudentResultsGroupedByStudent();
+
+        if (studentResultsGrouped.length === 0) {
+            res.status(404).json({ message: "404: Nəticələr tapılmadı!" });
+            return;
+        }
         
-        const latestExam = studentResults.reduce((latest, result) => 
+        const allResults = studentResultsGrouped.flatMap(group => group.results);
+
+        const latestExam = allResults.reduce((latest, result) => 
             new Date(result.exam.date) > new Date(latest.exam.date) ? result : latest
         );
         
         const latestMonth = new Date(latestExam.exam.date).getMonth();
         const latestYear = new Date(latestExam.exam.date).getFullYear();
-        
-        // 2. Группируем результаты по студентам (Student)
-        const students: any = {};
-        studentResults.forEach((studentResult: any) => {
-            if (!students[studentResult.student._id]) {
-                students[studentResult.student._id] = {
-                    student: studentResult.student,
-                    results: [],
-                };
-            }
-
-            students[studentResult.student._id].results.push(studentResult);
-        });
 
         // 3. Каждому студенту в maxLevel записываем максимальный уровень, который он прошел, без учёта последнего экзамена
         //    Уровни: 0-15: E, 16-25: D, 26-34: C, 35-41: B, 42-46: A, 47-50: Lisey
-        for (const studentId in students) {
-            const student = students[studentId];
+        for (const studentId in studentResultsGrouped) {
+            const student = studentResultsGrouped[studentId];
             student.student.status = "";
             if (student.results.length <= 1) continue;
             // исключаем последний экзамен, так как он определяет статус студента
@@ -59,31 +38,30 @@ export const updateStatistics = async (req: Request, res: Response) => {
             const studentMaxlevel: string = calculateLevel(student.student.maxLevel);
             const studentLastLevel: string = calculateLevel(student.results[0].totalScore);
 
-            if (student.student.maxLevel < student.results[0].totalScore && studentMaxlevel !== studentLastLevel) {
-                //student.student.status.push("İnkişaf edən şagird");
-                student.student.status = "İnkişaf edən şagird";
-                student.student.maxLevel = student.results[0].totalScore;
+            if (student.student.maxLevel < student.results[0].totalScore && student.results.length > 1 &&
+                studentMaxlevel !== studentLastLevel) {
+                student.results[0].status = "İnkişaf edən şagird";
                 student.results[0].score += 10;
-                // обновляем в базе данных статус студента
-                
+                student.student.maxLevel = student.results[0].totalScore;
+
+                await StudentResult.findByIdAndUpdate(student.results[0]._id, {
+                    status: student.results[0].status,
+                    score: student.results[0].score
+                });
             }
-            await Student.findByIdAndUpdate(studentId, { status: student.student.status, maxLevel: student.student.maxLevel }, { new: true });
-            await StudentResult.findByIdAndUpdate(student.results[0]._id, { score: student.results[0].score });
         }
 
         // 5. Если студент в своём районе набрал самый высокий балл по последнему экзамену, то в его статус пишем (добавляем) "ayın şagirdi". 
         // А также добавляем в его score +5
         // У нас есть students, его группируем по районам
-        const districtResults: any = {};
-        for (const studentId in students) {
-            const student = students[studentId];
-            const districtId = student.student.district;
-            if (!districtResults[districtId]) {
-                districtResults[districtId] = [];
+        const districtResults: Record<string, IStudentResultsGrouped[]> = studentResultsGrouped.reduce((acc, student) => {
+            const districtId = student.student.district!.toString();
+            if (!acc[districtId]) {
+                acc[districtId] = [];
             }
-
-            districtResults[districtId].push(student);
-        }
+            acc[districtId].push(student);
+            return acc;
+        }, {} as Record<string, IStudentResultsGrouped[]>);
 
         // берём districtResults, пробегаемся по последним результатам каждого студента, выясняем кто набрал самый высокий балл
         // и добавляем статус "ayın şagirdi" и +5 к score
@@ -108,42 +86,20 @@ export const updateStatistics = async (req: Request, res: Response) => {
             // теперь всем студентам с этим баллом добавляем статус "ayın şagirdi"
             for (const student of latestMonthResults) {
                 if (student.results[0].totalScore === maxTotalScore && maxTotalScore >= 47) {
-                    // student.student.status.push("Ayın şagirdi");
-                    // if (student.student.code == 1403707020) console.log('That is Sadraddinova: ', student.student.status);
-                    student.student.status = student.student.status ? `${student.student.status}, Ayın şagirdi` : "Ayın şagirdi";
+                    student.results[0].status = student.student.status ? `${student.student.status}, Ayın şagirdi` : "Ayın şagirdi";
                     student.results[0].score += 5;
-                    // обновляем в базе данных статус студента (добавляем новый статус через запятую)
-                    await Student.findByIdAndUpdate(student.student._id, { status: student.student.status }, { new: true });
-                    await StudentResult.findByIdAndUpdate(student.results[0]._id, { score: student.results[0].score });
+                    
+                    await StudentResult.findByIdAndUpdate(student.results[0]._id, {
+                        status: student.results[0].status,
+                        score: student.results[0].score
+                    });
                 }
             }
         }
         
-        const lastExam = await StudentResult.find()
-            .populate("exam")
-            .sort({ "exam.date": -1 }) // Сортируем по убыванию даты
-            .limit(1);
-
-        if (!lastExam.length) {
-            console.log("В базе нет результатов");
-            return;
-        }
-
-        const lastExamDate = new Date(lastExam[0].exam.date);
-        const lastYear = lastExamDate.getFullYear();
-        const lastMonth = lastExamDate.getMonth() + 1; // Январь — 0, поэтому +1
-
-        const studentResultsByDate: IStudentResult[] = await StudentResult.find()
-            .populate("student")
-            .populate("exam")
-            .where("exam.date")
-            .gte(new Date(lastYear, lastMonth - 1, 1).getTime()) // Первый день месяца
-            .lt(new Date(lastYear, lastMonth, 1).getTime()) // Первый день следующего месяца
-            .sort({ totalScore: -1 }); // Сортируем по убыванию totalScore
-        
         res.status(200).json({ message: "Statistika yeniləndi" });
     } catch (error) {
-        res.status(500).json({ message: "Statistikanın yenilənməsində xəta", error });
+        res.status(500).json({ message: "Statistikanın yenilənməsində xəta!", error });
     }
 }
 
@@ -269,6 +225,55 @@ const calculateLevel = (totalScore: number): string => {
     } else {
         return "E";
     }
+}
+
+async function getStudentResultsGroupedByStudent(): Promise<IStudentResultsGrouped[]> {
+    return await StudentResult.aggregate([
+        {
+            $lookup: {
+                from: "students",
+                localField: "student",
+                foreignField: "_id",
+                as: "student"
+            }
+        },
+        { $unwind: "$student" },
+        {
+            $lookup: {
+                from: "exams",
+                localField: "exam",
+                foreignField: "_id",
+                as: "exam"
+            }
+        },
+        { $unwind: "$exam" },
+        { $sort: { "exam.date": -1 } },
+        {
+            $group: {
+                _id: "$student._id",
+                student: { $first: "$student" },
+                results: {
+                    $push: {
+                        _id: "$_id",
+                        exam: "$exam",
+                        grade: "$grade",
+                        disciplines: "$disciplines",
+                        totalScore: "$totalScore",
+                        score: "$score",
+                        level: "$level",
+                        status: "$status"
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                student: 1,
+                results: 1
+            }
+        }
+    ]) as IStudentResultsGrouped[];
 }
 
 export const getStatistics = async (req: Request, res: Response) => {
