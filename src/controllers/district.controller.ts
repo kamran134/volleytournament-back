@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import District from "../models/district.model";
+import District, { IDistrict } from "../models/district.model";
 
 export const getDistricts = async (req: Request, res: Response) => {
     try {
@@ -14,12 +14,29 @@ export const createDistrict = async (req: Request, res: Response) => {
     try {
         const { name, region, code } = req.body;
         const district = new District({ name, region, code });
-        const savedDistrict = await district.save();
-        res.status(201).json(savedDistrict);
+        const checkDistrictToExist = await checkExisting(district);
+
+        if (!checkDistrictToExist) {
+            const savedDistrict = await district.save();
+            res.status(201).json({savedDistrict, message: 'Rayon uğurla əlavə edildi'});
+        }
+        else {
+            res.status(409).json({ message: 'Rayon artıq bazada var' });
+        }
     } catch (error) {
         res.status(500).json({ message: "Rayonun yaradılmasında xəta!", error });
     }
 };
+
+const checkExisting = async (district: IDistrict): Promise<boolean> => {
+    try {
+        const foundedDistrict = await District.find({ code: district.code });
+        return foundedDistrict.length > 0;
+    } catch (error) {
+        console.error(error);
+        return true;
+    }
+}
 
 export const createAllDistricts = async (req: Request, res: Response) => {
     try {

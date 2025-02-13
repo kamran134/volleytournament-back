@@ -3,6 +3,8 @@ import xlsx from "xlsx";
 import School, { ISchoolInput } from "../models/school.model";
 import District from "../models/district.model";
 import mongoose from "mongoose";
+import fs from "fs";
+import path from "path";
 
 export const getSchools = async (req: Request, res: Response) => {
     try {
@@ -114,15 +116,6 @@ export const createAllSchools = async (req: Request, res: Response) => {
         const existingDistrictCodes = existingDistricts.map(d => d.code);
         const missingDistrictCodes = districtCodes.filter(code => !existingDistrictCodes.includes(code!));
 
-        if (missingDistrictCodes.length > 0) {
-            console.error('missing codes: ', JSON.stringify(missingDistrictCodes));
-            res.status(400).json({
-                message: "Bəzi rayon kodları tapılmadı!",
-                missingDistrictCodes
-            });
-            return;
-        }
-
         const districtMap = existingDistricts.reduce((map, district) => {
             map[district.code] = String(district._id);
             return map;
@@ -136,7 +129,16 @@ export const createAllSchools = async (req: Request, res: Response) => {
             district: districtMap[item.districtCode]
         }));
 
-        // const savedSchools = await School.insertMany(schoolsToSave);
+        // Remove the uploaded file
+        const filePath = path.join(__dirname, `../../${req.file.path}`);
+
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                console.error(`Fayl silinən zamanı xəta baş verdi: ${err.message}`);
+            } else {
+                console.log(`Fayl ${filePath} uğurla silindi.`);
+            }
+        });
         
         // res.status(201).json({ message: "Fayl uğurla yükləndi!", savedSchools });
         const results = await School.collection.bulkWrite(
@@ -152,9 +154,17 @@ export const createAllSchools = async (req: Request, res: Response) => {
         // Analyze results for success and failures
         const numCreated = results.upsertedCount;
         const numUpdated = results.modifiedCount;
-        res.status(201).json({ message: "Fayl uğurla yükləndi!", details: `Yeni məktəblər: ${numCreated}\nYenilənən məktəblər: ${numUpdated}` });
+        res.status(201).json({
+            message: "Fayl uğurla yükləndi!",
+            details: `Yeni məktəblər: ${numCreated}\nYenilənən məktəblər: ${numUpdated}`,
+            missingDistrictCodes
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Məktəblərin yaradılmasında xəta", error })
     }
+}
+
+export const deleteSchool = async (req: Request, res: Response) => {
+
 }

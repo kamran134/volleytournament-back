@@ -3,6 +3,8 @@ import xlsx from "xlsx";
 import Teacher, { ITeacherInput } from "../models/teacher.model";
 import School from "../models/school.model";
 import { Types } from "mongoose";
+import fs from "fs";
+import path from "path";
 
 export const getTeachers = async (req: Request, res: Response) => {
     try {
@@ -116,6 +118,17 @@ export const createAllTeachers = async (req: Request, res: Response) => {
             fullname: item.fullname
         }));
 
+        // Remove the uploaded file
+        const filePath = path.join(__dirname, `../../${req.file.path}`);
+
+        fs.unlink(filePath, (err) => {
+            if (err) {
+                console.error(`Fayl silinən zamanı xəta baş verdi: ${err.message}`);
+            } else {
+                console.log(`Fayl ${filePath} uğurla silindi.`);
+            }
+        });
+
         const results = await Teacher.collection.bulkWrite(
             teachersToSave.map(teacher => ({
                 updateOne: {
@@ -128,7 +141,11 @@ export const createAllTeachers = async (req: Request, res: Response) => {
 
         const numCreated = results.upsertedCount;
         const numUpdated = results.modifiedCount;
-        res.status(201).json({ message: "Fayl uğurla yükləndi!", details: `Yeni müəllimlər: ${numCreated}\nYenilənən müəllimlər: ${numUpdated}` });
+        res.status(201).json({
+            message: "Fayl uğurla yükləndi!",
+            details: `Yeni müəllimlər: ${numCreated}\nYenilənən müəllimlər: ${numUpdated}`,
+            missingSchoolCodes
+        });
 
     } catch (error) {
         res.status(500).json({ message: "Müəllimlərin yaradılmasında xəta!", error });
