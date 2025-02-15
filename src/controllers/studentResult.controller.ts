@@ -8,7 +8,7 @@ import StudentResult, { IStudentResultFileInput, IStudentResultInput } from "../
 import { Error, Types } from "mongoose";
 import fs from "fs";
 import path from "path";
-import { updateStatistics, updateStatisticsByRepublic } from "./stat.controller";
+import { updateStatistics, updateStatisticsByRepublic, updateStats, updateStatsByRepublic } from "./stat.controller";
 
 export const getStudentResults = async (req: Request, res: Response) => {
     try {
@@ -98,8 +98,8 @@ export const createAllResults = async (req: Request, res: Response) => {
 
         const results = await StudentResult.insertMany(resultsToInsert);
 
-        await updateStatistics(req, res);
-        await updateStatisticsByRepublic(req, res);
+        const updateStatsStatus = await updateStats();
+        const updateStatsByRepublicStatus = await updateStatsByRepublic();
 
         res.status(201).json({ message: "Şagirdin nəticələri uğurla yaradıldı!", results, studentsWithoutTeacher });
     } catch (error) {
@@ -130,12 +130,6 @@ export const processStudentResults = async (studentDataToInsert: IStudentInput[]
     }
 }
 
-// у каждого студента есть свой уникальный код, который используется для идентификации студента, он десятизначный, 
-// первые семь цифр - это код учителя, а последние три цифры - это порядковый номер студента в школе
-// это код учителя. Последние три цифры это порядковый номер студента у этого учителя
-// соответственно функция ниже должна по первым семи цифрам найти учителя и присвоить его id студенту
-// если учителя нет, то написать в логах коды этих студентов и не добавлять их в базу
-// если учитель есть, то брать первые две цифры слева и найти район и первые 5 слева и найти школу
 const assignTeacherToStudent = async (student: IStudentInput) => {
     try {
         const teacher = await Teacher.findOne({ code: Math.floor(student.code / 1000) }) as ITeacher;

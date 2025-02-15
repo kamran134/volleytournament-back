@@ -16,7 +16,6 @@ export interface IStudentInput {
 }
 
 export interface IStudent extends Document {
-    _id: mongoose.Types.ObjectId;
     code: number;
     lastName: string;
     firstName: string;

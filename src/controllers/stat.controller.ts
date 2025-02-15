@@ -1,23 +1,42 @@
 import { Request, Response } from "express";
-import mongoose from "mongoose";
 import StudentResult, { IStudentResult, IStudentResultsGrouped } from "../models/studentResult.model";
-import Student, { IStudent } from "../models/student.model";
-import District, { IDistrict } from "../models/district.model";
-import School, { ISchool } from "../models/school.model";
-import Teacher, { ITeacher } from "../models/teacher.model";
+import { IStudent } from "../models/student.model";
+import District from "../models/district.model";
+import School from "../models/school.model";
+import Teacher from "../models/teacher.model";
+import Exam from "../models/exam.model";
 
 export const updateStatistics = async (req: Request, res: Response) => {
+    try {
+        const status = await updateStats();
+        if (status === 404) {
+            res.status(404).json({ message: "404: Nəticələr tapılmadı!" });
+            return;
+        }
+        res.status(200).json({ message: "Statistika yeniləndi" });
+    } catch (error) {
+        res.status(500).json({ message: "Statistikanın yenilənməsində xəta!", error });
+    }
+}
+
+export const updateStatisticsByRepublic = async (req: Request, res: Response) => {
+    try {
+        await updateStatsByRepublic();
+        res.status(200).json({ message: "Respublika üzrə statistika uğurla yeniləndi!" });
+    } catch (error) {
+        res.status(500).json({ message: "Respublika üzrə statistikanın yenilənməsində xəta", error });
+    }
+    
+}
+
+export const updateStats = async (): Promise<number> => {
     try {
         // 1. Пробегаемся по всем результатам экзаменов (StudentResult)
         const studentResultsGrouped: IStudentResultsGrouped[] = await getStudentResultsGroupedByStudent();
 
-        if (studentResultsGrouped.length === 0) {
-            res.status(404).json({ message: "404: Nəticələr tapılmadı!" });
-            return;
-        }
+        if (studentResultsGrouped.length === 0) return 404;
         
         const allResults = studentResultsGrouped.flatMap(group => group.results);
-
         const latestExam = allResults.reduce((latest, result) => 
             new Date(result.exam.date) > new Date(latest.exam.date) ? result : latest
         );
@@ -96,14 +115,14 @@ export const updateStatistics = async (req: Request, res: Response) => {
                 }
             }
         }
-        
-        res.status(200).json({ message: "Statistika yeniləndi" });
+
+        return 200;
     } catch (error) {
-        res.status(500).json({ message: "Statistikanın yenilənməsində xəta!", error });
+        throw error;
     }
 }
 
-export const updateStatisticsByRepublic = async (req: Request, res: Response) => {
+export const updateStatsByRepublic = async (): Promise<number> => {
     try {
         // 1. Пробегаемся по всем результатам экзаменов (StudentResult)
         const studentResults: IStudentResult[] = await StudentResult.find()
@@ -114,7 +133,7 @@ export const updateStatisticsByRepublic = async (req: Request, res: Response) =>
         const latestExam = studentResults.reduce((latest, result) => 
             new Date(result.exam.date) > new Date(latest.exam.date) ? result : latest
         );
-        
+
         const latestMonth = new Date(latestExam.exam.date).getMonth();
         const latestYear = new Date(latestExam.exam.date).getFullYear();
 
@@ -138,7 +157,6 @@ export const updateStatisticsByRepublic = async (req: Request, res: Response) =>
                 return examDate.getMonth() === latestMonth && examDate.getFullYear() === latestYear;
             });
 
-        // console.log('latesMothResults: ', JSON.stringify(latestMonthResults));
         // сначала выясняем самый высокий бал по всем студентам
         const maxTotalScore = Math.max(...latestMonthResults.map(r => r.totalScore));
         for (const studentId in latestMonthResults) {
@@ -146,26 +164,25 @@ export const updateStatisticsByRepublic = async (req: Request, res: Response) =>
             // maxTotalScore = Math.max(maxTotalScore, student.results[0].totalScore);
         }
 
-        console.log('max score: ', maxTotalScore);
-
         // теперь всем студентам с этим баллом добавляем статус "Respublika üzrə ayın şagirdi"
         for (const studentId in students) {
             const student = students[studentId];
             if (student.results[0].totalScore === maxTotalScore && maxTotalScore >= 47) {
                 // student.student.status.push("Respublika üzrə ayın şagirdi");
-                student.student.status = student.student.status ? `${student.student.status}, Respublika üzrə ayın şagirdi` : "Respublika üzrə ayın şagirdi";
-                student.result[0].score += 5;
+                student.results[0].status = student.results[0].status ? `${student.results[0].status}, Respublika üzrə ayın şagirdi` : "Respublika üzrə ayın şagirdi";
+                student.results[0].score += 5;
                 // обновляем в базе данных статус студента
-                await Student.findByIdAndUpdate(studentId, { status: student.student.status }, { new: true });
-                await StudentResult.findByIdAndUpdate(student.results[0]._id, { score: student.results[0].score });
+                await StudentResult.findByIdAndUpdate(student.results[0]._id, {
+                    score: student.results[0].score,
+                    status: student.results[0].status
+                });
             }
         }
 
-        res.status(200).json({ message: "Respublika üzrə statistika uğurla yeniləndi!" });
+        return 200;
     } catch (error) {
-        res.status(500).json({ message: "Respublika üzrə statistikanın yenilənməsində xəta", error });
+        throw error;
     }
-    
 }
 
 export const calculateAndSaveScores = async (req: Request, res: Response) => {
@@ -278,9 +295,31 @@ async function getStudentResultsGroupedByStudent(): Promise<IStudentResultsGroup
 
 export const getStatistics = async (req: Request, res: Response) => {
     try {
-        const studentsOfMonth: IStudent[] = await Student.find({ status: { $regex: "Ayın şagirdi", $options: "i" } });
-        const studentsOfMonthByRepublic: IStudent[] = await Student.find({ status: { $regex: "Respublika üzrə ayın şagirdi", $options: "i" } });
-        const developingStudents: IStudent[] = await Student.find({ status: { $regex: "İnkişaf edən şagird", $options: "i" } });
+        const { month } = req.query;
+        if (!month) {
+            res.status(400).json({ message: "Ay seçilməyib!" });
+            return;
+        }
+
+        const [year, monthStr] = (month as string).split("-");
+        const monthIndex: number = parseInt(monthStr, 10);
+        const selectedMonth = new Date(parseInt(year, 10), monthIndex, 1);
+        const startDate = new Date(selectedMonth);
+        const endDate = new Date(new Date(startDate).setMonth(startDate.getMonth() + 1));
+
+        const examsInMonth = await Exam.find({ date: { $gte: startDate, $lt: endDate } }).select('_id');
+
+        const studentResults: IStudentResult[] = await StudentResult.find({exam: { $in: examsInMonth.map(e => e._id) }})
+            .populate("exam")
+            .populate("student");
+
+        const studentsOfMonth: IStudentResult[] = studentResults.filter(r => r.status?.match(/Ayın şagirdi/i));
+        const studentsOfMonthByRepublic: IStudentResult[] = studentResults.filter(r => r.status?.match(/Respublika üzrə ayın şagirdi/i));
+        const developingStudents: IStudentResult[] = studentResults.filter(r => r.status?.match(/İnkişaf edən şagird/i));
+
+        // const studentsOfMonth: IStudent[] = await Student.find({ status: { $regex: "Ayın şagirdi", $options: "i" } });
+        // const studentsOfMonthByRepublic: IStudent[] = await Student.find({ status: { $regex: "Respublika üzrə ayın şagirdi", $options: "i" } });
+        // const developingStudents: IStudent[] = await Student.find({ status: { $regex: "İnkişaf edən şagird", $options: "i" } });
         res.status(200).json({ studentsOfMonth, studentsOfMonthByRepublic, developingStudents });
     } catch (error) {
         res.status(500).json({ message: "Statistikanın alınmasında xəta", error });

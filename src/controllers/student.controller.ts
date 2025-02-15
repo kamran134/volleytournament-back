@@ -30,8 +30,6 @@ export const getStudents = async (req: Request, res: Response) => {
             filter.teacher = { $in: teacherIds };
         }
 
-        console.log('filters: ', filter);
-
         const [data, totalCount] = await Promise.all([
             Student.find(filter)
                 .populate('teacher')
