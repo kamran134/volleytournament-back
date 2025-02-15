@@ -3,8 +3,15 @@ import District, { IDistrict } from "../models/district.model";
 
 export const getDistricts = async (req: Request, res: Response) => {
     try {
-        const districts = await District.find();
-        res.status(200).json(districts);
+        const [data, totalCount] = await Promise.all([
+            District.find(),
+            District.countDocuments()
+        ]);
+
+        res.status(200).json({ data, totalCount });
+
+        // const districts = await District.find();
+        // res.status(200).json(districts);
     } catch (error) {
         res.status(500).json({ message: "Rayonların alınmasında xəta", error });
     }

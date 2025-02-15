@@ -1,25 +1,42 @@
 import { Request, Response } from "express";
 import Student, { IStudent, IStudentDetails } from "../models/student.model";
 import StudentResult, { IStudentResult } from "../models/studentResult.model";
+import { Types } from "mongoose";
 
 export const getStudents = async (req: Request, res: Response) => {
     try {
         const page: number = parseInt(req.query.page as string) || 1;
         const size: number = parseInt(req.query.size as string) || 10;
         const skip: number = (page - 1) * size;
-        const schoolIds: string[] = req.query.schoolIds
-            ? (req.query.schoolIds as string).split(',')
+        const districtIds: Types.ObjectId[] = req.query.districtIds
+            ? (req.query.districtIds as string).split(',').map(id => new Types.ObjectId(id))
+            : [];
+        const schoolIds: Types.ObjectId[] = req.query.schoolIds
+            ? (req.query.schoolIds as string).split(',').map(id => new Types.ObjectId(id))
+            : [];
+        const teacherIds: Types.ObjectId[] = req.query.teacherIds
+            ? (req.query.teacherIds as string).split(',').map(id => new Types.ObjectId(id))
             : [];
 
         const filter: any = {};
 
-        if (schoolIds.length > 0) {
+        if (districtIds.length > 0 && schoolIds.length == 0) {
+            filter.district = { $in: districtIds };
+        }
+        else if (schoolIds.length > 0 && teacherIds.length == 0) {
             filter.school = { $in: schoolIds };
         }
+        else if (teacherIds.length > 0) {
+            filter.teacher = { $in: teacherIds };
+        }
+
+        console.log('filters: ', filter);
 
         const [data, totalCount] = await Promise.all([
             Student.find(filter)
                 .populate('teacher')
+                .populate('school')
+                .populate('district')
                 .sort({ code: 1 })
                 .skip(skip)
                 .limit(size),

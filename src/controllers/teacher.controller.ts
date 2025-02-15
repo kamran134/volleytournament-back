@@ -45,6 +45,31 @@ export const getTeachers = async (req: Request, res: Response) => {
     }
 }
 
+export const getTeachersForFilter = async (req: Request, res: Response) => {
+    try {
+        const schoolIds: Types.ObjectId[] = req.query.schoolIds
+            ? (req.query.schoolIds as string).split(',').map(id => new Types.ObjectId(id.trim()))
+            : [];
+        
+        const filter: any = {};
+
+        if (schoolIds.length > 0) {
+            filter.school = { $in: schoolIds };
+        }
+
+        const [data, totalCount] = await Promise.all([
+            Teacher.find(filter)
+                .populate('school')
+                .sort({ code: 1 }),
+            Teacher.countDocuments(filter)
+        ]);
+
+        res.status(200).json({ data, totalCount });
+    } catch (error) {
+        res.status(500).json({ message: "Müəllimlərin alınmasında xəta", error });
+    }
+};
+
 export const createTeacher = async (req: Request, res: Response) => {
     try {
         const { fullname, code, schoolCode } = req.body;
