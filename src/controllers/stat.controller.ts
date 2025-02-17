@@ -4,7 +4,7 @@ import { IStudent } from "../models/student.model";
 import District from "../models/district.model";
 import School from "../models/school.model";
 import Teacher from "../models/teacher.model";
-import Exam from "../models/exam.model";
+import Exam, { IExam } from "../models/exam.model";
 
 export const updateStatistics = async (req: Request, res: Response) => {
     try {
@@ -31,91 +31,7 @@ export const updateStatisticsByRepublic = async (req: Request, res: Response) =>
 
 export const updateStats = async (): Promise<number> => {
     try {
-        // 1. Пробегаемся по всем результатам экзаменов (StudentResult)
-        const studentResultsGrouped: IStudentResultsGrouped[] = await getStudentResultsGroupedByStudent();
-
-        if (studentResultsGrouped.length === 0) return 404;
         
-        const allResults = studentResultsGrouped.flatMap(group => group.results);
-        const latestExam = allResults.reduce((latest, result) => 
-            new Date(result.exam.date) > new Date(latest.exam.date) ? result : latest
-        );
-        
-        const latestMonth = new Date(latestExam.exam.date).getMonth();
-        const latestYear = new Date(latestExam.exam.date).getFullYear();
-
-        // 3. Каждому студенту в maxLevel записываем максимальный уровень, который он прошел, без учёта последнего экзамена
-        //    Уровни: 0-15: E, 16-25: D, 26-34: C, 35-41: B, 42-46: A, 47-50: Lisey
-        for (const studentId in studentResultsGrouped) {
-            const student = studentResultsGrouped[studentId];
-            student.student.status = "";
-            if (student.results.length <= 1) continue;
-            // исключаем последний экзамен, так как он определяет статус студента
-            student.student.maxLevel = student.results.slice(1).reduce((maxLevel: number, result: any) => {
-                return Math.max(maxLevel, result.totalScore);
-            }, 0);
-            const studentMaxlevel: string = calculateLevel(student.student.maxLevel);
-            const studentLastLevel: string = calculateLevel(student.results[0].totalScore);
-
-            if (student.student.maxLevel < student.results[0].totalScore && student.results.length > 1 &&
-                studentMaxlevel !== studentLastLevel) {
-                student.results[0].status = "İnkişaf edən şagird";
-                student.results[0].score += 10;
-                student.student.maxLevel = student.results[0].totalScore;
-
-                await StudentResult.findByIdAndUpdate(student.results[0]._id, {
-                    status: student.results[0].status,
-                    score: student.results[0].score
-                });
-            }
-        }
-
-        // 5. Если студент в своём районе набрал самый высокий балл по последнему экзамену, то в его статус пишем (добавляем) "ayın şagirdi". 
-        // А также добавляем в его score +5
-        // У нас есть students, его группируем по районам
-        const districtResults: Record<string, IStudentResultsGrouped[]> = studentResultsGrouped.reduce((acc, student) => {
-            const districtId = student.student.district!.toString();
-            if (!acc[districtId]) {
-                acc[districtId] = [];
-            }
-            acc[districtId].push(student);
-            return acc;
-        }, {} as Record<string, IStudentResultsGrouped[]>);
-
-        // берём districtResults, пробегаемся по последним результатам каждого студента, выясняем кто набрал самый высокий балл
-        // и добавляем статус "ayın şagirdi" и +5 к score
-        for (const districtId in districtResults) {
-            const districtResult = districtResults[districtId];
-            const latestMonthResults = districtResult
-                //.flatMap((student: any) => student.results)
-                .filter((result: any) => {
-                    if (!result.exam || !result.exam.date) return false;
-                    const examDate = new Date(result.exam.date);
-                    return examDate.getMonth() === latestMonth && examDate.getFullYear() === latestYear;
-                });
-
-            // Находим максимальный totalScore за этот месяц
-            const maxTotalScore = latestMonthResults.reduce((maxScore: number, result: any) =>
-                Math.max(maxScore, result.totalScore), 0
-            );
-
-            //console.log('Distrcit res: ', JSON.stringify(districtResult));
-            //console.log('\nDistrict latest month: ', JSON.stringify(latestMonthResults));
-            
-            // теперь всем студентам с этим баллом добавляем статус "ayın şagirdi"
-            for (const student of latestMonthResults) {
-                if (student.results[0].totalScore === maxTotalScore && maxTotalScore >= 47) {
-                    student.results[0].status = student.student.status ? `${student.student.status}, Ayın şagirdi` : "Ayın şagirdi";
-                    student.results[0].score += 5;
-                    
-                    await StudentResult.findByIdAndUpdate(student.results[0]._id, {
-                        status: student.results[0].status,
-                        score: student.results[0].score
-                    });
-                }
-            }
-        }
-
         return 200;
     } catch (error) {
         throw error;
@@ -182,6 +98,125 @@ export const updateStatsByRepublic = async (): Promise<number> => {
         return 200;
     } catch (error) {
         throw error;
+    }
+}
+
+export const detectDevelopingStudents = async () => {
+    try {
+        // 1. Пробегаемся по всем результатам экзаменов (StudentResult)
+        const studentResultsGrouped: IStudentResultsGrouped[] = await getStudentResultsGroupedByStudent();
+        if (studentResultsGrouped.length === 0) return 404;
+        
+        const allResults = studentResultsGrouped.flatMap(group => group.results);
+        const latestExam = allResults.reduce((latest, result) => 
+            new Date(result.exam.date) > new Date(latest.exam.date) ? result : latest
+        );
+        
+        const latestMonth = new Date(latestExam.exam.date).getMonth();
+        const latestYear = new Date(latestExam.exam.date).getFullYear();
+
+        // 3. Каждому студенту в maxLevel записываем максимальный уровень, который он прошел, без учёта последнего экзамена
+        //    Уровни: 0-15: E, 16-25: D, 26-34: C, 35-41: B, 42-46: A, 47-50: Lisey
+        for (const studentId in studentResultsGrouped) {
+            const student = studentResultsGrouped[studentId];
+            student.student.status = "";
+            if (student.results.length <= 1) continue;
+            // исключаем последний экзамен, так как он определяет статус студента
+            student.student.maxLevel = student.results.slice(1).reduce((maxLevel: number, result: any) => {
+                return Math.max(maxLevel, result.totalScore);
+            }, 0);
+            const studentMaxlevel: string = calculateLevel(student.student.maxLevel);
+            const studentLastLevel: string = calculateLevel(student.results[0].totalScore);
+
+            if (student.student.maxLevel < student.results[0].totalScore && student.results.length > 1 &&
+                studentMaxlevel !== studentLastLevel) {
+                student.results[0].status = "İnkişaf edən şagird";
+                student.results[0].score += 10;
+                student.student.maxLevel = student.results[0].totalScore;
+
+                await StudentResult.findByIdAndUpdate(student.results[0]._id, {
+                    status: student.results[0].status,
+                    score: student.results[0].score
+                });
+            }
+        }
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const markTopStudents = async (month: number, year: number): Promise<void> => {
+    // Определяем диапазон дат для поиска экзаменов
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+    // Получаем все экзамены за указанный месяц и год
+    const exams: IExam[] = await Exam.find({
+        date: { $gte: startDate, $lte: endDate }
+    });
+
+    if (!exams.length) {
+        console.log("Нет экзаменов за этот период.");
+        return;
+    }
+
+    // Извлекаем ID экзаменов
+    const examIds = exams.map(exam => exam._id);
+
+    // Получаем все результаты по найденным экзаменам
+    const results: IStudentResult[] = await StudentResult.find({
+        exam: { $in: examIds }
+    }).populate("student");
+
+    if (!results.length) {
+        console.log("Нет результатов экзаменов за этот период.");
+        return;
+    }
+
+    // Группируем результаты по районам
+    const districtGroups: Record<string, IStudentResult[]> = results.reduce((acc, result) => {
+        const districtId = result.student.district?.toString();
+        if (!districtId) return acc;
+
+        if (!acc[districtId]) {
+            acc[districtId] = [];
+        }
+        acc[districtId].push(result);
+        return acc;
+    }, {} as Record<string, IStudentResult[]>);
+
+    // Список обновлений
+    const bulkOperations = [];
+
+    for (const districtId in districtGroups) {
+        const districtResults = districtGroups[districtId];
+
+        // Находим максимальный totalScore в этом районе
+        const maxTotalScore = Math.max(...districtResults.map(r => r.totalScore));
+
+        // Определяем лучших учеников
+        const topStudents = districtResults.filter(r => r.totalScore === maxTotalScore);
+
+        for (const studentResult of topStudents) {
+            const updatedStatus = studentResult.status
+                ? `${studentResult.status}, Ayın şagirdi`
+                : "Ayın şagirdi";
+
+            bulkOperations.push({
+                updateOne: {
+                    filter: { _id: studentResult._id },
+                    update: { $set: { status: updatedStatus } }
+                }
+            });
+        }
+    }
+
+    // Выполняем массовое обновление
+    if (bulkOperations.length > 0) {
+        await StudentResult.bulkWrite(bulkOperations);
+        console.log(`Обновлено ${bulkOperations.length} записей.`);
+    } else {
+        console.log("Не найдено учеников для обновления.");
     }
 }
 

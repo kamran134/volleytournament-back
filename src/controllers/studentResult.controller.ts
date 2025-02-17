@@ -42,7 +42,7 @@ export const createAllResults = async (req: Request, res: Response) => {
             return;
         }
 
-        const resultReadedData: IStudentResultFileInput[] = rows.slice(1).map(row => ({
+        const resultReadedData: IStudentResultFileInput[] = rows.slice(3).map(row => ({
             examId: new Types.ObjectId(examId),
             grade: Number(row[2]),
             studentCode: Number(row[3]),
