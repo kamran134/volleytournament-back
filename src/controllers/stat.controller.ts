@@ -5,6 +5,7 @@ import District from "../models/district.model";
 import School from "../models/school.model";
 import Teacher from "../models/teacher.model";
 import Exam, { IExam } from "../models/exam.model";
+import { getExamsByMonthYear } from "./exam.controller";
 
 export const updateStatistics = async (req: Request, res: Response) => {
     try {
@@ -19,82 +20,66 @@ export const updateStatistics = async (req: Request, res: Response) => {
     }
 }
 
-export const updateStatisticsByRepublic = async (req: Request, res: Response) => {
+// export const updateStatisticsByRepublic = async (req: Request, res: Response) => {
+//     try {
+//         await updateStatsByRepublic();
+//         res.status(200).json({ message: "Respublika üzrə statistika uğurla yeniləndi!" });
+//     } catch (error) {
+//         res.status(500).json({ message: "Respublika üzrə statistikanın yenilənməsində xəta", error });
+//     } 
+// }
+
+export const resetStats = async (): Promise<void> => {
     try {
-        await updateStatsByRepublic();
-        res.status(200).json({ message: "Respublika üzrə statistika uğurla yeniləndi!" });
+        await StudentResult.updateMany({ status: "", score: 1 });
     } catch (error) {
-        res.status(500).json({ message: "Respublika üzrə statistikanın yenilənməsində xəta", error });
+        console.error(error);
     }
-    
 }
 
 export const updateStats = async (): Promise<number> => {
     try {
+        // Сначала сбрасываем всю статистику
+        await resetStats();
         
-        return 200;
-    } catch (error) {
-        throw error;
-    }
-}
+        // Получаем все даты экзаменов (только поле date)
+        const exams: IExam[] = await Exam.find({}, { date: 1 });
 
-export const updateStatsByRepublic = async (): Promise<number> => {
-    try {
-        // 1. Пробегаемся по всем результатам экзаменов (StudentResult)
-        const studentResults: IStudentResult[] = await StudentResult.find()
-        .populate("student")
-        .populate("exam")
-        .sort({ examDate: 1 });
-
-        const latestExam = studentResults.reduce((latest, result) => 
-            new Date(result.exam.date) > new Date(latest.exam.date) ? result : latest
-        );
-
-        const latestMonth = new Date(latestExam.exam.date).getMonth();
-        const latestYear = new Date(latestExam.exam.date).getFullYear();
-
-        // 2. Группируем результаты по студентам (Student)
-        const students: any = {};
-        studentResults.forEach((studentResult: any) => {
-            if (!students[studentResult.student._id]) {
-                students[studentResult.student._id] = {
-                    student: studentResult.student,
-                    results: [],
-                };
-            }
-
-            students[studentResult.student._id].results.push(studentResult);
-        });
-
-        const latestMonthResults = studentResults
-            .filter((result: any) => {
-                if (!result.exam || !result.exam.date) return false;
-                const examDate = new Date(result.exam.date);
-                return examDate.getMonth() === latestMonth && examDate.getFullYear() === latestYear;
-            });
-
-        // сначала выясняем самый высокий бал по всем студентам
-        const maxTotalScore = Math.max(...latestMonthResults.map(r => r.totalScore));
-        for (const studentId in latestMonthResults) {
-            const student = students[studentId];
-            // maxTotalScore = Math.max(maxTotalScore, student.results[0].totalScore);
+        if (!exams.length) {
+            console.log("Нет экзаменов в базе.");
+            return 404;
         }
 
-        // теперь всем студентам с этим баллом добавляем статус "Respublika üzrə ayın şagirdi"
-        for (const studentId in students) {
-            const student = students[studentId];
-            if (student.results[0].totalScore === maxTotalScore && maxTotalScore >= 47) {
-                // student.student.status.push("Respublika üzrə ayın şagirdi");
-                student.results[0].status = student.results[0].status ? `${student.results[0].status}, Respublika üzrə ayın şagirdi` : "Respublika üzrə ayın şagirdi";
-                student.results[0].score += 5;
-                // обновляем в базе данных статус студента
-                await StudentResult.findByIdAndUpdate(student.results[0]._id, {
-                    score: student.results[0].score,
-                    status: student.results[0].status
-                });
-            }
+        // Создаём Set для хранения уникальных (год, месяц)
+        const uniqueMonths = new Set<string>();
+
+        for (const exam of exams) {
+            const date = new Date(exam.date);
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1; // Январь — 1, Февраль — 2 и т. д.
+            uniqueMonths.add(`${year}-${month}`);
         }
 
+        // Преобразуем в массив и сортируем по дате (по возрастанию)
+        const sortedMonths = Array.from(uniqueMonths)
+            .map(m => {
+                const [year, month] = m.split("-").map(Number);
+                return { year, month };
+            })
+            .sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month);
+
+        console.log(`Будет обработано ${sortedMonths.length} месяцев...`);
+        await markDevelopingStudents(new Date().getMonth(), new Date().getFullYear());
+        // Вызываем `markTopStudents()` для каждого месяца
+        for (const { year, month } of sortedMonths) {
+            console.log(`🔹 Обрабатываем ${month}/${year}...`);
+            //await markDevelopingStudents(month, year);
+            await markTopStudents(month, year);
+            await markTopStudentsRepublic(month, year);
+            
+        }
+
+        console.log("✅ Обработка всех месяцев завершена.");
         return 200;
     } catch (error) {
         throw error;
@@ -107,19 +92,9 @@ export const detectDevelopingStudents = async () => {
         const studentResultsGrouped: IStudentResultsGrouped[] = await getStudentResultsGroupedByStudent();
         if (studentResultsGrouped.length === 0) return 404;
         
-        const allResults = studentResultsGrouped.flatMap(group => group.results);
-        const latestExam = allResults.reduce((latest, result) => 
-            new Date(result.exam.date) > new Date(latest.exam.date) ? result : latest
-        );
-        
-        const latestMonth = new Date(latestExam.exam.date).getMonth();
-        const latestYear = new Date(latestExam.exam.date).getFullYear();
-
-        // 3. Каждому студенту в maxLevel записываем максимальный уровень, который он прошел, без учёта последнего экзамена
-        //    Уровни: 0-15: E, 16-25: D, 26-34: C, 35-41: B, 42-46: A, 47-50: Lisey
         for (const studentId in studentResultsGrouped) {
             const student = studentResultsGrouped[studentId];
-            student.student.status = "";
+            student.results[0].status = "";
             if (student.results.length <= 1) continue;
             // исключаем последний экзамен, так как он определяет статус студента
             student.student.maxLevel = student.results.slice(1).reduce((maxLevel: number, result: any) => {
@@ -145,15 +120,103 @@ export const detectDevelopingStudents = async () => {
     }
 }
 
-export const markTopStudents = async (month: number, year: number): Promise<void> => {
-    // Определяем диапазон дат для поиска экзаменов
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+export const markDevelopingStudents = async (month: number, year: number): Promise<void> => {
+    try {
+        console.log(`🔹 Анализируем прогресс студентов до ${month}/${year}...`);
 
-    // Получаем все экзамены за указанный месяц и год
-    const exams: IExam[] = await Exam.find({
-        date: { $gte: startDate, $lte: endDate }
-    });
+        // 1️⃣ Определяем диапазон дат (до указанного месяца)
+        const endDate = new Date(year, month - 1, 31, 23, 59, 59, 999);
+
+        // 2️⃣ Получаем все экзамены до этого месяца
+        const exams = await Exam.find({
+            date: { $lte: endDate }
+        });
+
+        if (!exams.length) {
+            console.log("Нет экзаменов за указанный период.");
+            return;
+        }
+
+        // 3️⃣ Извлекаем ID экзаменов
+        const examIds = exams.map(exam => exam._id);
+
+        // 4️⃣ Получаем все результаты по этим экзаменам
+        const results: IStudentResult[] = await StudentResult.find({
+            exam: { $in: examIds }
+        }).populate("student").populate("exam");
+
+        if (!results.length) {
+            console.log("Нет результатов экзаменов за этот период.");
+            return;
+        }
+
+        // 5️⃣ Группируем результаты по студентам
+        const studentResultsGrouped: Record<string, IStudentResult[]> = results.reduce((acc, result) => {
+            const studentId: string = String(result.student._id);
+            if (!acc[studentId]) {
+                acc[studentId] = [];
+            }
+            acc[studentId].push(result);
+            return acc;
+        }, {} as Record<string, IStudentResult[]>);
+
+        const bulkOperations = [];
+
+        // 6️⃣ Анализируем студентов
+        for (const studentId in studentResultsGrouped) {
+            const studentResults = studentResultsGrouped[studentId];
+
+            // console.log("stud results: ", studentResults);
+            // Сортируем экзамены по дате (от старого к новому)
+            studentResults.sort((a, b) => a.exam.date.getTime() - b.exam.date.getTime());
+
+            // Обнуляем статус у самого нового результата (текущий месяц)
+            //studentResults[studentResults.length - 1].status = "";
+
+            if (studentResults.length <= 1) continue; // Пропускаем студентов с 1 экзаменом
+
+            // 7️⃣ Определяем максимальный результат за предыдущие экзамены
+            const maxPreviousTotalScore = Math.max(
+                ...studentResults.slice(0, -1).map(r => r.totalScore)
+            );
+
+            const currentResult = studentResults[studentResults.length - 1];
+
+            // 8️⃣ Проверяем, если текущий результат выше всех предыдущих
+            if (currentResult.totalScore > maxPreviousTotalScore) {
+                const previousLevel = calculateLevel(maxPreviousTotalScore);
+                const currentLevel = calculateLevel(currentResult.totalScore);
+
+                if (previousLevel !== currentLevel) {
+                    // Добавляем статус и прибавляем 10 очков
+                    const updatedStatus = currentResult.status
+                        ? `${currentResult.status}, İnkişaf edən şagird`
+                        : "İnkişaf edən şagird";
+
+                    bulkOperations.push({
+                        updateOne: {
+                            filter: { _id: currentResult._id },
+                            update: { $set: { status: updatedStatus }, $inc: { score: 10 } }
+                        }
+                    });
+                }
+            }
+        }
+
+        // 9️⃣ Выполняем массовое обновление
+        if (bulkOperations.length > 0) {
+            await StudentResult.bulkWrite(bulkOperations);
+            console.log(`✅ ${bulkOperations.length} nəfər inkişaf edən şagird.`);
+        } else {
+            console.log("Не найдено учеников для обновления.");
+        }
+    } catch (error) {
+        console.error("Ошибка в markDevelopingStudents:", error);
+    }
+};
+
+export const markTopStudents = async (month: number, year: number): Promise<void> => {
+    const exams = await getExamsByMonthYear(month, year);
 
     if (!exams.length) {
         console.log("Нет экзаменов за этот период.");
@@ -162,6 +225,11 @@ export const markTopStudents = async (month: number, year: number): Promise<void
 
     // Извлекаем ID экзаменов
     const examIds = exams.map(exam => exam._id);
+
+    // await StudentResult.updateMany(
+    //     { exam: { $in: examIds } },
+    //     { $set: { status: "", score: 0 } }
+    // );
 
     // Получаем все результаты по найденным экзаменам
     const results: IStudentResult[] = await StudentResult.find({
@@ -193,6 +261,8 @@ export const markTopStudents = async (month: number, year: number): Promise<void
 
         // Находим максимальный totalScore в этом районе
         const maxTotalScore = Math.max(...districtResults.map(r => r.totalScore));
+        // Если статус не лицейный, то это не успех
+        if (maxTotalScore < 47) continue;
 
         // Определяем лучших учеников
         const topStudents = districtResults.filter(r => r.totalScore === maxTotalScore);
@@ -205,11 +275,69 @@ export const markTopStudents = async (month: number, year: number): Promise<void
             bulkOperations.push({
                 updateOne: {
                     filter: { _id: studentResult._id },
-                    update: { $set: { status: updatedStatus } }
+                    update: { $set: { status: updatedStatus}, $inc: { score: 5 } }
                 }
             });
         }
     }
+
+    // Выполняем массовое обновление
+    if (bulkOperations.length > 0) {
+        await StudentResult.bulkWrite(bulkOperations);
+        console.log(`${bulkOperations.length} nəfər ayın şagirdi tapıldı.`);
+    } else {
+        console.log("Не найдено учеников для обновления.");
+    }
+}
+
+async function markTopStudentsRepublic(month: number, year: number): Promise<void> {
+    const exams = await getExamsByMonthYear(month, year);
+
+    if (!exams.length) {
+        console.log("Нет экзаменов за этот период.");
+        return;
+    }
+
+    // Извлекаем ID экзаменов
+    const examIds = exams.map(exam => exam._id);
+
+    // await StudentResult.updateMany(
+    //     { exam: { $in: examIds } },
+    //     { $set: { status: "", score: 0 } }
+    // );
+
+    // Получаем все результаты по найденным экзаменам
+    const results: IStudentResult[] = await StudentResult.find({
+        exam: { $in: examIds }
+    });
+
+    if (!results.length) {
+        console.log("Нет результатов экзаменов за этот период.");
+        return;
+    }
+
+    // Находим максимальный totalScore по всей республике
+    const maxTotalScore = Math.max(...results.map(r => r.totalScore));
+
+    // Определяем лучших учеников
+    const topStudents = results.filter(r => r.totalScore === maxTotalScore);
+
+    // Список обновлений
+    const bulkOperations = topStudents.map(studentResult => ({
+        updateOne: {
+            filter: { _id: studentResult._id },
+            update: {
+                $set: {
+                    status: studentResult.status
+                        ? `${studentResult.status}, Respublika üzrə ayın şagirdi`
+                        : "Respublika üzrə ayın şagirdi",
+                },
+                $inc: {
+                    score: 5
+                }
+            }
+        }
+    }));
 
     // Выполняем массовое обновление
     if (bulkOperations.length > 0) {
@@ -219,6 +347,7 @@ export const markTopStudents = async (month: number, year: number): Promise<void
         console.log("Не найдено учеников для обновления.");
     }
 }
+
 
 export const calculateAndSaveScores = async (req: Request, res: Response) => {
     try {
@@ -346,7 +475,11 @@ export const getStatistics = async (req: Request, res: Response) => {
 
         const studentResults: IStudentResult[] = await StudentResult.find({exam: { $in: examsInMonth.map(e => e._id) }})
             .populate("exam")
-            .populate("student");
+            .populate({ path: "student", populate: [
+                { path: "district", model: "District" },
+                { path: "school", model: "School" },
+                { path: "teacher", model: "Teacher" }
+            ]});
 
         const studentsOfMonth: IStudentResult[] = studentResults.filter(r => r.status?.match(/Ayın şagirdi/i));
         const studentsOfMonthByRepublic: IStudentResult[] = studentResults.filter(r => r.status?.match(/Respublika üzrə ayın şagirdi/i));

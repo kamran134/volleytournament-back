@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Exam from "../models/exam.model";
+import Exam, { IExam } from "../models/exam.model";
 import StudentResult from "../models/studentResult.model";
 
 export const getExams = async (req: Request, res: Response) => {
@@ -20,6 +20,19 @@ export const getExams = async (req: Request, res: Response) => {
     } catch (error) {
         res.status(500).json({ message: "İmtahanların alınmasında xəta", error });
     }
+}
+
+export const getExamsByMonthYear = async (month: number, year: number): Promise<IExam[] | []> => {
+    // Определяем диапазон дат для поиска экзаменов
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+    
+        // Получаем все экзамены за указанный месяц и год
+        const exams: IExam[] = await Exam.find({
+            date: { $gte: startDate, $lte: endDate }
+        });
+
+        return exams;
 }
 
 export const createExam = async (req: Request, res: Response) => {

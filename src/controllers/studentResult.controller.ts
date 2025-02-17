@@ -2,13 +2,13 @@ import { Request, Response } from "express";
 import xlsx from "xlsx";
 import Student, { IStudent, IStudentInput } from "../models/student.model";
 import Teacher, { ITeacher } from "../models/teacher.model";
-import School, { ISchool } from "../models/school.model";
-import District, { IDistrict } from "../models/district.model";
+import School from "../models/school.model";
+import District from "../models/district.model";
 import StudentResult, { IStudentResultFileInput, IStudentResultInput } from "../models/studentResult.model";
 import { Error, Types } from "mongoose";
 import fs from "fs";
 import path from "path";
-import { updateStatistics, updateStatisticsByRepublic, updateStats, updateStatsByRepublic } from "./stat.controller";
+import { detectDevelopingStudents } from "./stat.controller";
 
 export const getStudentResults = async (req: Request, res: Response) => {
     try {
@@ -57,7 +57,7 @@ export const createAllResults = async (req: Request, res: Response) => {
             level: String(row[12])
         }));
 
-        const studentDataToInsert: IStudentInput[] = rows.slice(1).map(row => ({
+        const studentDataToInsert: IStudentInput[] = rows.slice(3).map(row => ({
             code: Number(row[3]),
             lastName: String(row[4]),
             firstName: String(row[5]),
@@ -98,11 +98,11 @@ export const createAllResults = async (req: Request, res: Response) => {
 
         const results = await StudentResult.insertMany(resultsToInsert);
 
-        const updateStatsStatus = await updateStats();
-        const updateStatsByRepublicStatus = await updateStatsByRepublic();
+        await detectDevelopingStudents();
 
         res.status(201).json({ message: "Şagirdin nəticələri uğurla yaradıldı!", results, studentsWithoutTeacher });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: "Şagirdlərin nəticələrinin yaradılmasında xəta!", error });
     }
 }
