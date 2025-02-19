@@ -10,6 +10,8 @@ import examRoutes from "./routes/exam.routes";
 import studentRoutes from "./routes/student.routes";
 import studentResultRoutes from "./routes/studentResult.routes";
 import statRoutes from "./routes/stat.routes";
+import authRoutes from "./routes/auth.routes";
+import cookieParser from "cookie-parser";
 
 dontenv.config();
 connectDB();
@@ -19,6 +21,7 @@ const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express());
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
     res.send("API is running!");
@@ -37,6 +40,7 @@ app.use("/api/exams", examRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/student-results", studentResultRoutes);
 app.use("/api/stats", statRoutes);
+app.use("/auth", authRoutes)
 
 app.use((req, res, next) => {
     res.status(404).json({ message: 'Məlumat tapılmadı' });
