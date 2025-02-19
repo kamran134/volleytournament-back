@@ -5,7 +5,7 @@ import { authMiddleware } from "../middleware/auth.middleware";
 const router = express.Router();
 
 router.post("/login", login);
-router.post("/register", authMiddleware(["superadmin"]), register);
+router.post("/register", register);
 router.post("/approve/:id", authMiddleware(["superadmin"]), approveUser);
 router.post("/logout", logout);
 

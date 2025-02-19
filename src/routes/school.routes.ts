@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { createAllSchools, createSchool, getSchools, getSchoolsForFilter } from "../controllers/school.controller";
+import { createAllSchools, createSchool, deleteSchool, deleteSchoolsByIds, getSchools, getSchoolsForFilter } from "../controllers/school.controller";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
@@ -8,5 +8,7 @@ const upload = multer({ dest: "uploads/" });
 router.route("/").get(getSchools).post(createSchool);
 router.route("/filter").get(getSchoolsForFilter);
 router.route("/upload").post(upload.single("file"), createAllSchools);
+router.route("/:id").delete(deleteSchool);
+router.route("/delete/:schoolIds").delete(deleteSchoolsByIds);
 
 export default router;

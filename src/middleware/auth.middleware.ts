@@ -18,6 +18,7 @@ declare global {
 export const authMiddleware = (roles: string[]) => (req: Request, res: Response, next: NextFunction) => {
     const token = req.cookies.token;
 
+    // console.log('req: ', req);
     console.log('Cookies: ', req.cookies);
 
     if (!token) {

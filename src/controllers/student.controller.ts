@@ -88,15 +88,42 @@ export const deleteAllStudents = async (req: Request, res: Response) => {
         res.status(200).json(result);
     } catch (error) {
         res.status(500).json(error);
+        console.error(error);
     }
 }
 
 export const deleteStudent = async (req: Request, res: Response) => {
     try {
+        const studentResults = await StudentResult.deleteMany({ student: req.params.id });
         const result = await Student.findByIdAndDelete(req.params.id);
-        res.status(200).json(result);
+        res.status(200).json({ result, studentResults });
     }
     catch (error) {
         res.status(500).json(error);
+        console.error(error);
+    }
+}
+
+export const deleteStudentsByIds = async (req: Request, res: Response) => {
+    try {
+        const { studentIds } = req.params;
+        if (studentIds.length === 0) {
+            res.status(400).json({ message: "Şagirdlər seçilməyib" });
+            return;
+        }
+        const studentIdsArr = studentIds.split(",");
+
+        const deletedStudentResults = await StudentResult.deleteMany({ student: { $in: studentIdsArr } });
+        const deletedStudents = await Student.deleteMany({ _id: { $in: studentIdsArr } });
+
+        if (deletedStudents.deletedCount === 0) {
+            res.status(404).json({ message: "Silinmək üçün seçilən şagirdlər bazada tapılmadı" });
+            return;
+        }
+
+        res.status(200).json({ message: `${deletedStudents.deletedCount} şagird və ${deletedStudentResults.deletedCount} onların nəticələri bazadan silindi!` });
+    } catch (error) {
+        res.status(500).json(error);
+        console.error(error);
     }
 }

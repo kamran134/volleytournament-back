@@ -176,3 +176,37 @@ export const createAllTeachers = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Müəllimlərin yaradılmasında xəta!", error });
     }
 }
+
+export const deleteTeacher = async (req: Request, res: Response) => {
+    try {
+        const result = await Teacher.findByIdAndDelete(req.params.id);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        res.status(500).json(error);
+        console.error(error);
+    }
+}
+
+export const deleteTeachersByIds = async (req: Request, res: Response) => {
+    try {
+        const { teacherIds } = req.params;
+        if (teacherIds.length === 0) {
+            res.status(400).json({ message: "Müəllimlər seçilməyib" });
+            return;
+        }
+        const teacherIdsArr = teacherIds.split(",");
+
+        const deletedStudents = await Teacher.deleteMany({ _id: { $in: teacherIdsArr } });
+
+        if (deletedStudents.deletedCount === 0) {
+            res.status(404).json({ message: "Silinmək üçün seçilən müəllimlər bazada tapılmadı" });
+            return;
+        }
+
+        res.status(200).json({ message: `${deletedStudents.deletedCount} müəllim bazadan silindi!` });
+    } catch (error) {
+        res.status(500).json(error);
+        console.error(error);
+    }
+}

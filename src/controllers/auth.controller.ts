@@ -12,6 +12,10 @@ const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
+    console.log('i am here');
+    console.log("Отправленный Set-Cookie:", res.getHeaders()['set-cookie']);
+    console.log('Login request body:', req.body);
+
     try {
         const user = await User.findOne({ email });
 
@@ -37,8 +41,9 @@ export const login = async (req: Request, res: Response) => {
             //secure: process.env.NODE_ENV === "production",
             sameSite: "strict"
         });
+        
 
-        res.json({ message: "Uğurlu avtorizasiya", role: user.role });
+        res.json({ message: "Uğurlu avtorizasiya", role: user.role, token });
     } catch (error) {
         res.status(500).json({ message: "Serverdə xəta!" });
         console.error(error);

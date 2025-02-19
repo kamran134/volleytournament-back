@@ -166,5 +166,36 @@ export const createAllSchools = async (req: Request, res: Response) => {
 }
 
 export const deleteSchool = async (req: Request, res: Response) => {
+    try {
+        const result = await School.findByIdAndDelete(req.params.id);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        res.status(500).json(error);
+        console.error(error);
+    }
+}
 
+export const deleteSchoolsByIds = async (req: Request, res: Response) => {
+    try {
+        const { schoolIds } = req.params;
+        if (schoolIds.length === 0) {
+            res.status(400).json({ message: "Məktəblər seçilməyib" });
+            return;
+        }
+        const schoolIdsArr = schoolIds.split(",");
+        // console.log(schoolIdsArr);
+        // const deletedStudents = {deletedCount: 0};
+        const deletedStudents = await School.deleteMany({ _id: { $in: schoolIdsArr } });
+
+        if (deletedStudents.deletedCount === 0) {
+            res.status(404).json({ message: "Silinmək üçün seçilən məktəblər bazada tapılmadı" });
+            return;
+        }
+
+        res.status(200).json({ message: `${deletedStudents.deletedCount} məktəb bazadan silindi!` });
+    } catch (error) {
+        res.status(500).json(error);
+        console.error(error);
+    }
 }

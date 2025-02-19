@@ -20,7 +20,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({
-    origin: 'http://157.230.29.19',
+    origin: ['http://localhost:4200', 'http://157.230.29.19'],
     credentials: true
 }));
 app.use(express());
