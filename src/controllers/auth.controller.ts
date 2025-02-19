@@ -16,7 +16,7 @@ export const login = async (req: Request, res: Response) => {
         const user = await User.findOne({ email });
 
         if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
-            res.status(400).json({ message: "Yalnış məlumatlar!" });
+            res.status(400).json({ message: "Yanlış məlumatlar!" });
             return;
         }
 
