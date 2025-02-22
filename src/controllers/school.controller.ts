@@ -1,12 +1,9 @@
 import { Request, Response } from "express";
-import xlsx from "xlsx";
-import School, { ISchool, ISchoolInput } from "../models/school.model";
+import School, { ISchoolInput } from "../models/school.model";
 import District from "../models/district.model";
 import mongoose from "mongoose";
-import fs from "fs";
-import path from "path";
 import { deleteFile } from "../services/file.service";
-import { checkExistingSchoolCodes, checkExistingSchools } from "../services/school.service";
+import { checkExistingSchoolCodes } from "../services/school.service";
 import { checkExistingDistricts } from "../services/district.service";
 import { readExcel } from "../services/excel.service";
 
@@ -106,7 +103,7 @@ export const createAllSchools = async (req: Request, res: Response) => {
 
         // прочли и присвоили модели
         const dataToInsert: ISchoolInput[] = rows.slice(4).map(row => ({
-            districtCode: Number(row[1]) | 0,
+            districtCode: Number(row[1]) || 0,
             code: Number(row[2]),
             name: String(row[3]),
             address: ''
@@ -130,17 +127,32 @@ export const createAllSchools = async (req: Request, res: Response) => {
             return map;
         }, {} as Record<string, string>);
 
-        const schoolsToSave = newSchools.filter(item => item.code > 0 && item.districtCode > 0).map(item => ({
-            name: item.name,
-            address: item.address,
-            code: item.code,
-            districtCode: item.districtCode,
-            district: districtMap[item.districtCode]
+        const schoolsToSave = newSchools.filter(
+            item =>
+                item.code > 0 && 
+                !missingDistrictCodes.includes(item.districtCode) && 
+                !schoolCodesWithoutDistrictCodes.includes(item.code)
+        ).map(
+            item => ({
+                name: item.name,
+                address: item.address,
+                code: item.code,
+                districtCode: item.districtCode,
+                district: districtMap[item.districtCode]
         }));
 
         // Remove the uploaded file
         deleteFile(req.file.path);
         
+        if (schoolsToSave.length === 0) {
+            res.status(201).json({
+                message: "Bütün məktəblər bazada var!",
+                missingDistrictCodes,
+                schoolCodesWithoutDistrictCodes
+            });
+            return;
+        }
+
         const results = await School.collection.bulkWrite(
             schoolsToSave.map(school => ({
                 updateOne: {
@@ -158,8 +170,8 @@ export const createAllSchools = async (req: Request, res: Response) => {
         res.status(201).json({
             message: "Fayl uğurla yükləndi!",
             details: `Yeni məktəblər: ${numCreated}\nYenilənən məktəblər: ${numUpdated}`,
-            schoolCodesWithoutDistrictCodes,
-            missingDistrictCodes
+            missingDistrictCodes,
+            schoolCodesWithoutDistrictCodes
         });
     } catch (error) {
         console.error(error);

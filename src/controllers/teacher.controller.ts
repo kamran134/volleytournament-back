@@ -110,7 +110,7 @@ export const createAllTeachers = async (req: Request, res: Response) => {
         }
 
         const dataToInsert: ITeacherInput[] = rows.slice(4).map(row => ({
-            schoolCode: Number(row[2]) | 0,
+            schoolCode: Number(row[2]) || 0,
             code: Number(row[3]),
             fullname: String(row[4])
         }));
@@ -132,14 +132,29 @@ export const createAllTeachers = async (req: Request, res: Response) => {
             return map;
         }, {} as Record<string, string>);
 
-        const teachersToSave = newTeachers.filter(item => item.code > 0 && item.schoolCode > 0).map(item => ({
-            school: schoolMap[item.schoolCode],
-            code: item.code,
-            fullname: item.fullname
+        const teachersToSave = newTeachers.filter(
+            item =>
+                item.code > 0 && 
+                !missingSchoolCodes.includes(item.schoolCode) &&
+                !teacherCodesWithoutSchoolCodes.includes(item.code)
+            ).map(
+                item => ({
+                    school: schoolMap[item.schoolCode],
+                    code: item.code,
+                    fullname: item.fullname
         }));
 
         // Remove the uploaded file
         deleteFile(req.file.path);
+
+        if (teachersToSave.length === 0) {
+            res.status(201).json({
+                message: "Bütün müəllimlər bazada var!",
+                missingSchoolCodes,
+                teacherCodesWithoutSchoolCodes
+            });
+            return;
+        }
 
         const results = await Teacher.collection.bulkWrite(
             teachersToSave.map(teacher => ({
@@ -157,8 +172,8 @@ export const createAllTeachers = async (req: Request, res: Response) => {
         res.status(201).json({
             message: "Fayl uğurla yükləndi!",
             details: `Yeni müəllimlər: ${numCreated}\nYenilənən müəllimlər: ${numUpdated}`,
-            teacherCodesWithoutSchoolCodes,
-            missingSchoolCodes
+            missingSchoolCodes,
+            teacherCodesWithoutSchoolCodes
         });
     } catch (error) {
         res.status(500).json({ message: "Müəllimlərin yaradılmasında xəta!", error });

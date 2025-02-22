@@ -84,8 +84,6 @@ export const createAllResults = async (req: Request, res: Response) => {
 
         const results = await StudentResult.insertMany(resultsToInsert);
 
-        // await detectDevelopingStudents();
-
         res.status(201).json({
             message: "Şagirdin nəticələri uğurla yaradıldı!",
             results,
@@ -127,7 +125,7 @@ export const deleteResults = async (req: Request, res: Response) => {
 
         res.status(200).json({ 
             message: "İmtahan nəticələri uğurla silindi!", 
-            deletedCount: deletedResults.deletedCount 
+            totalCount: deletedResults.deletedCount 
         });
     } catch (error) {
         res.status(500).json({ message: "İmtahan nəticələrini silərkən xəta baş verdi!", error });

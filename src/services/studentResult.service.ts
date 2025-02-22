@@ -6,7 +6,7 @@ import { getExamsByMonthYear } from "./exam.service";
 import { assignTeacherToStudent } from "./student.service";
 
 export const processStudentResults = async (studentDataToInsert: IStudentInput[]): 
-    Promise<{students: IStudent[], studentsWithoutTeacher: IStudentInput[]}> => {
+    Promise<{students: IStudent[], studentsWithoutTeacher: number[]}> => {
     try {
         const studentCodes: number[] = studentDataToInsert.map(item => item.code);
         const existingStudents: IStudent[] = await Student.find({ code: { $in: studentCodes } });
@@ -18,7 +18,7 @@ export const processStudentResults = async (studentDataToInsert: IStudentInput[]
         }));
 
         const studentsWithTeacher: IStudentInput[] = newStudents.filter(student => student.teacher);
-        const studentsWithoutTeacher: IStudentInput[] = newStudents.filter(student => !student.teacher);
+        const studentsWithoutTeacher: number[] = newStudents.filter(student => !student.teacher).map(student => student.code);
         
         const newStudentsIds = await Student.insertMany(studentsWithTeacher);
         const allStudents: IStudent[] = existingStudents.concat(newStudentsIds);
