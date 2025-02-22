@@ -109,9 +109,13 @@ export const createAllSchools = async (req: Request, res: Response) => {
             address: ''
         }));
 
+        // Выявляем и отсеиваем некорректных учителей
+        const correctSchoolsToInsert = dataToInsert.filter(data => data.code > 9999);
+        const incorrectSchoolCodes = dataToInsert.filter(data => data.code <= 9999).map(data => data.code);
+
         // Сначала отсеиваем школы, которые уже есть
-        const existingSchoolCodes: number[] = await checkExistingSchoolCodes(dataToInsert.map(data => data.code));
-        const newSchools: ISchoolInput[] = dataToInsert.filter(data => !existingSchoolCodes.includes(data.code));
+        const existingSchoolCodes: number[] = await checkExistingSchoolCodes(correctSchoolsToInsert.map(data => data.code));
+        const newSchools: ISchoolInput[] = correctSchoolsToInsert.filter(data => !existingSchoolCodes.includes(data.code));
 
         // Отделяем те строки, где не был указан код района, их выведем в конце на фронт
         const districtCodes = newSchools.filter(item => item.districtCode > 0).map(item => item.districtCode);
@@ -148,7 +152,8 @@ export const createAllSchools = async (req: Request, res: Response) => {
             res.status(201).json({
                 message: "Bütün məktəblər bazada var!",
                 missingDistrictCodes,
-                schoolCodesWithoutDistrictCodes
+                schoolCodesWithoutDistrictCodes,
+                incorrectSchoolCodes
             });
             return;
         }

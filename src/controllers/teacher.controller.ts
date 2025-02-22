@@ -115,9 +115,13 @@ export const createAllTeachers = async (req: Request, res: Response) => {
             fullname: String(row[4])
         }));
 
+        // Выявляем и отсеиваем некорректных учителей
+        const correctTeachersToInsert = dataToInsert.filter(data => data.code > 999999);
+        const incorrectTeacherCodes = dataToInsert.filter(data => data.code <= 999999).map(data => data.code);
+
         // Сначала отсеиваем учителей, которые уже есть
-        const existingTeacherCodes: number[] = await checkExistingTeacherCodes(dataToInsert.map(data => data.code));
-        const newTeachers: ITeacherInput[] = dataToInsert.filter(data => !existingTeacherCodes.includes(data.code));
+        const existingTeacherCodes: number[] = await checkExistingTeacherCodes(correctTeachersToInsert.map(data => data.code));
+        const newTeachers: ITeacherInput[] = correctTeachersToInsert.filter(data => !existingTeacherCodes.includes(data.code));
 
         const schoolCodes = newTeachers.filter(item => item.schoolCode > 0).map(item => item.schoolCode);
         const teacherCodesWithoutSchoolCodes = newTeachers.filter(item => item.schoolCode === 0).map(item => item.code);
@@ -151,7 +155,8 @@ export const createAllTeachers = async (req: Request, res: Response) => {
             res.status(201).json({
                 message: "Bütün müəllimlər bazada var!",
                 missingSchoolCodes,
-                teacherCodesWithoutSchoolCodes
+                teacherCodesWithoutSchoolCodes,
+                incorrectTeacherCodes
             });
             return;
         }

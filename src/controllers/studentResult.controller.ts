@@ -59,7 +59,10 @@ export const createAllResults = async (req: Request, res: Response) => {
             grade: Number(row[2]),
         }));
 
-        const {students, studentsWithoutTeacher} = await processStudentResults(studentDataToInsert);
+        const correctStudentDataToInsert = studentDataToInsert.filter(data => data.code > 999999999);
+        const incorrectStudentCodes = studentDataToInsert.filter(data => data.code <= 999999999).map(data => data.code);
+
+        const {students, studentsWithoutTeacher} = await processStudentResults(correctStudentDataToInsert);
 
         // нужны только те студенты, которые есть в базе
         const filtredResults = resultReadedData.filter(result => students.map(student => student.code).includes(result.studentCode));
@@ -87,7 +90,8 @@ export const createAllResults = async (req: Request, res: Response) => {
         res.status(201).json({
             message: "Şagirdin nəticələri uğurla yaradıldı!",
             results,
-            studentsWithoutTeacher
+            studentsWithoutTeacher,
+            incorrectStudentCodes
         });
     } catch (error) {
         console.error(error);
