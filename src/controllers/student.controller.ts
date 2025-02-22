@@ -17,17 +17,27 @@ export const getStudents = async (req: Request, res: Response) => {
         const teacherIds: Types.ObjectId[] = req.query.teacherIds
             ? (req.query.teacherIds as string).split(',').map(id => new Types.ObjectId(id))
             : [];
+        const defective: boolean = req.query.defective?.toString().toLowerCase() === 'true';
 
         const filter: any = {};
 
-        if (districtIds.length > 0 && schoolIds.length == 0) {
-            filter.district = { $in: districtIds };
+        if (defective) {
+            filter.$or = [
+                { teacher: null },
+                { school: null },
+                { district: null },
+            ];
         }
-        else if (schoolIds.length > 0 && teacherIds.length == 0) {
-            filter.school = { $in: schoolIds };
-        }
-        else if (teacherIds.length > 0) {
-            filter.teacher = { $in: teacherIds };
+        else {
+            if (districtIds.length > 0 && schoolIds.length == 0) {
+                filter.district = { $in: districtIds };
+            }
+            else if (schoolIds.length > 0 && teacherIds.length == 0) {
+                filter.school = { $in: schoolIds };
+            }
+            else if (teacherIds.length > 0) {
+                filter.teacher = { $in: teacherIds };
+            }
         }
 
         const [data, totalCount] = await Promise.all([
