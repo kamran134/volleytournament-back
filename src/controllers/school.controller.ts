@@ -1,10 +1,14 @@
 import { Request, Response } from "express";
 import xlsx from "xlsx";
-import School, { ISchoolInput } from "../models/school.model";
+import School, { ISchool, ISchoolInput } from "../models/school.model";
 import District from "../models/district.model";
 import mongoose from "mongoose";
 import fs from "fs";
 import path from "path";
+import { deleteFile } from "../services/file.service";
+import { checkExistingSchoolCodes, checkExistingSchools } from "../services/school.service";
+import { checkExistingDistricts } from "../services/district.service";
+import { readExcel } from "../services/excel.service";
 
 export const getSchools = async (req: Request, res: Response) => {
     try {
@@ -92,27 +96,32 @@ export const createAllSchools = async (req: Request, res: Response) => {
             return;
         }
 
-        const workbook = xlsx.readFile(req.file.path);
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-
-        const rows: any[] = xlsx.utils.sheet_to_json(sheet, { header: 1 });
-
+        const rows: any[] = readExcel(req.file.path);
+        
         if (rows.length < 5) {
             console.warn('Not enough rows');
             res.status(400).json({ message: "Faylda kifayət qədər sətr yoxdur!" });
             return;
         }
 
+        // прочли и присвоили модели
         const dataToInsert: ISchoolInput[] = rows.slice(4).map(row => ({
-            districtCode: Number(row[1]),
+            districtCode: Number(row[1]) | 0,
             code: Number(row[2]),
             name: String(row[3]),
             address: ''
         }));
 
-        const districtCodes = dataToInsert.filter(item => item.districtCode > 0).map(item => item.districtCode);
-        const existingDistricts = await District.find({ code: { $in: districtCodes } });
+        // Сначала отсеиваем школы, которые уже есть
+        const existingSchoolCodes: number[] = await checkExistingSchoolCodes(dataToInsert.map(data => data.code));
+        const newSchools: ISchoolInput[] = dataToInsert.filter(data => !existingSchoolCodes.includes(data.code));
+
+        // Отделяем те строки, где не был указан код района, их выведем в конце на фронт
+        const districtCodes = newSchools.filter(item => item.districtCode > 0).map(item => item.districtCode);
+        const schoolCodesWithoutDistrictCodes = newSchools.filter(item => item.districtCode === 0).map(item => item.code);
+
+        // Проверяем все ли указанные районы существуют у нас в базе
+        const existingDistricts = await checkExistingDistricts(districtCodes);
         const existingDistrictCodes = existingDistricts.map(d => d.code);
         const missingDistrictCodes = districtCodes.filter(code => !existingDistrictCodes.includes(code!));
 
@@ -121,7 +130,7 @@ export const createAllSchools = async (req: Request, res: Response) => {
             return map;
         }, {} as Record<string, string>);
 
-        const schoolsToSave = dataToInsert.filter(item => item.code > 0 && item.districtCode > 0).map(item => ({
+        const schoolsToSave = newSchools.filter(item => item.code > 0 && item.districtCode > 0).map(item => ({
             name: item.name,
             address: item.address,
             code: item.code,
@@ -130,17 +139,8 @@ export const createAllSchools = async (req: Request, res: Response) => {
         }));
 
         // Remove the uploaded file
-        const filePath = path.join(__dirname, `../../${req.file.path}`);
-
-        fs.unlink(filePath, (err) => {
-            if (err) {
-                console.error(`Fayl silinən zamanı xəta baş verdi: ${err.message}`);
-            } else {
-                console.log(`Fayl ${filePath} uğurla silindi.`);
-            }
-        });
+        deleteFile(req.file.path);
         
-        // res.status(201).json({ message: "Fayl uğurla yükləndi!", savedSchools });
         const results = await School.collection.bulkWrite(
             schoolsToSave.map(school => ({
                 updateOne: {
@@ -154,9 +154,11 @@ export const createAllSchools = async (req: Request, res: Response) => {
         // Analyze results for success and failures
         const numCreated = results.upsertedCount;
         const numUpdated = results.modifiedCount;
+
         res.status(201).json({
             message: "Fayl uğurla yükləndi!",
             details: `Yeni məktəblər: ${numCreated}\nYenilənən məktəblər: ${numUpdated}`,
+            schoolCodesWithoutDistrictCodes,
             missingDistrictCodes
         });
     } catch (error) {

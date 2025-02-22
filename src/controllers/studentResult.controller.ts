@@ -1,14 +1,11 @@
 import { Request, Response } from "express";
 import xlsx from "xlsx";
-import Student, { IStudent, IStudentInput } from "../models/student.model";
-import Teacher, { ITeacher } from "../models/teacher.model";
-import School from "../models/school.model";
-import District from "../models/district.model";
+import Student, { IStudentInput } from "../models/student.model";
 import StudentResult, { IStudentResultFileInput, IStudentResultInput } from "../models/studentResult.model";
-import { Error, Types } from "mongoose";
-import fs from "fs";
-import path from "path";
-import { detectDevelopingStudents } from "./stat.controller";
+import { Types } from "mongoose";
+import { deleteFile } from "../services/file.service";
+import { detectDevelopingStudents, processStudentResults } from "../services/studentResult.service";
+import { readExcel } from "../services/excel.service";
 
 export const getStudentResults = async (req: Request, res: Response) => {
     try {
@@ -32,10 +29,7 @@ export const createAllResults = async (req: Request, res: Response) => {
             return;
         }
 
-        const workbook = xlsx.readFile(req.file.path);
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const rows: any[] = xlsx.utils.sheet_to_json(sheet, { header: 1 });
+        const rows: any[] = readExcel(req.file.path);
 
         if (rows.length < 2) {
             res.status(400).json({ message: "Faylda kifayət qədər sətr yoxdur!" });
@@ -86,68 +80,20 @@ export const createAllResults = async (req: Request, res: Response) => {
         }));
 
         // Remove the uploaded file
-        const filePath = path.join(__dirname, `../../${req.file.path}`);
-
-        fs.unlink(filePath, (err) => {
-            if (err) {
-                console.error(`Fayl silinən zamanı xəta baş verdi: ${err.message}`);
-            } else {
-                console.log(`Fayl ${filePath} uğurla silindi.`);
-            }
-        });
+        deleteFile(req.file.path);
 
         const results = await StudentResult.insertMany(resultsToInsert);
 
-        await detectDevelopingStudents();
+        // await detectDevelopingStudents();
 
-        res.status(201).json({ message: "Şagirdin nəticələri uğurla yaradıldı!", results, studentsWithoutTeacher });
+        res.status(201).json({
+            message: "Şagirdin nəticələri uğurla yaradıldı!",
+            results,
+            studentsWithoutTeacher
+        });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Şagirdlərin nəticələrinin yaradılmasında xəta!", error });
-    }
-}
-
-export const processStudentResults = async (studentDataToInsert: IStudentInput[]): 
-    Promise<{students: IStudent[], studentsWithoutTeacher: IStudentInput[]}> => {
-    try {
-        const studentCodes: number[] = studentDataToInsert.map(item => item.code);
-        const existingStudents: IStudent[] = await Student.find({ code: { $in: studentCodes } });
-        const newStudents = studentDataToInsert.filter(student => !existingStudents.map(d => d.code).includes(student.code));
-
-        // Assign teacher to student
-        await Promise.all(newStudents.map(async (student) => {
-            await assignTeacherToStudent(student);
-        }));
-
-        const studentsWithTeacher: IStudentInput[] = newStudents.filter(student => student.teacher);
-        const studentsWithoutTeacher: IStudentInput[] = newStudents.filter(student => !student.teacher);
-        
-        const newStudentsIds = await Student.insertMany(studentsWithTeacher);
-        const allStudents: IStudent[] = existingStudents.concat(newStudentsIds);
-        return {students: allStudents, studentsWithoutTeacher};
-    } catch (error) {
-        throw error;
-    }
-}
-
-const assignTeacherToStudent = async (student: IStudentInput) => {
-    try {
-        const teacher = await Teacher.findOne({ code: Math.floor(student.code / 1000) }) as ITeacher;
-        if (teacher) {
-            student.teacher = teacher._id as Types.ObjectId;
-            const studentSchool = await School.findById(teacher.school);
-            if (studentSchool) {
-                student.school = studentSchool._id as Types.ObjectId;
-                const studentDistrict = await District.findById(studentSchool.district);
-                if (studentDistrict) {
-                    student.district = studentDistrict._id as Types.ObjectId;
-                }
-            }
-        } else {
-            console.log(`Uğursuz: ${student.code}`);
-        }
-    } catch (error) {
-        console.error(`Xəta: ${error}`);
     }
 }
 

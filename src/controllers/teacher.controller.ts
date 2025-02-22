@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
-import xlsx from "xlsx";
 import Teacher, { ITeacherInput } from "../models/teacher.model";
 import School from "../models/school.model";
 import { Types } from "mongoose";
-import fs from "fs";
-import path from "path";
+import { readExcel } from "../services/excel.service";
+import { checkExistingTeacherCodes } from "../services/teacher.service";
+import { checkExistingSchools } from "../services/school.service";
+import { deleteFile } from "../services/file.service";
 
 export const getTeachers = async (req: Request, res: Response) => {
     try {
@@ -100,11 +101,7 @@ export const createAllTeachers = async (req: Request, res: Response) => {
             return;
         }
 
-        const workbook = xlsx.readFile(req.file.path);
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-
-        const rows: any[] = xlsx.utils.sheet_to_json(sheet, { header: 1 });
+        const rows: any[] = readExcel(req.file.path);
 
         if (rows.length < 5) {
             console.warn('Not enough rows');
@@ -113,46 +110,36 @@ export const createAllTeachers = async (req: Request, res: Response) => {
         }
 
         const dataToInsert: ITeacherInput[] = rows.slice(4).map(row => ({
-            schoolCode: Number(row[2]),
+            schoolCode: Number(row[2]) | 0,
             code: Number(row[3]),
             fullname: String(row[4])
         }));
 
-        const schoolCodes = dataToInsert.filter(item => item.schoolCode > 0).map(item => item.schoolCode);
-        const existingSchools = await School.find({ code: { $in: schoolCodes } });
+        // Сначала отсеиваем учителей, которые уже есть
+        const existingTeacherCodes: number[] = await checkExistingTeacherCodes(dataToInsert.map(data => data.code));
+        const newTeachers: ITeacherInput[] = dataToInsert.filter(data => !existingTeacherCodes.includes(data.code));
+
+        const schoolCodes = newTeachers.filter(item => item.schoolCode > 0).map(item => item.schoolCode);
+        const teacherCodesWithoutSchoolCodes = newTeachers.filter(item => item.schoolCode === 0).map(item => item.code);
+        
+        // Проверяем все ли указанные школы существуют у нас в базе
+        const existingSchools = await checkExistingSchools(schoolCodes);
         const existingSchoolCodes = existingSchools.map(d => d.code);
         const missingSchoolCodes = schoolCodes.filter(code => !existingSchoolCodes.includes(code));
-
-        // if (missingSchoolCodes.length > 0) {
-        //     console.error('missing codes: ', JSON.stringify(missingSchoolCodes));
-        //     res.status(400).json({
-        //         message: "Bəzi məktəb kodları tapılmadı!",
-        //         missingSchoolCodes
-        //     });
-        //     return;
-        // }
 
         const schoolMap = existingSchools.reduce((map, school) => {
             map[school.code] = String(school._id);
             return map;
         }, {} as Record<string, string>);
 
-        const teachersToSave = dataToInsert.filter(item => item.code > 0 && item.schoolCode > 0).map(item => ({
+        const teachersToSave = newTeachers.filter(item => item.code > 0 && item.schoolCode > 0).map(item => ({
             school: schoolMap[item.schoolCode],
             code: item.code,
             fullname: item.fullname
         }));
 
         // Remove the uploaded file
-        const filePath = path.join(__dirname, `../../${req.file.path}`);
-
-        fs.unlink(filePath, (err) => {
-            if (err) {
-                console.error(`Fayl silinən zamanı xəta baş verdi: ${err.message}`);
-            } else {
-                console.log(`Fayl ${filePath} uğurla silindi.`);
-            }
-        });
+        deleteFile(req.file.path);
 
         const results = await Teacher.collection.bulkWrite(
             teachersToSave.map(teacher => ({
@@ -166,12 +153,13 @@ export const createAllTeachers = async (req: Request, res: Response) => {
 
         const numCreated = results.upsertedCount;
         const numUpdated = results.modifiedCount;
+
         res.status(201).json({
             message: "Fayl uğurla yükləndi!",
             details: `Yeni müəllimlər: ${numCreated}\nYenilənən müəllimlər: ${numUpdated}`,
+            teacherCodesWithoutSchoolCodes,
             missingSchoolCodes
         });
-
     } catch (error) {
         res.status(500).json({ message: "Müəllimlərin yaradılmasında xəta!", error });
     }
