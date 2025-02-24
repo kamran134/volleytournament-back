@@ -1,4 +1,8 @@
 import Exam, { IExam } from "../models/exam.model";
+import District from "../models/district.model";
+import School from "../models/school.model";
+import Teacher from "../models/teacher.model";
+import { IStudent } from "../models/student.model";
 import StudentResult from "../models/studentResult.model";
 import { markDevelopingStudents, markTopStudents, markTopStudentsRepublic } from "./studentResult.service";
 
@@ -56,5 +60,48 @@ export const updateStats = async (): Promise<number> => {
         return 200;
     } catch (error) {
         throw error;
+    }
+}
+
+export const calculateAndSaveScores = async () => {
+    try {
+        const results = await StudentResult.find().populate('student');
+        
+        const districtScores = new Map<string, number>();
+        const schoolScores = new Map<string, number>();
+        const teacherScores = new Map<string, number>();
+
+        for (const result of results) {
+            const student = result.student as IStudent;
+            if (!student) continue;
+
+            const { district, school, teacher } = student;
+            const score = result.totalScore;
+            
+            if (district) {
+                districtScores.set(district.toString(), (districtScores.get(district.toString()) || 0) + score);
+            }
+            if (school) {
+                schoolScores.set(school.toString(), (schoolScores.get(school.toString()) || 0) + score);
+            }
+            if (teacher) {
+                teacherScores.set(teacher.toString(), (teacherScores.get(teacher.toString()) || 0) + score);
+            }
+        }
+
+        // Обновление данных в базе
+        for (const [districtId, score] of districtScores) {
+            await District.findByIdAndUpdate(districtId, { score }, { new: true });
+        }
+        for (const [schoolId, score] of schoolScores) {
+            await School.findByIdAndUpdate(schoolId, { score }, { new: true });
+        }
+        for (const [teacherId, score] of teacherScores) {
+            await Teacher.findByIdAndUpdate(teacherId, { score }, { new: true });
+        }
+
+        console.log('Scores updated successfully');
+    } catch (error) {
+        console.error('Error updating scores:', error);
     }
 }
