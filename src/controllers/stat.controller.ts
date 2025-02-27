@@ -6,7 +6,7 @@ import { calculateAndSaveScores, updateStats } from "../services/stats.service";
 export const updateStatistics = async (req: Request, res: Response) => {
     try {
         const status = await updateStats();
-        await calculateAndSaveScores();
+        
         if (status === 404) {
             res.status(404).json({ message: "404: Nəticələr tapılmadı!" });
             return;

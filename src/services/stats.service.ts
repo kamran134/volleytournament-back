@@ -53,10 +53,12 @@ export const updateStats = async (): Promise<number> => {
             //await markDevelopingStudents(month, year);
             await markTopStudents(month, year);
             await markTopStudentsRepublic(month, year);
-            
         }
 
         console.log("✅ Обработка всех месяцев завершена.");
+
+        await calculateAndSaveScores();
+
         return 200;
     } catch (error) {
         throw error;
@@ -67,41 +69,71 @@ export const calculateAndSaveScores = async () => {
     try {
         const results = await StudentResult.find().populate('student');
         
-        const districtScores = new Map<string, number>();
-        const schoolScores = new Map<string, number>();
-        const teacherScores = new Map<string, number>();
+        const districtScores = new Map<string, number[]>();
+        const schoolScores = new Map<string, number[]>();
+        const teacherScores = new Map<string, number[]>();
 
         for (const result of results) {
             const student = result.student as IStudent;
             if (!student) continue;
 
             const { district, school, teacher } = student;
-            const score = result.totalScore;
-            
+            const score = result.score;
+
             if (district) {
-                districtScores.set(district.toString(), (districtScores.get(district.toString()) || 0) + score);
+                if (!districtScores.has(district.toString())) {
+                    districtScores.set(district.toString(), []);
+                }
+                districtScores.get(district.toString())!.push(score);
             }
             if (school) {
-                schoolScores.set(school.toString(), (schoolScores.get(school.toString()) || 0) + score);
+                if (!schoolScores.has(school.toString())) {
+                    schoolScores.set(school.toString(), []);
+                }
+                schoolScores.get(school.toString())!.push(score);
             }
             if (teacher) {
-                teacherScores.set(teacher.toString(), (teacherScores.get(teacher.toString()) || 0) + score);
+                if (!teacherScores.has(teacher.toString())) {
+                    teacherScores.set(teacher.toString(), []);
+                }
+                teacherScores.get(teacher.toString())!.push(score);
             }
         }
 
         // Обновление данных в базе
-        for (const [districtId, score] of districtScores) {
-            await District.findByIdAndUpdate(districtId, { score }, { new: true });
-        }
-        for (const [schoolId, score] of schoolScores) {
-            await School.findByIdAndUpdate(schoolId, { score }, { new: true });
-        }
-        for (const [teacherId, score] of teacherScores) {
-            await Teacher.findByIdAndUpdate(teacherId, { score }, { new: true });
-        }
+        await Promise.all([
+            ...[...districtScores.entries()].map(([districtId, scores]) => {
+                const totalScore = scores.reduce((acc, item) => acc + item, 0);
+                return District.findByIdAndUpdate(districtId, {
+                    score: totalScore,
+                    averageScore: totalScore / scores.length
+                }, { new: true });
+            }),
+            ...[...schoolScores.entries()].map(([schoolId, scores]) => {
+                const totalScore = scores.reduce((acc, item) => acc + item, 0);
+                return School.findByIdAndUpdate(schoolId, {
+                    score: totalScore,
+                    averageScore: totalScore / scores.length
+                }, { new: true });
+            }),
+            ...[...teacherScores.entries()].map(([teacherId, scores]) => {
+                const totalScore = scores.reduce((acc, item) => acc + item, 0);
+                return Teacher.findByIdAndUpdate(teacherId, {
+                    score: totalScore,
+                    averageScore: totalScore / scores.length
+                }, { new: true });
+            })
+        ]);                
 
         console.log('Scores updated successfully');
     } catch (error) {
         console.error('Error updating scores:', error);
     }
+}
+
+const groupBy = (arr: any[], key: string) => {
+    return arr.reduce((acc, item) => {
+        (acc[item[key]] = acc[item[key]] || []).push(item);
+        return acc;
+    }, {});
 }

@@ -1,10 +1,9 @@
 import { Request, Response } from "express";
-import xlsx from "xlsx";
 import Student, { IStudentInput } from "../models/student.model";
 import StudentResult, { IStudentResultFileInput, IStudentResultInput } from "../models/studentResult.model";
 import { Types } from "mongoose";
 import { deleteFile } from "../services/file.service";
-import { detectDevelopingStudents, processStudentResults } from "../services/studentResult.service";
+import { processStudentResults } from "../services/studentResult.service";
 import { readExcel } from "../services/excel.service";
 
 export const getStudentResults = async (req: Request, res: Response) => {

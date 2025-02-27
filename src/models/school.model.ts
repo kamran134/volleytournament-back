@@ -24,6 +24,7 @@ const SchoolSchema: Schema = new Schema({
     districtCode: { type: Number, required: true },
     district: { type: String, ref: 'District' },
     score: { type: Number, required: false },
+    averageScore: { type: Number, required: false },
     status: { type: String, required: false },
 });
 

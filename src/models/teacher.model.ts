@@ -19,6 +19,7 @@ const TeacherSchema: Schema = new Schema({
     code: { type: Number, required: true, unique: true},
     fullname: { type: String, required: true },
     score: { type: Number, required: false },
+    averageScore: { type: Number, required: false },
     status: { type: String, required: false },
 });
 
