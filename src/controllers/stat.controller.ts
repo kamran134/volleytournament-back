@@ -1,7 +1,9 @@
 import { Request, Response } from "express";
 import StudentResult, { IStudentResult } from "../models/studentResult.model";
 import Exam from "../models/exam.model";
-import { calculateAndSaveScores, updateStats } from "../services/stats.service";
+import Teacher from "../models/teacher.model";
+import School from "../models/school.model";
+import { updateStats } from "../services/stats.service";
 
 export const updateStatistics = async (req: Request, res: Response) => {
     try {
@@ -72,5 +74,36 @@ export const getStatisticsByExam = async (req: Request, res: Response) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Statistikanın alınmasında xəta", error });
+    }
+}
+
+export const getTeacherStatistics = async (req: Request, res: Response) => {
+    try {
+        // просто берём учителей из базы, тех, у кого есть score и averageScore по убыванию averageScore
+        const teachers = await Teacher
+            .find({ score: { $exists: true }, averageScore: { $exists: true } })
+            .populate("school")
+            .populate({ path: "school", populate: { path: "district", model: "District" } })
+            .sort({ averageScore: -1 });
+
+        res.status(200).json({ teachers });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Müəllimlərin statistikasının alınmasında xəta", error });
+    }
+}
+
+export const getSchoolStatistics = async (req: Request, res: Response) => {
+    try {
+        // просто берём школы из базы, тех, у кого есть score и averageScore по убыванию averageScore
+        const schools = await School
+            .find({ score: { $exists: true }, averageScore: { $exists: true } })
+            .populate("district")
+            .sort({ averageScore: -1 });
+
+        res.status(200).json({ schools });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Məktəblərin statistikasının alınmasında xəta", error });
     }
 }
