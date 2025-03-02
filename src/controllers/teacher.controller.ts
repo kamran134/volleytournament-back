@@ -3,42 +3,13 @@ import Teacher, { ITeacherInput } from "../models/teacher.model";
 import School from "../models/school.model";
 import { Types } from "mongoose";
 import { readExcel } from "../services/excel.service";
-import { checkExistingTeacherCodes } from "../services/teacher.service";
+import { checkExistingTeacherCodes, getFiltredTeachers } from "../services/teacher.service";
 import { checkExistingSchools } from "../services/school.service";
 import { deleteFile } from "../services/file.service";
 
 export const getTeachers = async (req: Request, res: Response) => {
     try {
-        const page: number = parseInt(req.query.page as string) || 1;
-        const size: number = parseInt(req.query.size as string) || 10;
-        const skip: number = (page - 1) * size;
-        const districtIds: Types.ObjectId[] = req.query.districtIds
-            ? (req.query.districtIds as string).split(',').map(id => new Types.ObjectId(id))
-            : [];
-        const schoolIds: Types.ObjectId[] = req.query.schoolIds
-            ? (req.query.schoolIds as string).split(',').map(id => new Types.ObjectId(id))
-            : [];
-
-        const filter: any = {};
-
-        if (districtIds.length > 0 && schoolIds.length == 0) {
-            const districtSchoolIds = await School.find({ district: { $in: districtIds } }).select("_id");
-            filter.school = { $in: districtSchoolIds.map(s => s._id) };
-        }
-        else if (schoolIds.length > 0) {
-            filter.school = { $in: schoolIds };
-        }
-        
-        const [data, totalCount] = await Promise.all([
-            Teacher.find(filter)
-                .populate({
-                    path: 'school',
-                    populate: { path: 'district' }
-                })
-                .skip(skip)
-                .limit(size),
-            Teacher.countDocuments(filter)
-        ]);
+        const { data, totalCount } = await getFiltredTeachers(req);
         
         res.status(200).json({ data, totalCount });
     } catch (error) {

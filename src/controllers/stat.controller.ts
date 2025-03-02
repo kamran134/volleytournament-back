@@ -4,6 +4,8 @@ import Exam from "../models/exam.model";
 import Teacher from "../models/teacher.model";
 import School from "../models/school.model";
 import { updateStats } from "../services/stats.service";
+import { Types } from "mongoose";
+import { getFiltredStudents } from "../services/student.service";
 
 export const updateStatistics = async (req: Request, res: Response) => {
     try {
@@ -20,9 +22,10 @@ export const updateStatistics = async (req: Request, res: Response) => {
     }
 }
 
-export const getStatistics = async (req: Request, res: Response) => {
+export const getStudentsStatistics = async (req: Request, res: Response) => {
     try {
         const { month } = req.query;
+        
         if (!month) {
             res.status(400).json({ message: "Ay seçilməyib!" });
             return;
@@ -36,7 +39,20 @@ export const getStatistics = async (req: Request, res: Response) => {
 
         const examsInMonth = await Exam.find({ date: { $gte: startDate, $lt: endDate } }).select('_id');
 
-        const studentResults: IStudentResult[] = await StudentResult.find({exam: { $in: examsInMonth.map(e => e._id) }})
+        let filter: any = { exam: { $in: examsInMonth.map(e => e._id) } };
+
+        if (req.query.districtIds) {
+            const filtredStudentsData = await getFiltredStudents(req);
+            if (filtredStudentsData.totalCount > 0) {
+                filter.student = { $in: filtredStudentsData.data.map(s => s._id) };
+            }
+            else {
+                res.status(404).json({ message: "Nəticə tapılmadı!" });
+                return;
+            }
+        }
+        
+        const studentResults: IStudentResult[] = await StudentResult.find(filter)
             .populate("exam")
             .populate({ path: "student", populate: [
                 { path: "district", model: "District" },
@@ -79,9 +95,26 @@ export const getStatisticsByExam = async (req: Request, res: Response) => {
 
 export const getTeacherStatistics = async (req: Request, res: Response) => {
     try {
+        const districtIds: Types.ObjectId[] = req.query.districtIds
+            ? (req.query.districtIds as string).split(',').map(id => new Types.ObjectId(id))
+            : [];
+        const schoolIds: Types.ObjectId[] = req.query.schoolIds
+            ? (req.query.schoolIds as string).split(',').map(id => new Types.ObjectId(id))
+            : [];
+
+        const filter: any = { score: { $exists: true }, averageScore: { $exists: true } };
+
+        if (districtIds.length > 0 && schoolIds.length == 0) {
+            const districtSchoolIds = await School.find({ district: { $in: districtIds } }).select("_id");
+            filter.school = { $in: districtSchoolIds.map(s => s._id) };
+        }
+        else if (schoolIds.length > 0) {
+            filter.school = { $in: schoolIds };
+        }
+        
         // просто берём учителей из базы, тех, у кого есть score и averageScore по убыванию averageScore
         const teachers = await Teacher
-            .find({ score: { $exists: true }, averageScore: { $exists: true } })
+            .find(filter)
             .populate("school")
             .populate({ path: "school", populate: { path: "district", model: "District" } })
             .sort({ averageScore: -1 });

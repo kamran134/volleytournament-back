@@ -1,17 +1,15 @@
 import { Request, Response } from "express";
-import District, { IDistrict } from "../models/district.model";
+import District from "../models/district.model";
+import { checkExistingDistrict } from "../services/district.service";
 
 export const getDistricts = async (req: Request, res: Response) => {
     try {
         const [data, totalCount] = await Promise.all([
-            District.find(),
+            District.find().sort({ name: 1}),
             District.countDocuments()
         ]);
 
         res.status(200).json({ data, totalCount });
-
-        // const districts = await District.find();
-        // res.status(200).json(districts);
     } catch (error) {
         res.status(500).json({ message: "Rayonların alınmasında xəta", error });
     }
@@ -21,7 +19,7 @@ export const createDistrict = async (req: Request, res: Response) => {
     try {
         const { name, region, code } = req.body;
         const district = new District({ name, region, code });
-        const checkDistrictToExist = await checkExisting(district);
+        const checkDistrictToExist = await checkExistingDistrict(district);
 
         if (!checkDistrictToExist) {
             const savedDistrict = await district.save();
@@ -34,16 +32,6 @@ export const createDistrict = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Rayonun yaradılmasında xəta!", error });
     }
 };
-
-const checkExisting = async (district: IDistrict): Promise<boolean> => {
-    try {
-        const foundedDistrict = await District.find({ code: district.code });
-        return foundedDistrict.length > 0;
-    } catch (error) {
-        console.error(error);
-        return true;
-    }
-}
 
 export const createAllDistricts = async (req: Request, res: Response) => {
     try {
