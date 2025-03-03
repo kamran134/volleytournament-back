@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
-import Student, { IStudent, IStudentDetails } from "../models/student.model";
+import Student from "../models/student.model";
 import StudentResult, { IStudentResult } from "../models/studentResult.model";
-import { Types } from "mongoose";
 import { getFiltredStudents } from "../services/student.service";
 
 export const getStudents = async (req: Request, res: Response) => {

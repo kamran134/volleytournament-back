@@ -15,6 +15,8 @@ export interface ISchool extends Document {
     districtCode: number;
     district: IDistrict;
     score: number;
+    averageScore: number;
+    status: string;
 }
 
 const SchoolSchema: Schema = new Schema({

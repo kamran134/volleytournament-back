@@ -20,7 +20,8 @@ export const processStudentResults = async (studentDataToInsert: IStudentInput[]
         const studentsWithTeacher: IStudentInput[] = newStudents.filter(student => student.teacher);
         const studentsWithoutTeacher: number[] = newStudents.filter(student => !student.teacher).map(student => student.code);
         
-        const newStudentsIds = await Student.insertMany(studentsWithTeacher);
+        const newStudentsDocs = await Student.insertMany(studentsWithTeacher);
+        const newStudentsIds: IStudent[] = newStudentsDocs.map(doc => doc.toObject() as IStudent);
         const allStudents: IStudent[] = existingStudents.concat(newStudentsIds);
         return {students: allStudents, studentsWithoutTeacher};
     } catch (error) {

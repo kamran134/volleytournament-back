@@ -5,10 +5,14 @@ import Teacher from "../models/teacher.model";
 import { IStudent } from "../models/student.model";
 import StudentResult from "../models/studentResult.model";
 import { markDevelopingStudents, markTopStudents, markTopStudentsRepublic } from "./studentResult.service";
+import { countDistrictsRates } from "./district.service";
+import { Types } from "mongoose";
 
 export const resetStats = async (): Promise<void> => {
     try {
+        console.log("🔄 Сброс статистики...");
         await StudentResult.updateMany({ status: "", score: 1 });
+        console.log("✅ Статистика сброшена.");
     } catch (error) {
         console.error(error);
     }
@@ -18,6 +22,7 @@ export const updateStats = async (): Promise<number> => {
     try {
         // Сначала сбрасываем всю статистику
         await resetStats();
+        await countDistrictsRates();
         
         // Получаем все даты экзаменов (только поле date)
         const exams: IExam[] = await Exam.find({}, { date: 1 });
@@ -67,11 +72,21 @@ export const updateStats = async (): Promise<number> => {
 
 export const calculateAndSaveScores = async () => {
     try {
-        const results = await StudentResult.find().populate('student');
-        
-        const districtScores = new Map<string, number[]>();
-        const schoolScores = new Map<string, number[]>();
-        const teacherScores = new Map<string, number[]>();
+        console.log("🔄 Обновление баллов..."); 
+        // Загружаем результаты вместе со студентами, их школами, районами и учителями
+         const results = await StudentResult.find().populate({
+            path: 'student',
+            populate: [
+                { path: 'district' },
+                { path: 'school', populate: { path: 'district' } },
+                { path: 'teacher', populate: { path: 'school' } }
+            ]
+        });
+
+        // Создаём мапы для хранения сумм баллов
+        const districtScores = new Map<string, number>();
+        const schoolScores = new Map<string, number>();
+        const teacherScores = new Map<string, number>();
 
         for (const result of results) {
             const student = result.student as IStudent;
@@ -80,60 +95,70 @@ export const calculateAndSaveScores = async () => {
             const { district, school, teacher } = student;
             const score = result.score;
 
-            if (district) {
-                if (!districtScores.has(district.toString())) {
-                    districtScores.set(district.toString(), []);
-                }
-                districtScores.get(district.toString())!.push(score);
+            if (district && '_id' in district) {
+                const districtId = (district as { _id: Types.ObjectId })._id.toString();
+                districtScores.set(
+                    districtId,
+                    (districtScores.get(districtId) || 0) + score
+                );
             }
-            if (school) {
-                if (!schoolScores.has(school.toString())) {
-                    schoolScores.set(school.toString(), []);
-                }
-                schoolScores.get(school.toString())!.push(score);
+            if (school && '_id' in school) {
+                const schoolId = (school as { _id: Types.ObjectId })._id.toString();
+                schoolScores.set(
+                    schoolId,
+                    (schoolScores.get(schoolId) || 0) + score
+                );
             }
-            if (teacher) {
-                if (!teacherScores.has(teacher.toString())) {
-                    teacherScores.set(teacher.toString(), []);
-                }
-                teacherScores.get(teacher.toString())!.push(score);
+            if (teacher && '_id' in teacher) {
+                const teacherId = (teacher as { _id: Types.ObjectId })._id.toString();
+                teacherScores.set(
+                    teacherId,
+                    (teacherScores.get(teacherId) || 0) + score
+                );
             }
         }
 
-        // Обновление данных в базе
-        await Promise.all([
-            ...[...districtScores.entries()].map(([districtId, scores]) => {
-                const totalScore = scores.reduce((acc, item) => acc + item, 0);
-                return District.findByIdAndUpdate(districtId, {
-                    score: totalScore,
-                    averageScore: totalScore / scores.length
-                }, { new: true });
-            }),
-            ...[...schoolScores.entries()].map(([schoolId, scores]) => {
-                const totalScore = scores.reduce((acc, item) => acc + item, 0);
-                return School.findByIdAndUpdate(schoolId, {
-                    score: totalScore,
-                    averageScore: totalScore / scores.length
-                }, { new: true });
-            }),
-            ...[...teacherScores.entries()].map(([teacherId, scores]) => {
-                const totalScore = scores.reduce((acc, item) => acc + item, 0);
-                return Teacher.findByIdAndUpdate(teacherId, {
-                    score: totalScore,
-                    averageScore: totalScore / scores.length
-                }, { new: true });
-            })
-        ]);                
+        console.log("🔄 Обновление среднего балла районов, школ и учителей...");
 
-        console.log('Scores updated successfully');
+        // Загружаем районы с их rate
+        const districts: { _id: Types.ObjectId; rate: number }[] = await District.find();
+        const districtRates = new Map(districts.map(d => [d._id.toString(), d.rate || 1]));
+
+        // Обновляем данные в базе
+        // Обновляем баллы для районов
+        for (const [districtId, score] of districtScores.entries()) {
+            const rate = districtRates.get(districtId) || 1;
+            await District.findByIdAndUpdate(districtId, {
+                score,
+                averageScore: score / rate
+            });
+        }
+
+        // Обновляем баллы для школ
+        for (const [schoolId, score] of schoolScores.entries()) {
+            const school = results.find(r => (r.student.school?._id || '').toString() === schoolId)?.student.school;
+            const districtId = (school?.district?._id || '').toString();
+            const rate = districtRates.get(districtId || '') || 1;
+            await School.findByIdAndUpdate(schoolId, {
+                score,
+                averageScore: score / rate
+            });
+        }
+
+        // Обновляем баллы для учителей
+        for (const [teacherId, score] of teacherScores.entries()) {
+            const teacher = results.find(r => (r.student.teacher?._id || '').toString() === teacherId)?.student.teacher;
+            const districtId = teacher?.school?.district.toString();
+            const rate = districtRates.get(districtId || '') || 1;
+            // console.log('teacher', teacher, 'score:', score, 'rate:', rate);
+            await Teacher.findByIdAndUpdate(teacherId, {
+                score,
+                averageScore: score / rate
+            });
+        }
+
+        console.log("✅ Баллы обновлены.");
     } catch (error) {
         console.error('Error updating scores:', error);
     }
-}
-
-const groupBy = (arr: any[], key: string) => {
-    return arr.reduce((acc, item) => {
-        (acc[item[key]] = acc[item[key]] || []).push(item);
-        return acc;
-    }, {});
 }

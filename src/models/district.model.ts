@@ -5,6 +5,8 @@ export interface IDistrict extends Document {
     region: string;
     name: string;
     score: number;
+    averageScore: number;
+    rate: number;
 }
 
 const DistrictSchema: Schema = new Schema({
@@ -12,7 +14,8 @@ const DistrictSchema: Schema = new Schema({
     region: { type: String, required: false },
     name: { type: String, required: true },
     score: { type: Number, required: false },
-    averageScore: { type: Number, required: false }
+    averageScore: { type: Number, required: false },
+    rate: { type: Number, required: false }
 });
 
 export default mongoose.model<IDistrict>("District", DistrictSchema);

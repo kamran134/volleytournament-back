@@ -3,6 +3,7 @@ import StudentResult, { IStudentResult } from "../models/studentResult.model";
 import Exam from "../models/exam.model";
 import Teacher from "../models/teacher.model";
 import School from "../models/school.model";
+import District from "../models/district.model";
 import { updateStats } from "../services/stats.service";
 import { Types } from "mongoose";
 import { getFiltredStudents } from "../services/student.service";
@@ -129,8 +130,18 @@ export const getTeacherStatistics = async (req: Request, res: Response) => {
 export const getSchoolStatistics = async (req: Request, res: Response) => {
     try {
         // просто берём школы из базы, тех, у кого есть score и averageScore по убыванию averageScore
+        const districtIds: Types.ObjectId[] = req.query.districtIds
+            ? (req.query.districtIds as string).split(',').map(id => new Types.ObjectId(id))
+            : [];
+
+        const filter: any = { score: { $exists: true }, averageScore: { $exists: true } };
+
+        if (districtIds.length > 0) {
+            filter.district = { $in: districtIds };
+        }
+
         const schools = await School
-            .find({ score: { $exists: true }, averageScore: { $exists: true } })
+            .find(filter)
             .populate("district")
             .sort({ averageScore: -1 });
 
@@ -138,5 +149,19 @@ export const getSchoolStatistics = async (req: Request, res: Response) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Məktəblərin statistikasının alınmasında xəta", error });
+    }
+}
+
+export const getDistrictStatistics = async (req: Request, res: Response) => {
+    try {
+        // просто берём районы из базы, тех, у кого есть score и averageScore по убыванию averageScore
+        const districts = await District
+            .find({ score: { $exists: true }, averageScore: { $exists: true } })
+            .sort({ averageScore: -1 });
+
+        res.status(200).json({ districts });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Rayonların statistikasının alınmasında xəta", error });
     }
 }

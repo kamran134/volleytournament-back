@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
 import { ITeacher } from "./teacher.model";
 import { ISchool } from "./school.model";
 import { IDistrict } from "./district.model";
@@ -21,24 +21,24 @@ export interface IStudent extends Document {
     firstName: string;
     middleName: string;
     grade: number; // sinif
-    teacher?: mongoose.Types.ObjectId;
-    school?: mongoose.Types.ObjectId;
-    district?: mongoose.Types.ObjectId;
+    teacher: ITeacher;
+    school?: ISchool;
+    district?: IDistrict;
     score: number;
     maxLevel: number;
     status: string;
 }
 
-export interface IStudentDetails extends Document {
+export interface IStudentMini extends Document {
     _id: mongoose.Types.ObjectId;
     code: number;
     lastName: string;
     firstName: string;
     middleName: string;
     grade: number;
-    teacher: ITeacher;
-    school: ISchool;
-    district: IDistrict;
+    teacher: Types.ObjectId;
+    school: Types.ObjectId;
+    district: Types.ObjectId;
     score: number;
     status: string;
     results: IStudentResult[];

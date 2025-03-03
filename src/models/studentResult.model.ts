@@ -43,6 +43,22 @@ export interface IStudentResult extends Document {
     status?: string;
 }
 
+export interface IStudentResultDetails extends Document {
+    student: IStudent;
+    exam: IExam;
+    grade: number;
+    disciplines: {
+        az: number;
+        math: number;
+        lifeKnowledge: number;
+        logic: number;
+    };
+    totalScore: number;
+    level: string;
+    score: number;
+    status?: string;
+}
+
 export interface IStudentResultsGrouped {
     student: IStudent;
     results: IStudentResult[];
