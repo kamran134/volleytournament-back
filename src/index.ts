@@ -12,6 +12,9 @@ import studentResultRoutes from "./routes/studentResult.routes";
 import statRoutes from "./routes/stat.routes";
 import authRoutes from "./routes/auth.routes";
 import cookieParser from "cookie-parser";
+import morgan from "morgan";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 dontenv.config();
 connectDB();
@@ -19,22 +22,28 @@ connectDB();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Middleware
+app.use(helmet());
+app.use(morgan("dev"));
 app.use(cors({
     origin: ['http://localhost:4200', 'http://157.230.29.19'],
     credentials: true
 }));
-app.use(express());
+app.use(express.json());
 app.use(cookieParser());
+
+// Limit requests
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 минут
+    max: 100 // Ограничивает 100 запросов с одного IP за 15 минут
+});
+app.use(limiter);
 
 app.get("/", (req, res) => {
     res.send("API is running!");
 });
 
-// Middleware для JSON
-app.use(express.json()); // Добавляет поддержку application/json
-// Или (если используете body-parser)
-// app.use(bodyParser.json());
-
+// Routes
 app.use("/api/districts", districtRoutes);
 app.use("/api/schools", schoolRoutes);
 app.use("/api/teachers", teacherRoutes);

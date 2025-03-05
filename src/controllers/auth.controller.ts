@@ -12,10 +12,6 @@ const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 export const login = async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
-    console.log('i am here');
-    console.log("Отправленный Set-Cookie:", res.getHeaders()['set-cookie']);
-    console.log('Login request body:', req.body);
-
     try {
         const user = await User.findOne({ email });
 
@@ -25,7 +21,7 @@ export const login = async (req: Request, res: Response) => {
         }
 
         if (!user?.isApproved) {
-            res.status(403).json({ message: "Adminin təstiqi mütləqdir!" });
+            res.status(403).json({ message: "Adminin təsdiqi mütləqdir!" });
             return;
         }
 
@@ -39,7 +35,8 @@ export const login = async (req: Request, res: Response) => {
             httpOnly: true,
             secure: false,
             //secure: process.env.NODE_ENV === "production",
-            sameSite: "strict"
+            sameSite: "strict",
+            path: "/"
         });
         
 

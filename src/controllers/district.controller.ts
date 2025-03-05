@@ -49,3 +49,18 @@ export const createAllDistricts = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Rayonların yaradılmasında xəta", error })
     }
 }
+
+export const deleteDistrict = async (req: Request, res: Response) => {
+    try {
+        const result = await District.findByIdAndDelete(req.params.id);
+
+        console.log('id: ', req.params.id);
+
+        if (!result) {
+            res.status(404).json({ message: "Rayon tapılmadı" });
+        }
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json(error);
+    }
+}
