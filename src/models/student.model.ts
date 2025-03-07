@@ -10,9 +10,9 @@ export interface IStudentInput {
     firstName: string;
     middleName: string;
     grade: number;
-    teacher?: mongoose.Types.ObjectId;
-    school?: mongoose.Types.ObjectId;
-    district?: mongoose.Types.ObjectId;
+    teacher?: Types.ObjectId;
+    school?: Types.ObjectId;
+    district?: Types.ObjectId;
 }
 
 export interface IStudent extends Document {
@@ -30,7 +30,6 @@ export interface IStudent extends Document {
 }
 
 export interface IStudentMini extends Document {
-    _id: mongoose.Types.ObjectId;
     code: number;
     lastName: string;
     firstName: string;

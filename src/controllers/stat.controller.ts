@@ -7,6 +7,7 @@ import District from "../models/district.model";
 import { updateStats } from "../services/stats.service";
 import { Types } from "mongoose";
 import { getFiltredStudents } from "../services/student.service";
+import { IStudent } from "../models/student.model";
 
 export const updateStatistics = async (req: Request, res: Response) => {
     try {

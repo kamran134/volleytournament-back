@@ -78,9 +78,7 @@ export const getFiltredStudents = async (req: Request): Promise<{ data: IStudent
 
         const [data, totalCount] = await Promise.all([
             Student.find(filter)
-                .populate('teacher')
-                .populate('school')
-                .populate('district')
+                .populate('district school teacher')
                 .sort({ code: 1 })
                 .skip(skip)
                 .limit(size),
