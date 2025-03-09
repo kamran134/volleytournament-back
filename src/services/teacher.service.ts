@@ -37,21 +37,20 @@ export const getFiltredTeachers = async (req: Request): Promise<{ data: ITeacher
                 : [];
     
             const filter: any = {};
-    
+
             if (districtIds.length > 0 && schoolIds.length == 0) {
-                const districtSchoolIds = await School.find({ district: { $in: districtIds } }).select("_id");
-                filter.school = { $in: districtSchoolIds.map(s => s._id) };
+                filter.district = { $in: districtIds }
             }
-            else if (schoolIds.length > 0) {
+            if (schoolIds.length > 0) {
                 filter.school = { $in: schoolIds };
             }
             
+            
+            console.log('filter', filter);
+
             const [data, totalCount] = await Promise.all([
                 Teacher.find(filter)
-                    .populate({
-                        path: 'school',
-                        populate: { path: 'district' }
-                    })
+                    .populate('district school')
                     .skip(skip)
                     .limit(size),
                 Teacher.countDocuments(filter)

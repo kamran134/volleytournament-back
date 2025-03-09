@@ -187,8 +187,6 @@ export const repairStudents = async (req: Request, res: Response) => {
     try {
         const students = await Student.find().populate('district school teacher');
 
-        console.log('I am here');
-
         const studentsWithoutDistrict: string[] = [];
         const studentsWithoutSchool: string[] = [];
         const studentsWithoutTeacher: string[] = [];

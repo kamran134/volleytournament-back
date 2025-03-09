@@ -36,7 +36,7 @@ export const createAllResults = async (req: Request, res: Response) => {
         }
 
         const resultReadedData: IStudentResultFileInput[] = rows.slice(3).map(row => ({
-            examId: new Types.ObjectId(examId),
+            examId: examId as Types.ObjectId,
             grade: Number(row[2]),
             studentCode: Number(row[3]),
             lastName: String(row[4]),
@@ -84,7 +84,16 @@ export const createAllResults = async (req: Request, res: Response) => {
         // Remove the uploaded file
         deleteFile(req.file.path);
 
-        const results = await StudentResult.insertMany(resultsToInsert);
+        // const results = await StudentResult.insertMany(resultsToInsert);
+        const bulkOps = resultsToInsert.map(result => ({
+            updateOne: {
+                filter: { student: result.student, exam: result.exam },
+                update: { $set: result },
+                upsert: true // Если записи нет – создаст новую
+            }
+        }));
+        
+        const results = await StudentResult.bulkWrite(bulkOps);
 
         res.status(201).json({
             message: "Şagirdin nəticələri uğurla yaradıldı!",

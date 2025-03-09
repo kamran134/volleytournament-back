@@ -36,7 +36,7 @@ export const countDistrictsRates = async (): Promise<void> => {
     try {
         console.log("🔄 Подсчёт коэффициентов районов...");
 
-        const studentResults = await StudentResult.find().populate("student").populate("exam");
+        const studentResults = await StudentResult.find().populate("student exam");
 
         const districtCounts = new Map<string, number>();
         const examDistrictIds = new Set<string>();

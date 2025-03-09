@@ -150,7 +150,6 @@ export const calculateAndSaveScores = async () => {
             const teacher = results.find(r => (r.student.teacher?._id || '').toString() === teacherId)?.student.teacher;
             const districtId = teacher?.school?.district.toString();
             const rate = districtRates.get(districtId || '') || 1;
-            // console.log('teacher', teacher, 'score:', score, 'rate:', rate);
             await Teacher.findByIdAndUpdate(teacherId, {
                 score,
                 averageScore: score / rate

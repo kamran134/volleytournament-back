@@ -1,15 +1,18 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
 import { ISchool } from "./school.model";
+import { IDistrict } from "./district.model";
 
 export interface ITeacherInput {
+    districtCode: number;
     schoolCode: number;
     code: number;
     fullname: string;
 }
 
 export interface ITeacher extends Document {
-    school: ISchool;
     code: number;
+    district: IDistrict;
+    school: ISchool;
     fullname: string;
     score: number;
     averageScore: number;
@@ -17,8 +20,9 @@ export interface ITeacher extends Document {
 }
 
 const TeacherSchema: Schema = new Schema({
-    school: { type: String, ref: 'School' },
     code: { type: Number, required: true, unique: true},
+    district: { type: Types.ObjectId, ref: 'District' },
+    school: { type: Types.ObjectId, ref: 'School' },
     fullname: { type: String, required: true },
     score: { type: Number, required: false },
     averageScore: { type: Number, required: false },

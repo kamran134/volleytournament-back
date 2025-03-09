@@ -41,6 +41,8 @@ export interface IStudentResult extends Document {
     level: string;
     score: number;
     status?: string;
+    month: number;
+    year: number;
 }
 
 export interface IStudentResultDetails extends Document {
@@ -57,6 +59,8 @@ export interface IStudentResultDetails extends Document {
     level: string;
     score: number;
     status?: string;
+    month: number;
+    year: number;
 }
 
 export interface IStudentResultsGrouped {
@@ -77,7 +81,9 @@ const StudentResultSchema: Schema = new Schema({
     totalScore: { type: Number, required: true },
     score: { type: Number, required: true },
     level: { type: String, required: true },
-    status: { type: String, required: false }
+    status: { type: String, required: false },
+    month: { type: Number, required: true },
+    year: { type: Number, required: true }
 });
 
 StudentResultSchema.index({ student: 1, exam: 1 }, { unique: true });
