@@ -44,13 +44,11 @@ export const getFiltredTeachers = async (req: Request): Promise<{ data: ITeacher
             if (schoolIds.length > 0) {
                 filter.school = { $in: schoolIds };
             }
-            
-            
-            console.log('filter', filter);
 
             const [data, totalCount] = await Promise.all([
                 Teacher.find(filter)
                     .populate('district school')
+                    .sort({ averageScore: -1 })
                     .skip(skip)
                     .limit(size),
                 Teacher.countDocuments(filter)

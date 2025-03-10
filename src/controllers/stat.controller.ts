@@ -106,13 +106,14 @@ export const getTeacherStatistics = async (req: Request, res: Response) => {
 
         const filter: any = { score: { $exists: true }, averageScore: { $exists: true } };
 
-        if (districtIds.length > 0 && schoolIds.length == 0) {
-            const districtSchoolIds = await School.find({ district: { $in: districtIds } }).select("_id");
-            filter.school = { $in: districtSchoolIds.map(s => s._id) };
+        if (districtIds.length > 0) {
+            filter.district = { $in: districtIds };
         }
-        else if (schoolIds.length > 0) {
+        if (schoolIds.length > 0) {
             filter.school = { $in: schoolIds };
         }
+
+        console.log('filter', filter);
         
         // просто берём учителей из базы, тех, у кого есть score и averageScore по убыванию averageScore
         const teachers = await Teacher
