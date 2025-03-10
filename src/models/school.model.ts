@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
 import { IDistrict } from "./district.model";
 
 export interface ISchoolInput {
@@ -24,7 +24,7 @@ const SchoolSchema: Schema = new Schema({
     address: { type: String, required: false },
     code: { type: Number, required: true, unique: true },
     districtCode: { type: Number, required: true },
-    district: { type: String, ref: 'District' },
+    district: { type: Types.ObjectId, ref: 'District' },
     score: { type: Number, required: false },
     averageScore: { type: Number, required: false },
     status: { type: String, required: false },

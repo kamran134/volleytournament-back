@@ -25,7 +25,7 @@ export const getSchools = async (req: Request, res: Response) => {
         const [data, totalCount] = await Promise.all([
             School.find(filter)
                 .populate('district')
-                .sort({ code: 1 })
+                .sort({ averageScore: -1 })
                 .skip(skip)
                 .limit(size),
             School.countDocuments(filter)
@@ -48,11 +48,10 @@ export const getSchoolsForFilter = async (req: Request, res: Response) => {
         if (districtIds.length > 0) {
             filter.district = { $in: districtIds };
         }
-        
+
         const [data, totalCount] = await Promise.all([
             School.find(filter)
-                .populate('district')
-                .sort({ code: 1 }),
+                .sort({ name: 1 }),
             School.countDocuments(filter)
         ]);
 
@@ -216,5 +215,47 @@ export const deleteSchoolsByIds = async (req: Request, res: Response) => {
     } catch (error) {
         res.status(500).json(error);
         console.error(error);
+    }
+}
+
+export const repairSchools = async (req: Request, res: Response) => {
+    try {
+        const schools = await School.find().populate('district');
+
+        const schoolsWithoutDistrict: string[] = [];
+        const repairedSchools: string[] = [];
+
+        for (let school of schools) {
+            const schoolCode: string = school.code.toString();
+            if (schoolCode.length !== 5) continue;
+
+            let isUpdated = false;
+
+            if (!school.district) {
+                const districtCode = schoolCode.substring(0, 3);
+                const district = await District.findOne({ code: districtCode });
+
+                if (district) {
+                    school.district = district;
+                    isUpdated = true;
+                } else {
+                    schoolsWithoutDistrict.push(school.code.toString());
+                }
+            }
+
+            if (isUpdated) {
+                await school.save();
+                repairedSchools.push(school.code.toString());
+            }
+        }
+
+        res.status(200).json({
+            message: "Məktəblərin məlumatları yeniləndi",
+            repairedSchools,
+            schoolsWithoutDistrict,
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Müəllimlərin alınmasında xəta", error });
     }
 }

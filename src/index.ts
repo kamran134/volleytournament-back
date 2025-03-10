@@ -35,7 +35,7 @@ app.use(cookieParser());
 // Limit requests
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 минут
-    max: 100 // Ограничивает 100 запросов с одного IP за 15 минут
+    max: 300 // Ограничивает 100 запросов с одного IP за 15 минут
 });
 app.use(limiter);
 
