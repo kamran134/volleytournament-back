@@ -4,7 +4,7 @@ import School from "../models/school.model";
 import District from "../models/district.model";
 import { Types } from "mongoose";
 import { readExcel } from "../services/excel.service";
-import { checkExistingTeacherCodes, getFiltredTeachers } from "../services/teacher.service";
+import { checkExistingTeacherCodes, deleteTeacherById, deleteTeachersByIds, getFiltredTeachers } from "../services/teacher.service";
 import { checkExistingSchools } from "../services/school.service";
 import { deleteFile } from "../services/file.service";
 import { checkExistingDistricts } from "../services/district.service";
@@ -172,7 +172,8 @@ export const createAllTeachers = async (req: Request, res: Response) => {
 
 export const deleteTeacher = async (req: Request, res: Response) => {
     try {
-        const result = await Teacher.findByIdAndDelete(req.params.id);
+        const teacherId = req.params.id;
+        const result = await deleteTeacherById(teacherId);
         res.status(200).json(result);
     }
     catch (error) {
@@ -181,7 +182,7 @@ export const deleteTeacher = async (req: Request, res: Response) => {
     }
 }
 
-export const deleteTeachersByIds = async (req: Request, res: Response) => {
+export const deleteTeachers = async (req: Request, res: Response) => {
     try {
         const { teacherIds } = req.params;
         if (teacherIds.length === 0) {
@@ -190,14 +191,14 @@ export const deleteTeachersByIds = async (req: Request, res: Response) => {
         }
         const teacherIdsArr = teacherIds.split(",");
 
-        const deletedStudents = await Teacher.deleteMany({ _id: { $in: teacherIdsArr } });
-
-        if (deletedStudents.deletedCount === 0) {
+        const result = await deleteTeachersByIds(teacherIdsArr);
+        
+        if (result.deletedCount === 0) {
             res.status(404).json({ message: "Silinmək üçün seçilən müəllimlər bazada tapılmadı" });
             return;
         }
 
-        res.status(200).json({ message: `${deletedStudents.deletedCount} müəllim bazadan silindi!` });
+        res.status(200).json({ message: `${result.deletedCount} müəllim bazadan silindi!` });
     } catch (error) {
         res.status(500).json(error);
         console.error(error);

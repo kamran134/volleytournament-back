@@ -3,7 +3,7 @@ import School, { ISchoolInput } from "../models/school.model";
 import District from "../models/district.model";
 import mongoose from "mongoose";
 import { deleteFile } from "../services/file.service";
-import { checkExistingSchoolCodes } from "../services/school.service";
+import { checkExistingSchoolCodes, deleteSchoolById, deleteSchoolsByIds } from "../services/school.service";
 import { checkExistingDistricts } from "../services/district.service";
 import { readExcel } from "../services/excel.service";
 
@@ -185,7 +185,8 @@ export const createAllSchools = async (req: Request, res: Response) => {
 
 export const deleteSchool = async (req: Request, res: Response) => {
     try {
-        const result = await School.findByIdAndDelete(req.params.id);
+        const schoolId = req.params.id;
+        const result = await deleteSchoolById(schoolId);
         res.status(200).json(result);
     }
     catch (error) {
@@ -194,7 +195,7 @@ export const deleteSchool = async (req: Request, res: Response) => {
     }
 }
 
-export const deleteSchoolsByIds = async (req: Request, res: Response) => {
+export const deleteSchools = async (req: Request, res: Response) => {
     try {
         const { schoolIds } = req.params;
         if (schoolIds.length === 0) {
@@ -202,16 +203,14 @@ export const deleteSchoolsByIds = async (req: Request, res: Response) => {
             return;
         }
         const schoolIdsArr = schoolIds.split(",");
-        // console.log(schoolIdsArr);
-        // const deletedStudents = {deletedCount: 0};
-        const deletedStudents = await School.deleteMany({ _id: { $in: schoolIdsArr } });
+        const result = await deleteSchoolsByIds(schoolIdsArr);
 
-        if (deletedStudents.deletedCount === 0) {
+        if (result.deletedCount === 0) {
             res.status(404).json({ message: "Silinmək üçün seçilən məktəblər bazada tapılmadı" });
             return;
         }
 
-        res.status(200).json({ message: `${deletedStudents.deletedCount} məktəb bazadan silindi!` });
+        res.status(200).json({ message: `${result.deletedCount} məktəb bazadan silindi!` });
     } catch (error) {
         res.status(500).json(error);
         console.error(error);

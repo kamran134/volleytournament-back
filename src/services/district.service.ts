@@ -1,5 +1,8 @@
 import District, { IDistrict } from "../models/district.model";
+import Student from "../models/student.model";
 import StudentResult from "../models/studentResult.model";
+import School from "../models/school.model";
+import Teacher from "../models/teacher.model";
 
 export const checkExistingDistrict = async (district: IDistrict): Promise<boolean> => {
     try {
@@ -68,5 +71,20 @@ export const countDistrictsRates = async (): Promise<void> => {
     } catch (error) {
         console.error(error);
         throw new Error("Не удалось подсчитать рейтинги!");
+    }
+}
+
+export const deleteDistrictById = async (id: string) => {
+    try {
+        // последовательно удаляем сначала студентов, потом учителей, потом школы, а потом уже сам район
+        const students = await Student.find({ district: id });
+        const studentIds = students.map(student => student._id);
+        await StudentResult.deleteMany({ student: { $in: studentIds } });
+        await Student.deleteMany({ district: id });
+        await School.deleteMany({ district: id });
+        await Teacher.deleteMany({ district: id });
+        await District.findByIdAndDelete(id);
+    } catch (error) {
+        throw error;
     }
 }

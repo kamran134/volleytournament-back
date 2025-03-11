@@ -158,7 +158,6 @@ export const deleteStudents = async (req: Request, res: Response) => {
             return;
         }
         const studentIdsArr = studentIds.split(",");
-
         const { result, studentResults } = await deleteStudentsByIds(studentIdsArr);
 
         if (result && result.deletedCount === 0) {

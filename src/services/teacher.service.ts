@@ -1,7 +1,7 @@
 import { Request } from "express";
 import Teacher, { ITeacher } from "../models/teacher.model";
-import School from "../models/school.model";
-import { Types } from "mongoose";
+import { DeleteResult, Types } from "mongoose";
+import { deleteStudentsByTeacherId, deleteStudentsByTeachersIds } from "./student.service";
 
 export const checkExistingTeachers = async (codes: number[]): Promise<ITeacher[]> => {
     try {
@@ -62,11 +62,22 @@ export const getFiltredTeachers = async (req: Request): Promise<{ data: ITeacher
 
 export const deleteTeacherById = async (id: string): Promise<ITeacher | null> => {
     try {
-        
+        await deleteStudentsByTeacherId(id);
         const result = await Teacher.findByIdAndDelete(id);
         return result;
     } catch (error) {
         console.error(error);
         throw new Error("Müəllim tapılmadı!");
+    }
+}
+
+export const deleteTeachersByIds = async (ids: string[]): Promise<DeleteResult> => {
+    try {
+        await deleteStudentsByTeachersIds(ids);
+        const deletedTeachers = await Teacher.deleteMany({ _id: { $in: ids } });
+        return deletedTeachers;
+    } catch (error) {
+        console.error(error);
+        throw new Error("Müəllimlər silinə bilmədi!");
     }
 }

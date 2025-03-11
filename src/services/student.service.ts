@@ -110,3 +110,63 @@ export const deleteStudentsByIds = async (studentIds: string[]): Promise<{ resul
         throw error;
     }
 }
+
+export const deleteStudentsByTeacherId = async (teacherId: string): Promise<{ result: DeleteResult, studentResults: DeleteResult }> => {
+    try {
+        const students = await Student.find({ teacher: teacherId });
+        const studentIds = students.map(student => student._id);
+        const studentResults = await StudentResult.deleteMany({ student: { $in: studentIds } });
+        const result = await Student.deleteMany({ teacher: teacherId });
+        return { result, studentResults };
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteStudentsByTeachersIds = async (teacherIds: string[]): Promise<{ result: DeleteResult, studentResults: DeleteResult }> => {
+    try {
+        const students = await Student.find({ teacher: { $in: teacherIds } });
+        const studentIds = students.map(student => student._id);
+        const studentResults = await StudentResult.deleteMany({ student: { $in: studentIds } });
+        const result = await Student.deleteMany({ teacher: { $in: teacherIds } });
+        return { result, studentResults };
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteStudentsBySchoolId = async (schoolId: string): Promise<{ result: DeleteResult, studentResults: DeleteResult }> => {
+    try {
+        const students = await Student.find({ school: schoolId });
+        const studentIds = students.map(student => student._id);
+        const studentResults = await StudentResult.deleteMany({ student: { $in: studentIds } });
+        const result = await Student.deleteMany({ school: { $in: schoolId } });
+        return { result, studentResults };
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteStudentsBySchoolsIds = async (schoolIds: string[]): Promise<{ result: DeleteResult, studentResults: DeleteResult }> => {
+    try {
+        const students = await Student.find({ school: { $in: schoolIds } });
+        const studentIds = students.map(student => student._id);
+        const studentResults = await StudentResult.deleteMany({ student: { $in: studentIds } });
+        const result = await Student.deleteMany({ school: { $in: schoolIds } });
+        return { result, studentResults };
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteStudentsByDistrictId = async (districtId: string): Promise<{ result: DeleteResult, studentResults: DeleteResult }> => {
+    try {
+        const students = await Student.find({ district: districtId });
+        const studentIds = students.map(student => student._id);
+        const studentResults = await StudentResult.deleteMany({ student: { $in: studentIds } });
+        const result = await Student.deleteMany({ district: { $in: districtId } });
+        return { result, studentResults };
+    } catch (error) {
+        throw error;
+    }
+}
