@@ -11,6 +11,7 @@ import { Types } from "mongoose";
 export const resetStats = async (): Promise<void> => {
     try {
         console.log("🔄 Сброс статистики...");
+        await District.updateMany({ score: 0, averageScore: 0, rate: 0 });
         await StudentResult.updateMany({ status: "", score: 1 });
         console.log("✅ Статистика сброшена.");
     } catch (error) {
@@ -128,9 +129,6 @@ export const calculateAndSaveScores = async () => {
         // Обновляем баллы для районов
         for (const [districtId, score] of districtScores.entries()) {
             const rate = districtRates.get(districtId) || 1;
-
-            console.log("District ID:", districtId);
-            console.log("Score:", score);
 
             await District.findByIdAndUpdate(districtId, {
                 score,
