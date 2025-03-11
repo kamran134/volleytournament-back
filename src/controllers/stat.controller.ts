@@ -7,7 +7,6 @@ import District from "../models/district.model";
 import { updateStats } from "../services/stats.service";
 import { Types } from "mongoose";
 import { getFiltredStudents } from "../services/student.service";
-import { IStudent } from "../models/student.model";
 
 export const updateStatistics = async (req: Request, res: Response) => {
     try {
@@ -112,8 +111,6 @@ export const getTeacherStatistics = async (req: Request, res: Response) => {
         if (schoolIds.length > 0) {
             filter.school = { $in: schoolIds };
         }
-
-        console.log('filter', filter);
         
         // просто берём учителей из базы, тех, у кого есть score и averageScore по убыванию averageScore
         const teachers = await Teacher

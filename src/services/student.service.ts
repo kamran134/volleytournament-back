@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { DeleteResult, Types } from "mongoose";
 import { IStudent, IStudentInput } from "../models/student.model";
 import Teacher, { ITeacher } from "../models/teacher.model";
 import School from "../models/school.model";
@@ -6,6 +6,7 @@ import District from "../models/district.model";
 import Student from "../models/student.model";
 import StudentResult from "../models/studentResult.model";
 import { Request } from "express";
+import { deleteStudentResultsByStudentId } from "./studentResult.service";
 
 export const assignTeacherToStudent = async (student: IStudentInput) => {
     try {
@@ -86,6 +87,25 @@ export const getFiltredStudents = async (req: Request): Promise<{ data: IStudent
         ]);
 
         return { data, totalCount };
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteStudentById = async (id: string) => {
+    try {
+        await deleteStudentResultsByStudentId(id);
+        await Student.findByIdAndDelete(id);
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteStudentsByIds = async (studentIds: string[]): Promise<{ result: DeleteResult, studentResults: DeleteResult }> => {
+    try {
+        const studentResults = await StudentResult.deleteMany({ student: { $in: studentIds } });
+        const result = await Student.deleteMany({ _id: { $in: studentIds } });
+        return { result, studentResults };
     } catch (error) {
         throw error;
     }

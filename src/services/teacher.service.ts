@@ -58,4 +58,15 @@ export const getFiltredTeachers = async (req: Request): Promise<{ data: ITeacher
         } catch (error) {
             throw error;
         }
+}
+
+export const deleteTeacherById = async (id: string): Promise<ITeacher | null> => {
+    try {
+        
+        const result = await Teacher.findByIdAndDelete(id);
+        return result;
+    } catch (error) {
+        console.error(error);
+        throw new Error("Müəllim tapılmadı!");
     }
+}

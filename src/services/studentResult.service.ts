@@ -1,3 +1,4 @@
+import { DeleteResult } from "mongoose";
 import Exam from "../models/exam.model";
 import Student, { IStudent, IStudentInput } from "../models/student.model";
 import StudentResult, { IStudentResult, IStudentResultsGrouped } from "../models/studentResult.model";
@@ -239,11 +240,6 @@ export async function markTopStudentsRepublic(month: number, year: number): Prom
     // Извлекаем ID экзаменов
     const examIds = exams.map(exam => exam._id);
 
-    // await StudentResult.updateMany(
-    //     { exam: { $in: examIds } },
-    //     { $set: { status: "", score: 0 } }
-    // );
-
     // Получаем все результаты по найденным экзаменам
     const results: IStudentResult[] = await StudentResult.find({
         exam: { $in: examIds }
@@ -333,4 +329,36 @@ async function getStudentResultsGroupedByStudent(): Promise<IStudentResultsGroup
             }
         }
     ]) as IStudentResultsGrouped[];
+}
+
+export const deleteStudentResultsByExamId = async (examId: string): Promise<DeleteResult> => {
+    try {
+        return await StudentResult.deleteMany({ exam: examId });
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteStudentResultsByExams = async (examIds: string[]): Promise<DeleteResult> => {
+    try {
+        return await StudentResult.deleteMany({ exam: { $in: examIds } });
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteStudentResultsByStudentId = async (studentId: string): Promise<DeleteResult> => {
+    try {
+        return await StudentResult.deleteMany({ student: studentId });
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteStudentResultsByStudents = async (studentIds: string[]): Promise<DeleteResult> => {
+    try {
+        return await StudentResult.deleteMany({ student: { $in: studentIds } });
+    } catch (error) {
+        throw error;
+    }
 }

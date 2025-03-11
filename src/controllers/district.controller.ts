@@ -54,8 +54,6 @@ export const deleteDistrict = async (req: Request, res: Response) => {
     try {
         const result = await District.findByIdAndDelete(req.params.id);
 
-        console.log('id: ', req.params.id);
-
         if (!result) {
             res.status(404).json({ message: "Rayon tapılmadı" });
         }

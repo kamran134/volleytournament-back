@@ -128,6 +128,10 @@ export const calculateAndSaveScores = async () => {
         // Обновляем баллы для районов
         for (const [districtId, score] of districtScores.entries()) {
             const rate = districtRates.get(districtId) || 1;
+
+            console.log("District ID:", districtId);
+            console.log("Score:", score);
+
             await District.findByIdAndUpdate(districtId, {
                 score,
                 averageScore: score / rate

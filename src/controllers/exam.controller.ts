@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
-import Exam, { IExam } from "../models/exam.model";
+import Exam from "../models/exam.model";
 import StudentResult from "../models/studentResult.model";
+import { deleteStudentResultsByExamId } from "../services/studentResult.service";
 
 export const getExams = async (req: Request, res: Response) => {
     try {
@@ -55,7 +56,7 @@ export const deleteExam = async (req: Request, res: Response) => {
     try {
         const examId = req.params.id;
 
-        await StudentResult.deleteMany({ exam: examId });
+        await deleteStudentResultsByExamId(examId);
         const result = await Exam.findByIdAndDelete(req.params.id);
 
         if (!result) {

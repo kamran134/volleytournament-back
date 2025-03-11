@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
-import Student, { IStudent, IStudentInput } from "../models/student.model";
+import Student from "../models/student.model";
 import District from "../models/district.model";
 import School from "../models/school.model";
 import Teacher from "../models/teacher.model";
 import StudentResult, { IStudentResult } from "../models/studentResult.model";
-import { getFiltredStudents } from "../services/student.service";
+import { deleteStudentsByIds, getFiltredStudents } from "../services/student.service";
+import { deleteStudentResultsByStudentId } from "../services/studentResult.service";
 
 export const getStudents = async (req: Request, res: Response) => {
     try {
@@ -137,19 +138,9 @@ export const searchStudents = async (req: Request, res: Response) => {
     }
 }
 
-export const deleteAllStudents = async (req: Request, res: Response) => {
-    try {
-        const result = await Student.deleteMany();
-        res.status(200).json(result);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json(error);
-    }
-}
-
 export const deleteStudent = async (req: Request, res: Response) => {
     try {
-        const studentResults = await StudentResult.deleteMany({ student: req.params.id });
+        const studentResults = await deleteStudentResultsByStudentId(req.params.id as string);
         const result = await Student.findByIdAndDelete(req.params.id);
         res.status(200).json({ result, studentResults });
     }
@@ -159,7 +150,7 @@ export const deleteStudent = async (req: Request, res: Response) => {
     }
 }
 
-export const deleteStudentsByIds = async (req: Request, res: Response) => {
+export const deleteStudents = async (req: Request, res: Response) => {
     try {
         const { studentIds } = req.params;
         if (studentIds.length === 0) {
@@ -168,15 +159,25 @@ export const deleteStudentsByIds = async (req: Request, res: Response) => {
         }
         const studentIdsArr = studentIds.split(",");
 
-        const deletedStudentResults = await StudentResult.deleteMany({ student: { $in: studentIdsArr } });
-        const deletedStudents = await Student.deleteMany({ _id: { $in: studentIdsArr } });
+        const { result, studentResults } = await deleteStudentsByIds(studentIdsArr);
 
-        if (deletedStudents.deletedCount === 0) {
+        if (result && result.deletedCount === 0) {
             res.status(404).json({ message: "Silinmək üçün seçilən şagirdlər bazada tapılmadı" });
             return;
         }
 
-        res.status(200).json({ message: `${deletedStudents.deletedCount} şagird və ${deletedStudentResults.deletedCount} onların nəticələri bazadan silindi!` });
+        res.status(200).json({ message: `${result.deletedCount} şagird və ${studentResults.deletedCount} onların nəticələri bazadan silindi!` });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json(error);
+    }
+}
+
+export const deleteAllStudents = async (req: Request, res: Response) => {
+    try {
+        const studentResult = await StudentResult.deleteMany();
+        const result = await Student.deleteMany();
+        res.status(200).json({ message: `${result.deletedCount} şagird və ${studentResult.deletedCount} onların nəticələri bazadan silindi!` });
     } catch (error) {
         console.error(error);
         res.status(500).json(error);
