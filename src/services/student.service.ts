@@ -94,8 +94,10 @@ export const getFiltredStudents = async (req: Request): Promise<{ data: IStudent
 
 export const deleteStudentById = async (id: string) => {
     try {
-        await deleteStudentResultsByStudentId(id);
-        await Student.findByIdAndDelete(id);
+        Promise.all([
+            deleteStudentResultsByStudentId(id),
+            Student.findByIdAndDelete(id)
+        ]);
     } catch (error) {
         throw error;
     }
@@ -103,8 +105,11 @@ export const deleteStudentById = async (id: string) => {
 
 export const deleteStudentsByIds = async (studentIds: string[]): Promise<{ result: DeleteResult, studentResults: DeleteResult }> => {
     try {
-        const studentResults = await StudentResult.deleteMany({ student: { $in: studentIds } });
-        const result = await Student.deleteMany({ _id: { $in: studentIds } });
+        const [result, studentResults] = await Promise.all([
+            Student.deleteMany({ _id: { $in: studentIds } }),
+            StudentResult.deleteMany({ student: { $in: studentIds } })
+        ]);
+
         return { result, studentResults };
     } catch (error) {
         throw error;
@@ -113,10 +118,12 @@ export const deleteStudentsByIds = async (studentIds: string[]): Promise<{ resul
 
 export const deleteStudentsByTeacherId = async (teacherId: string): Promise<{ result: DeleteResult, studentResults: DeleteResult }> => {
     try {
-        const students = await Student.find({ teacher: teacherId });
-        const studentIds = students.map(student => student._id);
-        const studentResults = await StudentResult.deleteMany({ student: { $in: studentIds } });
-        const result = await Student.deleteMany({ teacher: teacherId });
+        const studentIds = await Student.find({ teacher: teacherId }).distinct('_id');
+
+        const [result, studentResults] = await Promise.all([
+            Student.deleteMany({ teacher: teacherId }),
+            StudentResult.deleteMany({ student: { $in: studentIds } })
+        ]);
         return { result, studentResults };
     } catch (error) {
         throw error;

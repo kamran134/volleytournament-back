@@ -15,6 +15,7 @@ import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
+import { errorHandler } from "./middleware/errorHandler";
 
 dontenv.config();
 connectDB();
@@ -57,6 +58,8 @@ app.use("/auth", authRoutes)
 app.use((req, res, next) => {
     res.status(404).json({ message: 'Məlumat tapılmadı' });
 });
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
     console.log(`Server run on port http://localhost:${PORT}`);

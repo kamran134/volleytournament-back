@@ -62,9 +62,11 @@ export const getFiltredTeachers = async (req: Request): Promise<{ data: ITeacher
 
 export const deleteTeacherById = async (id: string): Promise<ITeacher | null> => {
     try {
-        await deleteStudentsByTeacherId(id);
-        const result = await Teacher.findByIdAndDelete(id);
-        return result;
+        const [deletedStudents, deletedTeacher] = await Promise.all([
+            deleteStudentsByTeacherId(id),
+            Teacher.findByIdAndDelete(id)
+        ]);
+        return deletedTeacher;
     } catch (error) {
         console.error(error);
         throw new Error("Müəllim tapılmadı!");
