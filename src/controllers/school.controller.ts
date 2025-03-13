@@ -114,7 +114,9 @@ export const createAllSchools = async (req: Request, res: Response) => {
 
         // Сначала отсеиваем школы, которые уже есть
         const existingSchoolCodes: number[] = await checkExistingSchoolCodes(correctSchoolsToInsert.map(data => data.code));
-        const newSchools: ISchoolInput[] = correctSchoolsToInsert.filter(data => !existingSchoolCodes.includes(data.code));
+        const newSchools: ISchoolInput[] = existingSchoolCodes.length > 0 ?
+            correctSchoolsToInsert.filter(data => !existingSchoolCodes.includes(data.code))
+            : correctSchoolsToInsert;
 
         // Отделяем те строки, где не был указан код района, их выведем в конце на фронт
         const districtCodes = newSchools.filter(item => item.districtCode > 0).map(item => item.districtCode);
