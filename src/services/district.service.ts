@@ -16,6 +16,7 @@ export const checkExistingDistrict = async (district: IDistrict): Promise<boolea
 
 export const checkExistingDistricts = async (codes: number[]): Promise<IDistrict[]> => {
     try {
+        console.log("🔍 Поиск районов по кодам...");
         const result = await District.find({ code: { $in: codes } });
         return result;
     } catch (error) {

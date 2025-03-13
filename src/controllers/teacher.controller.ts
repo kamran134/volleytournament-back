@@ -82,7 +82,7 @@ export const createAllTeachers = async (req: Request, res: Response) => {
         }
 
         const dataToInsert: ITeacherInput[] = rows.slice(4).map(row => ({
-            districtCode: Number(row[2]) || 0,
+            districtCode: Number(row[1]) || 0,
             schoolCode: Number(row[2]) || 0,
             code: Number(row[3]),
             fullname: String(row[4])
@@ -94,7 +94,10 @@ export const createAllTeachers = async (req: Request, res: Response) => {
 
         // Сначала отсеиваем учителей, которые уже есть
         const existingTeacherCodes: number[] = await checkExistingTeacherCodes(correctTeachersToInsert.map(data => data.code));
-        const newTeachers: ITeacherInput[] = correctTeachersToInsert.filter(data => !existingTeacherCodes.includes(data.code));
+        
+        const newTeachers: ITeacherInput[] = existingTeacherCodes.length > 0
+            ? correctTeachersToInsert.filter(data => !existingTeacherCodes.includes(data.code))
+            : correctTeachersToInsert;
 
         const districtCodes = newTeachers.filter(item => item.districtCode > 0).map(item => item.districtCode);
         const schoolCodes = newTeachers.filter(item => item.schoolCode > 0).map(item => item.schoolCode);
