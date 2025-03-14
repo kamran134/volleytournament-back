@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import School, { ISchoolInput } from "../models/school.model";
+import School, { ISchool, ISchoolInput } from "../models/school.model";
 import District from "../models/district.model";
 import mongoose, { Types } from "mongoose";
 import { deleteFile } from "../services/file.service";
@@ -35,7 +35,7 @@ export const getSchools = async (req: Request, res: Response) => {
     } catch (error) {
         res.status(500).json({ message: "Məktəblərin alınmasında xəta", error });
     }
-};
+}
 
 export const getSchoolsForFilter = async (req: Request, res: Response) => {
     try {
@@ -61,7 +61,7 @@ export const getSchoolsForFilter = async (req: Request, res: Response) => {
     } catch (error) {
         res.status(500).json({ message: "Məktəblərin alınmasında xəta", error });
     }
-};
+}
 
 export const createSchool = async (req: Request, res: Response) => {
     try {
@@ -85,7 +85,7 @@ export const createSchool = async (req: Request, res: Response) => {
     } catch (error) {
         res.status(500).json({ message: "Məktəbin yaradılmasında xəta", error });
     }
-};
+}
 
 export const createAllSchools = async (req: Request, res: Response) => {
     try {
@@ -130,9 +130,9 @@ export const createAllSchools = async (req: Request, res: Response) => {
         const missingDistrictCodes = districtCodes.filter(code => !existingDistrictCodes.includes(code!));
 
         const districtMap = existingDistricts.reduce((map, district) => {
-            map[district.code] = String(district._id);
+            map[district.code] = district._id as Types.ObjectId;
             return map;
-        }, {} as Record<string, string>);
+        }, {} as Record<string, Types.ObjectId>);
 
         const schoolsToSave = newSchools.filter(
             item =>
@@ -145,7 +145,7 @@ export const createAllSchools = async (req: Request, res: Response) => {
                 address: item.address,
                 code: item.code,
                 districtCode: item.districtCode,
-                district: new Types.ObjectId(districtMap[item.districtCode])
+                district: districtMap[item.districtCode]
         }));
 
         // Remove the uploaded file
@@ -184,6 +184,58 @@ export const createAllSchools = async (req: Request, res: Response) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Məktəblərin yaradılmasında xəta", error })
+    }
+}
+
+export const updateSchool = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const school: ISchool = req.body as ISchool;
+        
+        // first we check if teacher district and school are valid and changed
+        if (school.district) {
+            const district = await District.findById(school.district);
+            if (!district) {
+                res.status(400).json({ message: "Bu kodda rayon tapilmadi" });
+                return;
+            }
+        }
+
+        // check changed fields of teacher
+        const existingSchool = await School.findById(id);
+        if (!existingSchool) {
+            res.status(404).json({ message: "Məktəb tapılmadı" });
+            return;
+        }
+
+        let isUpdated = false;
+        if (existingSchool.district !== school.district) {
+            existingSchool.district = school.district;
+            isUpdated = true;
+        }
+
+        if (existingSchool.name !== school.name) {
+            existingSchool.name = school.name;
+            isUpdated = true;
+        }
+
+        if (existingSchool.address !== school.address) {
+            existingSchool.address = school.address;
+            isUpdated = true;
+        }
+
+        if (existingSchool.code !== school.code) {
+            existingSchool.code = school.code;
+            isUpdated = true;
+        }
+
+        if (isUpdated) {
+            await existingSchool.save();
+            res.status(200).json(existingSchool);
+            return;
+        }
+    } catch (error) {
+        res.status(500).json({ message: "Məktəbin yenilənməsində xəta", error });
     }
 }
 

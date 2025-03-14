@@ -1,5 +1,5 @@
 import express from "express";
-import { getStudents, getStudent, deleteAllStudents, deleteStudent, deleteStudents, searchStudents, repairStudents, getStudentsForStats } from "../controllers/student.controller";
+import { getStudents, getStudent, deleteAllStudents, deleteStudent, deleteStudents, searchStudents, repairStudents, getStudentsForStats, updateStudent } from "../controllers/student.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
 
 const router = express.Router();
@@ -15,6 +15,7 @@ router.route("/search/:searchString").get(searchStudents);
 router.route("/delete/:studentIds")
     .delete(authMiddleware(["superadmin", "admin"]), deleteStudents);
 router.route("/:id").get(getStudent)
+    .put(authMiddleware(["superadmin", "admin"]), updateStudent)
     .delete(authMiddleware(["superadmin", "admin"]), deleteStudent);
 
 export default router;

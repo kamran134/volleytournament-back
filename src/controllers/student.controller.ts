@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Student from "../models/student.model";
+import Student, { IStudent } from "../models/student.model";
 import District from "../models/district.model";
 import School from "../models/school.model";
 import Teacher from "../models/teacher.model";
@@ -135,6 +135,81 @@ export const searchStudents = async (req: Request, res: Response) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Axtarış zamanı xəta!" })
+    }
+}
+
+export const updateStudent = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const student: IStudent = req.body as IStudent;
+        
+        // first we check if teacher district and school are valid and changed
+        if (student.district) {
+            const district = await District.findById(student.district);
+            if (!district) {
+                res.status(400).json({ message: "Bu kodda rayon tapilmadi" });
+                return;
+            }
+        }
+
+        if (student.school) {
+            const school = await School.findById(student.school);
+            if (!school) {
+                res.status(400).json({ message: "Bu kodda məktəb tapılmadı" });
+                return;
+            }
+        }
+
+        if (student.teacher) {
+            const teacher = await Teacher.findById(student.teacher);
+            if (!teacher) {
+                res.status(400).json({ message: "Bu kodda müəllim tapılmadı" });
+                return;
+            }
+        }
+
+        // check changed fields of teacher
+        const existingStudent = await Student.findById(id);
+        if (!existingStudent) {
+            res.status(404).json({ message: "Şagird tapılmadı" });
+            return;
+        }
+
+        let isUpdated = false;
+        if (existingStudent.district !== student.district) {
+            existingStudent.district = student.district;
+            isUpdated = true;
+        }
+
+        if (existingStudent.school !== student.school) {
+            existingStudent.school = student.school;
+            isUpdated = true;
+        }
+
+        if (existingStudent.teacher !== student.teacher) {
+            existingStudent.teacher = student.teacher;
+            isUpdated = true;
+        }
+
+        if (existingStudent.code !== student.code) {
+            existingStudent.code = student.code;
+            isUpdated = true;
+        }
+
+        if (existingStudent.lastName !== student.lastName || existingStudent.firstName !== student.firstName || existingStudent.middleName !== student.middleName) {
+            existingStudent.lastName = student.lastName;
+            existingStudent.firstName = student.firstName;
+            existingStudent.middleName = student.middleName;
+            isUpdated = true;
+        }
+
+        if (isUpdated) {
+            await existingStudent.save();
+            res.status(200).json(existingStudent);
+            return;
+        }
+    } catch (error) {
+        res.status(500).json({ message: "Şagirdin yenilənməsində xəta", error });
     }
 }
 
