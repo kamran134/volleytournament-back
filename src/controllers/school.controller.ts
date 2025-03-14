@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import School, { ISchoolInput } from "../models/school.model";
 import District from "../models/district.model";
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { deleteFile } from "../services/file.service";
 import { checkExistingSchoolCodes, deleteSchoolById, deleteSchoolsByIds } from "../services/school.service";
 import { checkExistingDistricts } from "../services/district.service";
@@ -48,6 +48,8 @@ export const getSchoolsForFilter = async (req: Request, res: Response) => {
         if (districtIds.length > 0) {
             filter.district = { $in: districtIds };
         }
+
+        console.log(filter);
 
         const [data, totalCount] = await Promise.all([
             School.find(filter)
@@ -143,7 +145,7 @@ export const createAllSchools = async (req: Request, res: Response) => {
                 address: item.address,
                 code: item.code,
                 districtCode: item.districtCode,
-                district: districtMap[item.districtCode]
+                district: new Types.ObjectId(districtMap[item.districtCode])
         }));
 
         // Remove the uploaded file
