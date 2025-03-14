@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Teacher, { ITeacherInput } from "../models/teacher.model";
+import Teacher, { ITeacher, ITeacherInput } from "../models/teacher.model";
 import School from "../models/school.model";
 import District from "../models/district.model";
 import { Types } from "mongoose";
@@ -170,6 +170,66 @@ export const createAllTeachers = async (req: Request, res: Response) => {
         });
     } catch (error) {
         res.status(500).json({ message: "Müəllimlərin yaradılmasında xəta!", error });
+    }
+}
+
+export const updateTeacher = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const teacher: ITeacher = req.body as ITeacher;
+        
+        // first we check if teacher district and school are valid and changed
+        if (teacher.district) {
+            const district = await District.findById(teacher.district);
+            if (!district) {
+                res.status(400).json({ message: "Bu kodda rayon tapilmadi" });
+                return;
+            }
+        }
+
+        if (teacher.school) {
+            const school = await School.findById(teacher.school);
+            if (!school) {
+                res.status(400).json({ message: "Bu kodda məktəb tapılmadı" });
+                return;
+            }
+        }
+
+        // check changed fields of teacher
+        const existingTeacher = await Teacher.findById(id);
+        if (!existingTeacher) {
+            res.status(404).json({ message: "Müəllim tapılmadı" });
+            return;
+        }
+
+        let isUpdated = false;
+        if (existingTeacher.district !== teacher.district) {
+            existingTeacher.district = teacher.district;
+            isUpdated = true;
+        }
+
+        if (existingTeacher.school !== teacher.school) {
+            existingTeacher.school = teacher.school;
+            isUpdated = true;
+        }
+
+        if (existingTeacher.code !== teacher.code) {
+            existingTeacher.code = teacher.code;
+            isUpdated = true;
+        }
+
+        if (existingTeacher.fullname !== teacher.fullname) {
+            existingTeacher.fullname = teacher.fullname;
+            isUpdated = true;
+        }
+
+        if (isUpdated) {
+            await existingTeacher.save();
+            res.status(200).json(existingTeacher);
+            return;
+        }
+    } catch (error) {
+        res.status(500).json({ message: "Müəllimin yenilənməsində xəta", error });
     }
 }
 

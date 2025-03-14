@@ -3,7 +3,7 @@ import District from "../models/district.model";
 import School from "../models/school.model";
 import Teacher from "../models/teacher.model";
 import { IStudent } from "../models/student.model";
-import StudentResult from "../models/studentResult.model";
+import StudentResult, { IStudentResult } from "../models/studentResult.model";
 import { markDevelopingStudents, markTopStudents, markTopStudentsRepublic } from "./studentResult.service";
 import { countDistrictsRates } from "./district.service";
 import { Types } from "mongoose";
@@ -127,6 +127,23 @@ export const calculateAndSaveScores = async () => {
 
         // Обновляем данные в базе
         // Обновляем баллы для районов
+        Promise.all([
+            updateDistrictScores(districtRates, districtScores),
+            updateSchoolScores(districtRates, schoolScores, results),
+            updateTeacherScores(districtRates, teacherScores, results)
+        ]);
+
+        console.log("✅ Баллы обновлены.");
+    } catch (error) {
+        console.error('Error updating scores:', error);
+    }
+}
+
+const updateDistrictScores = async (districtRates: Map<string, number>, districtScores: Map<string, number>) => {
+    try {
+        console.log("🔄 Обновление баллов районов...");
+
+        // Обновляем баллы для районов
         for (const [districtId, score] of districtScores.entries()) {
             const rate = districtRates.get(districtId) || 1;
 
@@ -135,6 +152,14 @@ export const calculateAndSaveScores = async () => {
                 averageScore: score / rate
             });
         }
+    } catch (error) {
+        console.error('Error updating district scores:', error);
+    }
+}
+
+const updateSchoolScores = async (districtRates: Map<string, number>, schoolScores: Map<string, number>, results: IStudentResult[]) => {
+    try {
+        console.log("🔄 Обновление баллов школ...");
 
         // Обновляем баллы для школ
         for (const [schoolId, score] of schoolScores.entries()) {
@@ -146,6 +171,14 @@ export const calculateAndSaveScores = async () => {
                 averageScore: score / rate
             });
         }
+    } catch (error) {
+        console.error('Error updating school scores:', error);
+    }
+}
+
+const updateTeacherScores = async (districtRates: Map<string, number>, teacherScores: Map<string, number>, results: IStudentResult[]) => {
+    try {
+        console.log("🔄 Обновление баллов учителей...");
 
         // Обновляем баллы для учителей
         for (const [teacherId, score] of teacherScores.entries()) {
@@ -157,9 +190,7 @@ export const calculateAndSaveScores = async () => {
                 averageScore: score / rate
             });
         }
-
-        console.log("✅ Баллы обновлены.");
     } catch (error) {
-        console.error('Error updating scores:', error);
+        console.error('Error updating teacher scores:', error);
     }
 }
