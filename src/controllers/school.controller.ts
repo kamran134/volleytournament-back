@@ -65,9 +65,19 @@ export const getSchoolsForFilter = async (req: Request, res: Response) => {
 
 export const createSchool = async (req: Request, res: Response) => {
     try {
-        const { name, address, code, districtCode } = req.body;
+        const { name, address, code, district } = req.body;
   
-        const existingDistrict = await District.findOne({ code: districtCode });
+        if (!name || !code || !district) {
+            res.status(400).json({ message: "Məlumatlar tam deyil" });
+            return;
+        }
+
+        if (code.toString().length !== 5) {
+            res.status(400).json({ message: "Məktəb kodu 5 simvoldan ibarət olmalıdır" });
+            return;
+        }
+
+        const existingDistrict = await District.findOne({ code: district.code });
         if (!existingDistrict) {
             res.status(400).json({ message: "Bu kodda rayon tapılmadı" });
             return;
@@ -77,11 +87,19 @@ export const createSchool = async (req: Request, res: Response) => {
             name,
             address,
             code,
+            districtCode: existingDistrict.code,
             district: existingDistrict._id,
         });
+
+        // Check if school with the same code already exists
+        const existingSchool = await School.findOne({ code });
+        if (existingSchool) {
+            res.status(400).json({ message: "Bu kodda məktəb artıq mövcuddur" });
+            return;
+        }
   
         const savedSchool = await school.save();
-        res.status(201).json(savedSchool);
+        res.status(201).json({message: "Məktəb uğurla yaradıldı! ", data: savedSchool});
     } catch (error) {
         res.status(500).json({ message: "Məktəbin yaradılmasında xəta", error });
     }

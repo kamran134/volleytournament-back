@@ -12,7 +12,6 @@ import { checkExistingDistricts } from "../services/district.service";
 export const getTeachers = async (req: Request, res: Response) => {
     try {
         const { data, totalCount } = await getFiltredTeachers(req);
-        
         res.status(200).json({ data, totalCount });
     } catch (error) {
         res.status(500).json({ message: "Müəllimlərin alınmasında xəta!", error });
@@ -46,22 +45,33 @@ export const getTeachersForFilter = async (req: Request, res: Response) => {
 
 export const createTeacher = async (req: Request, res: Response) => {
     try {
-        const { fullname, code, schoolCode } = req.body;
+        const { fullname, code, district, school } = req.body;
 
-        const existingSchool = await School.findOne({ code: schoolCode });
-        if (!existingSchool) {
-            res.status(400).json({ message: "Bu kodda məktəb tapılmadı" });
+        if (!fullname || !code) {
+            res.status(400).json({ message: "Məlumatlar tam deyil" });
+            return;
+        }
+
+        if (code.toString().length !== 7) {
+            res.status(400).json({ message: "Müəllim kodu 7 simvoldan ibarət olmalıdır" });
+            return;
+        }
+
+        const existingTeacher = await Teacher.findOne({ code });
+        if (existingTeacher) {
+            res.status(400).json({ message: "Bu kodda müəllim artıq mövcuddur" });
             return;
         }
 
         const teacher = new Teacher({
             fullname,
             code,
-            school: existingSchool._id
+            district: district._id,
+            school: school._id
         });
 
         const savedTeacher = await teacher.save();
-        res.status(201).json(savedTeacher);
+        res.status(201).json({message: 'Müəllim uğurla yaradıldı!', data: savedTeacher});
     } catch (error) {
         res.status(500).json({ message: "Müəllimin əlavə edilməsində xəta", error })
     }
