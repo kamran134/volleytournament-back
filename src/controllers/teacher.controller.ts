@@ -280,46 +280,104 @@ export const deleteTeachers = async (req: Request, res: Response) => {
 
 export const repairTeachers = async (req: Request, res: Response) => {
     try {
-        const teachers = await Teacher.find().populate('district school');
+        // Фильтруем учителей с отсутствующими или строковыми district/school
+        const teachers = await Teacher.find({
+            $or: [
+                { district: null },
+                { school: null },
+                { district: { $type: 'string' } }, // Проверяем, является ли district строкой
+                { school: { $type: 'string' } }    // Проверяем, является ли school строкой
+            ]
+        }).populate('district school');
 
         const teachersWithoutDistrict: string[] = [];
         const teachersWithoutSchool: string[] = [];
         const repairedTeachers: string[] = [];
+        const bulkOps: any[] = [];
 
         for (let teacher of teachers) {
             const teacherCode: string = teacher.code.toString();
-            if (teacherCode.length !== 7) continue;
+
+            // Валидация: код должен быть 7 символов
+            if (teacherCode.length !== 7) {
+                continue;
+            }
 
             let isUpdated = false;
+            let newDistrictId: Types.ObjectId | null = null;
+            let newSchoolId: Types.ObjectId | null = null;
 
-            if (!teacher.district) {
-                const districtCode = teacherCode.substring(0, 3);
-                const district = await District.findOne({ code: districtCode });
+            // Проверяем и исправляем district
+            if (!teacher.district || typeof teacher.district === 'string') {
+                let districtId;
+                if (typeof teacher.district === 'string') {
+                    // Если district — строка, пытаемся преобразовать в ObjectId
+                    if (Types.ObjectId.isValid(teacher.district)) {
+                        districtId = new Types.ObjectId(teacher.district);
+                        const districtExists = await District.findById(districtId);
+                        if (districtExists) {
+                            newDistrictId = districtId;
+                            isUpdated = true;
+                        }
+                    }
+                }
 
-                if (district) {
-                    teacher.district = district;
-                    isUpdated = true;
-                } else {
-                    teachersWithoutDistrict.push(teacher.code.toString());
+                // Если district отсутствует или строка некорректна, ищем по коду
+                if (!teacher.district) {
+                    const districtCode = teacherCode.substring(0, 3);
+                    const district = await District.findOne({ code: districtCode });
+                    if (district) {
+                        newDistrictId = district._id as Types.ObjectId;
+                        isUpdated = true;
+                    } else {
+                        teachersWithoutDistrict.push(teacherCode);
+                    }
                 }
             }
 
-            if (!teacher.school) {
-                const schoolCode = teacherCode.substring(0, 5);
-                const school = await School.findOne({ code: schoolCode });
+            // Проверяем и исправляем school
+            if (!teacher.school || typeof teacher.school === 'string') {
+                let schoolId;
+                if (typeof teacher.school === 'string') {
+                    // Если school — строка, пытаемся преобразовать в ObjectId
+                    if (Types.ObjectId.isValid(teacher.school)) {
+                        schoolId = new Types.ObjectId(teacher.school);
+                        const schoolExists = await School.findById(schoolId);
+                        if (schoolExists) {
+                            newSchoolId = schoolId;
+                            isUpdated = true;
+                        }
+                    }
+                }
 
-                if (school) {
-                    teacher.school = school;
-                    isUpdated = true;
-                } else {
-                    teachersWithoutSchool.push(teacher.code.toString());
+                // Если school отсутствует или строка некорректна, ищем по коду
+                if (!teacher.school) {
+                    const schoolCode = teacherCode.substring(0, 5);
+                    const school = await School.findOne({ code: schoolCode });
+                    if (school) {
+                        newSchoolId = school._id as Types.ObjectId;
+                        isUpdated = true;
+                    } else {
+                        teachersWithoutSchool.push(teacherCode);
+                    }
                 }
             }
 
+            // Если были изменения, добавляем в bulkOps
             if (isUpdated) {
-                await teacher.save();
-                repairedTeachers.push(teacher.code.toString());
+                bulkOps.push({
+                    updateOne: {
+                        filter: { _id: teacher._id },
+                        update: { $set: { district: newDistrictId, school: newSchoolId } }
+                    }
+                });
+                repairedTeachers.push(teacherCode);
             }
+        }
+
+        // Выполняем пакетное обновление
+        if (bulkOps.length > 0) {
+            await Teacher.bulkWrite(bulkOps);
         }
 
         res.status(200).json({
@@ -332,4 +390,4 @@ export const repairTeachers = async (req: Request, res: Response) => {
         console.error(error);
         res.status(500).json({ message: "Müəllimlərin alınmasında xəta", error });
     }
-}
+};
