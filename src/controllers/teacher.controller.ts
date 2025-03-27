@@ -91,11 +91,13 @@ export const createAllTeachers = async (req: Request, res: Response) => {
             return;
         }
 
+        // первый столбец он нулевой, нам не нужен
+
         const dataToInsert: ITeacherInput[] = rows.slice(4).map(row => ({
-            districtCode: Number(row[1]) || 0,
-            schoolCode: Number(row[2]) || 0,
-            code: Number(row[3]),
-            fullname: String(row[4])
+            districtCode: Number(row[1]) || 0, // 2-ой столбец
+            schoolCode: Number(row[2]) || 0, // 3-ий столбец
+            code: Number(row[3]), // 4-ый столбец
+            fullname: String(row[4]) // 5-ый столбец
         }));
 
         // Выявляем и отсеиваем некорректных учителей
