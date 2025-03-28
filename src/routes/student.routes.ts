@@ -1,11 +1,13 @@
 import express from "express";
-import { getStudents, getStudent, deleteAllStudents, deleteStudent, deleteStudents, searchStudents, repairStudents, getStudentsForStats, updateStudent } from "../controllers/student.controller";
+import { getStudents, getStudent, deleteAllStudents, deleteStudent, deleteStudents, searchStudents, repairStudents, getStudentsForStats, updateStudent, createStudent } from "../controllers/student.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
+import { create } from "domain";
 
 const router = express.Router();
 
 router.route("/")
     .get(getStudents)
+    .post(authMiddleware(["superadmin", "admin"]), createStudent)
     .delete(authMiddleware(["superadmin", "admin"]), deleteAllStudents);
 router.route("/repair")
     .get(authMiddleware(["superadmin", "admin"]), repairStudents);

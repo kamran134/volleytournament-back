@@ -138,6 +138,57 @@ export const searchStudents = async (req: Request, res: Response) => {
     }
 }
 
+export const createStudent = async (req: Request, res: Response) => {
+    try {
+        const student: IStudent = req.body as IStudent;
+
+        // first we check if student code is valid
+        const studentCode: string = student.code.toString();
+        if (studentCode.length !== 10) {
+            res.status(400).json({ message: "Tələbə kodu minimum 10 ədədli rəqəm olmalıdır" });
+            return;
+        }
+        // check if student already exists
+        const existingStudent = await Student.findOne({ code: student.code });
+        if (existingStudent) {
+            res.status(400).json({ message: "Bu kodda tələbə artıq var" });
+            return;
+        }
+
+        // then we check if teacher district and school are valid
+        if (student.district) {
+            const district = await District.findById(student.district);
+            if (!district) {
+                res.status(400).json({ message: "Bu kodda rayon tapilmadi" });
+                return;
+            }
+        }
+
+        if (student.school) {
+            const school = await School.findById(student.school);
+            if (!school) {
+                res.status(400).json({ message: "Bu kodda məktəb tapılmadı" });
+                return;
+            }
+        }
+
+        if (student.teacher) {
+            const teacher = await Teacher.findById(student.teacher);
+            if (!teacher) {
+                res.status(400).json({ message: "Bu kodda müəllim tapılmadı" });
+                return;
+            }
+        }
+
+        const newStudent = new Student(student);
+        await newStudent.save();
+        res.status(201).json(newStudent);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Tələbə yaradılarkən xəta baş verdi", error });
+    }
+}
+
 export const updateStudent = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
