@@ -35,6 +35,8 @@ export const getFiltredTeachers = async (req: Request): Promise<{ data: ITeacher
             const schoolIds: Types.ObjectId[] = req.query.schoolIds
                 ? (req.query.schoolIds as string).split(',').map(id => new Types.ObjectId(id))
                 : [];
+            const sortColumn: string = req.query.sortColumn?.toString() || 'averageScore';
+            const sortDirection: string = req.query.sortDirection?.toString() || 'desc';
     
             const filter: any = {};
 
@@ -48,7 +50,7 @@ export const getFiltredTeachers = async (req: Request): Promise<{ data: ITeacher
             const [data, totalCount] = await Promise.all([
                 Teacher.find(filter)
                     .populate('district school')
-                    .sort({ averageScore: -1 })
+                    .sort({ [sortColumn]: sortDirection === 'asc' ? 1 : -1 })
                     .skip(skip)
                     .limit(size),
                 Teacher.countDocuments(filter)

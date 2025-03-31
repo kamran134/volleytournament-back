@@ -3,34 +3,13 @@ import School, { ISchool, ISchoolInput } from "../models/school.model";
 import District from "../models/district.model";
 import mongoose, { Types } from "mongoose";
 import { deleteFile } from "../services/file.service";
-import { checkExistingSchoolCodes, deleteSchoolById, deleteSchoolsByIds } from "../services/school.service";
+import { checkExistingSchoolCodes, deleteSchoolById, deleteSchoolsByIds, getFiltredSchools } from "../services/school.service";
 import { checkExistingDistricts } from "../services/district.service";
 import { readExcel } from "../services/excel.service";
 
 export const getSchools = async (req: Request, res: Response) => {
     try {
-        const page: number = parseInt(req.query.page as string) || 1;
-        const size: number = parseInt(req.query.size as string) || 10;
-        const skip: number = (page - 1) * size;
-        const districtIds: string[] = req.query.districtIds
-            ? (req.query.districtIds as string).split(',')
-            : [];
-
-        const filter: any = {};
-
-        if (districtIds.length > 0) {
-            filter.district = { $in: districtIds };
-        }
-
-        const [data, totalCount] = await Promise.all([
-            School.find(filter)
-                .populate('district')
-                .sort({ averageScore: -1 })
-                .skip(skip)
-                .limit(size),
-            School.countDocuments(filter)
-        ]);
-
+        const { data, totalCount } = await getFiltredSchools(req);
         res.status(200).json({ data, totalCount });
     } catch (error) {
         res.status(500).json({ message: "Məktəblərin alınmasında xəta", error });

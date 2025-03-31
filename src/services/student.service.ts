@@ -48,8 +48,8 @@ export const getFiltredStudents = async (req: Request): Promise<{ data: IStudent
             ? (req.query.examIds as string).split(',').map(id => new Types.ObjectId(id))
             : [];
         const defective: boolean = req.query.defective?.toString().toLowerCase() === 'true';
-        const sortColumn: string = req.query.sortColumn?.toString() || 'code';
-        const sortDirection: string = req.query.sortDirection?.toString() || 'asc';
+        const sortColumn: string = req.query.sortColumn?.toString() || 'averageScore';
+        const sortDirection: string = req.query.sortDirection?.toString() || 'desc';
 
         const filter: any = {};
 
