@@ -4,8 +4,11 @@ import { checkExistingDistrict } from "../services/district.service";
 
 export const getDistricts = async (req: Request, res: Response) => {
     try {
+        const sortColumn: string = req.query.sortColumn?.toString() || 'averageScore';
+        const sortDirection: string = req.query.sortDirection?.toString() || 'desc';
+
         const [data, totalCount] = await Promise.all([
-            District.find().sort({ name: 1}),
+            District.find().sort({ [sortColumn]: sortDirection === 'asc' ? 1 : -1 }),
             District.countDocuments()
         ]);
 
