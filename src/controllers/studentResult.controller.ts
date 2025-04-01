@@ -44,10 +44,10 @@ export const createAllResults = async (req: Request, res: Response) => {
             middleName: String(row[6]),
             az: Number(row[7]),
             math: Number(row[8]),
-            lifeKnowledge: Number(row[9]),
-            logic: Number(row[10]),
-            totalScore: Number(row[11]),
-            level: String(row[12])
+            lifeKnowledge: Number(row[2]) === 5 ? 0 : Number(row[9]),
+            logic: Number(row[2]) === 5 ? Number(row[9]) : Number(row[10]),
+            totalScore: Number(row[2]) === 5 ? Number(row[10]) : Number(row[11]),
+            level: Number(row[2]) === 5 ? String(row[11]) : String(row[12])
         }));
 
         const studentDataToInsert: IStudentInput[] = rows.slice(3).map(row => ({
