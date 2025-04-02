@@ -88,6 +88,7 @@ export const calculateAndSaveScores = async () => {
         const districtScores = new Map<string, number>();
         const schoolScores = new Map<string, number>();
         const teacherScores = new Map<string, number>();
+        const studentScores = new Map<string, number>();
 
         for (const result of results) {
             const student = result.student as IStudent;
@@ -117,6 +118,11 @@ export const calculateAndSaveScores = async () => {
                     (teacherScores.get(teacherId) || 0) + score
                 );
             }
+            const studentId = (student as { _id: Types.ObjectId})._id.toString();
+            studentScores.set(
+                studentId,
+                (studentScores.get(studentId) || 0) + score
+            );
         }
 
         console.log("🔄 Обновление среднего балла районов, школ и учителей...");
@@ -130,7 +136,8 @@ export const calculateAndSaveScores = async () => {
         Promise.all([
             updateDistrictScores(districtRates, districtScores),
             updateSchoolScores(districtRates, schoolScores, results),
-            updateTeacherScores(districtRates, teacherScores, results)
+            updateTeacherScores(districtRates, teacherScores, results),
+            // updateStudentScores(districtRates, studentScores, results)
         ]);
 
         console.log("✅ Баллы обновлены.");
@@ -194,3 +201,22 @@ const updateTeacherScores = async (districtRates: Map<string, number>, teacherSc
         console.error('Error updating teacher scores:', error);
     }
 }
+
+// const updateStudentScores = async (districtRates: Map<string, number>, studentScores: Map<string, number>, results: IStudentResult[]) => {
+//     try {
+//         console.log("🔄 Обновление баллов студентов...");
+
+//         // Обновляем баллы для студентов
+//         for (const [studentId, score] of studentScores.entries()) {
+//             const student = results.find(r => (r.student._id || '').toString() === studentId)?.student;
+//             const districtId = student?.district?._id.toString();
+//             const rate = districtRates.get(districtId || '') || 1;
+//             await StudentResult.findByIdAndUpdate(studentId, {
+//                 score,
+//                 averageScore: score / rate
+//             });
+//         }
+//     } catch (error) {
+//         console.error('Error updating student scores:', error);
+//     }
+// }

@@ -39,6 +39,11 @@ export interface IStudentMini extends Document {
     school: Types.ObjectId;
     district: Types.ObjectId;
     score: number;
+    averageScore: number,
+    participationScore: number,
+    developmentScore: number,
+    studentOfTheMonthScore: number,
+    republicWideStudentOfTheMonthScore: number,
     status: string;
     results: IStudentResult[];
 }
@@ -54,6 +59,12 @@ const StudentSchema: Schema = new Schema({
     district: { type: Schema.Types.ObjectId, ref: "District" },
     maxLevel: { type: Number, required: false },
     status: { type: String, required: false },
+    score: { type: Number, required: false },
+    averageScore: { type: Number, required: false },
+    participationScore: { type: Number, required: false },
+    developmentScore: { type: Number, required: false },
+    studentOfTheMonthScore: { type: Number, required: false },
+    republicWideStudentOfTheMonthScore: { type: Number, required: false },
 });
 
 export default mongoose.model<IStudent>("Student", StudentSchema);

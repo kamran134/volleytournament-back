@@ -53,6 +53,9 @@ export const getStudent = async (req: Request, res: Response) => {
 
 export const getStudentsForStats = async (req: Request, res: Response) => {
     try {
+        const sortColumn: string = req.query.sortColumn?.toString() || 'averageScore';
+        const sortDirection: string = req.query.sortDirection?.toString() || 'desc';
+
         const { data, totalCount } = await getFiltredStudents(req);
         const returnData = [];
         for (const student of data) {
@@ -60,6 +63,16 @@ export const getStudentsForStats = async (req: Request, res: Response) => {
             const score = studentResult.reduce((a, b) => a + b.score, 0);
             const studentData = {...student.toObject(), score, averageScore: score / (student.district?.rate || 1) }
             returnData.push(studentData);
+        }
+ 
+        if (sortColumn === 'averageScore' || sortColumn === 'score') {
+            returnData.sort((a, b) => {
+                if (sortDirection === 'asc') {
+                    return a[sortColumn] - b[sortColumn];
+                } else {
+                    return b[sortColumn] - a[sortColumn];
+                }
+            });
         }
 
         res.status(200).json({ data: returnData, totalCount });
