@@ -26,7 +26,7 @@ export const updateStatistics = async (req: Request, res: Response) => {
 export const getStudentsStatistics = async (req: Request, res: Response) => {
     try {
         const { month } = req.query;
-        
+
         if (!month) {
             res.status(400).json({ message: "Ay seçilməyib!" });
             return;
@@ -42,6 +42,10 @@ export const getStudentsStatistics = async (req: Request, res: Response) => {
 
         let filter: any = { exam: { $in: examsInMonth.map(e => e._id) } };
 
+        console.log(`Start date: ${startDate}, End date: ${endDate}`);
+        console.log(`Exams in month: ${examsInMonth.map(e => e._id)}`);
+        console.log(`Filter: ${JSON.stringify(filter)}`);
+
         if (req.query.districtIds) {
             const filtredStudentsData = await getFiltredStudents(req);
             if (filtredStudentsData.totalCount > 0) {
@@ -52,7 +56,7 @@ export const getStudentsStatistics = async (req: Request, res: Response) => {
                 return;
             }
         }
-        
+
         const studentResults: IStudentResult[] = await StudentResult.find(filter)
             .populate("exam")
             .populate({ path: "student", populate: [
@@ -60,6 +64,8 @@ export const getStudentsStatistics = async (req: Request, res: Response) => {
                 { path: "school", model: "School" },
                 { path: "teacher", model: "Teacher" }
             ]});
+
+        console.log(`Student results: ${studentResults.length}`);
 
         const studentsOfMonth: IStudentResult[] = studentResults.filter(r => r.status?.match(/Ayın şagirdi/i));
         const studentsOfMonthByRepublic: IStudentResult[] = studentResults.filter(r => r.status?.match(/Respublika üzrə ayın şagirdi/i));
