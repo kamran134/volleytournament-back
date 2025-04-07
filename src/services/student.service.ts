@@ -32,7 +32,7 @@ export const assignTeacherToStudent = async (student: IStudentInput) => {
 export const getFiltredStudents = async (req: Request): Promise<{ data: IStudent[], totalCount: number }> => {
     try {
         const page: number = parseInt(req.query.page as string) || 1;
-        const size: number = parseInt(req.query.size as string) || 10;
+        const size: number = parseInt(req.query.size as string) || 100;
         const skip: number = (page - 1) * size;
         const districtIds: Types.ObjectId[] = req.query.districtIds
             ? (req.query.districtIds as string).split(',').map(id => new Types.ObjectId(id))

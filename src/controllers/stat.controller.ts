@@ -40,33 +40,73 @@ export const getStudentsStatistics = async (req: Request, res: Response) => {
 
         const examsInMonth = await Exam.find({ date: { $gte: startDate, $lt: endDate } }).select('_id');
 
-        let filter: any = { exam: { $in: examsInMonth.map(e => e._id) } };
-
-        console.log(`Start date: ${startDate}, End date: ${endDate}`);
-        console.log(`Exams in month: ${examsInMonth.map(e => e._id)}`);
-        console.log(`Filter: ${JSON.stringify(filter)}`);
-
-        if (req.query.districtIds) {
-            const filtredStudentsData = await getFiltredStudents(req);
-            if (filtredStudentsData.totalCount > 0) {
-                filter.student = { $in: filtredStudentsData.data.map(s => s._id) };
-            }
-            else {
-                res.status(404).json({ message: "Nəticə tapılmadı!" });
-                return;
-            }
+        if (examsInMonth.length === 0) {
+            res.status(404).json({ message: "Bu ayda imtahan tapılmadı!" });
+            return;
         }
 
-        const studentResults: IStudentResult[] = await StudentResult.find(filter)
-            .populate("exam")
-            .populate({ path: "student", populate: [
-                { path: "district", model: "District" },
-                { path: "school", model: "School" },
-                { path: "teacher", model: "Teacher" }
-            ]});
+        const districtIds: Types.ObjectId[] = req.query.districtIds
+            ? (req.query.districtIds as string).split(',').map(id => new Types.ObjectId(id))
+            : [];
+        const schoolIds: Types.ObjectId[] = req.query.schoolIds
+            ? (req.query.schoolIds as string).split(',').map(id => new Types.ObjectId(id))
+            : [];
+        const teacherIds: Types.ObjectId[] = req.query.teacherIds
+            ? (req.query.teacherIds as string).split(',').map(id => new Types.ObjectId(id))
+            : [];
 
-        console.log(`Student results: ${studentResults.length}`);
+        const pipeline: any[] = [
+            // 1. Фильтруем результаты по экзаменам месяца
+            { $match: { exam: { $in: examsInMonth.map(e => e._id) } } },
 
+            // 2. Присоединяем данные студентов
+            {
+                $lookup: {
+                    from: 'students',
+                    localField: 'student',
+                    foreignField: '_id',
+                    as: 'studentData'
+                }
+            },
+            { $unwind: '$studentData' }, // Разворачиваем массив studentData
+
+            // 3. Присоединяем связанные данные (district, school, teacher)
+            {
+                $lookup: { from: 'districts', localField: 'studentData.district', foreignField: '_id', as: 'studentData.district' }
+            },
+            { $unwind: { path: '$studentData.district', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: { from: 'schools', localField: 'studentData.school', foreignField: '_id', as: 'studentData.school' }
+            },
+            { $unwind: { path: '$studentData.school', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: { from: 'teachers', localField: 'studentData.teacher', foreignField: '_id', as: 'studentData.teacher' }
+            },
+            { $unwind: { path: '$studentData.teacher', preserveNullAndEmptyArrays: true } },
+
+            // 4. Применяем фильтры по districtIds, schoolIds, teacherIds
+            {
+                $match: {
+                    ...(districtIds.length > 0 && { 'studentData.district._id': { $in: districtIds } }),
+                    ...(schoolIds.length > 0 && { 'studentData.school._id': { $in: schoolIds } }),
+                    ...(teacherIds.length > 0 && { 'studentData.teacher._id': { $in: teacherIds } })
+                }
+            },
+
+            // 5. Присоединяем данные экзаменов
+            {
+                $lookup: {
+                    from: 'exams',
+                    localField: 'exam',
+                    foreignField: '_id',
+                    as: 'examData'
+                }
+            },
+            { $unwind: '$examData' }
+        ];
+
+        const studentResults = await StudentResult.aggregate(pipeline);
+        
         const studentsOfMonth: IStudentResult[] = studentResults.filter(r => r.status?.match(/Ayın şagirdi/i));
         const studentsOfMonthByRepublic: IStudentResult[] = studentResults.filter(r => r.status?.match(/Respublika üzrə ayın şagirdi/i));
         const developingStudents: IStudentResult[] = studentResults.filter(r => r.status?.match(/İnkişaf edən şagird/i));
