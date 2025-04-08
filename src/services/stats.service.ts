@@ -4,7 +4,7 @@ import School from "../models/school.model";
 import Teacher from "../models/teacher.model";
 import { IStudent } from "../models/student.model";
 import StudentResult, { IStudentResult } from "../models/studentResult.model";
-import { markDevelopingStudents, markTopStudents, markTopStudentsRepublic } from "./studentResult.service";
+import { markAllDevelopingStudents, markDevelopingStudents, markTopStudents, markTopStudentsRepublic } from "./studentResult.service";
 import { countDistrictsRates } from "./district.service";
 import { Types } from "mongoose";
 
@@ -52,7 +52,8 @@ export const updateStats = async (): Promise<number> => {
             .sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month);
 
         console.log(`Будет обработано ${sortedMonths.length} месяцев...`);
-        await markDevelopingStudents(new Date().getMonth(), new Date().getFullYear());
+        // await markDevelopingStudents(new Date().getMonth(), new Date().getFullYear());
+        await markAllDevelopingStudents();
         // Вызываем `markTopStudents()` для каждого месяца
         for (const { year, month } of sortedMonths) {
             console.log(`🔹 Обрабатываем ${month}/${year}...`);

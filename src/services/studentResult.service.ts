@@ -2,7 +2,7 @@ import { DeleteResult } from "mongoose";
 import Exam from "../models/exam.model";
 import Student, { IStudent, IStudentInput } from "../models/student.model";
 import StudentResult, { IStudentResult, IStudentResultsGrouped } from "../models/studentResult.model";
-import { calculateLevel } from "./common.service";
+import { calculateLevel, calculateLevelNumb } from "./common.service";
 import { getExamsByMonthYear } from "./exam.service";
 import { assignTeacherToStudent } from "./student.service";
 
@@ -30,37 +30,117 @@ export const processStudentResults = async (studentDataToInsert: IStudentInput[]
     }
 }
 
-export const detectDevelopingStudents = async () => {
+export const markAllDevelopingStudents = async (): Promise<void> => {
     try {
-        // 1. Пробегаемся по всем результатам экзаменов (StudentResult)
-        const studentResultsGrouped: IStudentResultsGrouped[] = await getStudentResultsGroupedByStudent();
-        if (studentResultsGrouped.length === 0) return 404;
-        
-        for (const studentId in studentResultsGrouped) {
-            const student = studentResultsGrouped[studentId];
-            student.results[0].status = "";
-            if (student.results.length <= 1) continue;
-            // исключаем последний экзамен, так как он определяет статус студента
-            student.student.maxLevel = student.results.slice(1).reduce((maxLevel: number, result: any) => {
-                return Math.max(maxLevel, result.totalScore);
-            }, 0);
-            const studentMaxlevel: string = calculateLevel(student.student.maxLevel);
-            const studentLastLevel: string = calculateLevel(student.results[0].totalScore);
+        /*
+        1. Вызываем всех студентов из базы данных
+        2. Пробегаемся по всем результатам экзаменов, отсортированных по дате (StudentResult), обнуляем статусы
+        3. Получаем все результаты экзаменов для каждого студента
+        4. Если у студента на каком-то этапе поднялся уровень, то добавляем статус "İnkişaf edən şagird" на текущий результат
+        5. Если у студента не меняется уровень или понижается, то статус результата остается пустым
+        ВАЖНО! Проверяем попарно, проходимся для каждого студента по всем результатам и сравниваем с предыдущими
+        Если у студента нет результатов, то пропускаем его, если у студента 1 результат, то пропускаем его
+        ВАЖНО! Нам не нужен максимальный результат. Мы просто идём по циклу и сравниваем с предыдущими результатами
+        */
+        console.log("🔄 Обновление статусов студентов...");
+        /*
+        const students: IStudent[] = await Student.find({});
+        if (!students.length) {
+            console.log("Нет студентов для обновления.");
+            return;
+        }
+        const bulkOperations = [];
 
-            if (student.student.maxLevel < student.results[0].totalScore && student.results.length > 1 &&
-                studentMaxlevel !== studentLastLevel) {
-                student.results[0].status = "İnkişaf edən şagird";
-                student.results[0].score += 10;
-                student.student.maxLevel = student.results[0].totalScore;
+        // 2. Пробегаемся по всем результатам экзаменов (StudentResult), обнуляем статусы
+        for (const student of students) {
+            const studentResults: IStudentResult[] = await StudentResult.find({ student: student._id }).populate("exam").sort({ date: 1 });
+            if (!studentResults.length) continue; // Пропускаем студентов без результатов
+            if (studentResults.length === 1) continue; // Пропускаем студентов с 1 результатом
 
-                await StudentResult.findByIdAndUpdate(student.results[0]._id, {
-                    status: student.results[0].status,
-                    score: student.results[0].score
+            let maxTotalScore = studentResults[0].totalScore;
+            let maxLevel = calculateLevelNumb(maxTotalScore);
+
+            for (let i = 1; i < studentResults.length - 1; i++) {
+                const currentResult = studentResults[i];
+
+                // Обнуляем статус у самого нового результата (текущий месяц)
+                currentResult.status = "";
+                currentResult.score = 1;
+
+                if (calculateLevelNumb(currentResult.totalScore) > maxLevel) {
+                    // Если уровень повысился, то добавляем статус "İnkişaf edən şagird"
+                    currentResult.status = "İnkişaf edən şagird";
+                    currentResult.score += 10;
+                    maxLevel = calculateLevelNumb(currentResult.totalScore);
+                    maxTotalScore = currentResult.totalScore;
+                }
+
+                bulkOperations.push({
+                    updateOne: {
+                        filter: { _id: currentResult._id },
+                        update: { $set: { status: currentResult.status, score: currentResult.score } }
+                    }
                 });
             }
         }
+        */
+
+        // 3. Получаем все результаты экзаменов для каждого студента
+        const studentResultsGrouped: IStudentResultsGrouped[] = await getStudentResultsGroupedByStudent();
+        if (studentResultsGrouped.length === 0) return;
+        const bulkOperations = [];
+
+        console.log("Найдено ", studentResultsGrouped.length, " студентов с результатами экзаменов.");
+
+        for (const student of studentResultsGrouped) {
+            if (student.results.length <= 1) continue; // Пропускаем студентов с 1 результатом
+
+            // Обнуляем статус у самого нового результата (текущий месяц)
+            student.results[0].status = "";
+            student.results[0].score = 1;
+
+            let maxTotalScore = student.results[0].totalScore;
+            let maxLevel = calculateLevelNumb(maxTotalScore);
+
+            for (let i = 1; i < student.results.length; i++) {
+                const currentResult = student.results[i];
+
+                // Обнуляем статус у самого нового результата (текущий месяц)
+                currentResult.status = "";
+                currentResult.score = 1;
+
+                //console.log("Студент: ", student.student.firstName, " Результат: ", currentResult.totalScore, " Уровень: ", maxLevel);
+                //console.log("Текущий результат: ", currentResult.totalScore, " Максимальный результат: ", maxTotalScore);
+
+                if (calculateLevelNumb(currentResult.totalScore) > maxLevel) {
+                    console.log(`Студент: ${student.student.lastName} ${student.student.firstName} ${student.student.middleName}\nРезультат: ${currentResult.totalScore}\n
+                        Уровень: ${maxLevel}`);
+                    currentResult.status = "İnkişaf edən şagird";
+                    currentResult.score += 10;
+                    maxLevel = calculateLevelNumb(currentResult.totalScore);
+                    maxTotalScore = currentResult.totalScore;
+                }
+
+                bulkOperations.push({
+                    updateOne: {
+                        filter: { _id: currentResult._id },
+                        update: { $set: { status: currentResult.status, score: currentResult.score } }
+                    }
+                });
+            }
+        }
+
+        // 4. Выполняем массовое обновление
+        if (bulkOperations.length > 0) {
+            await StudentResult.bulkWrite(bulkOperations);
+            console.log(`✅ Обновлено ${bulkOperations.length} статусов студентов.`);
+        } else {
+            console.log("Не найдено студентов для обновления.");
+        }
+
+        console.log("✅ Статусы студентов обновлены.");
     } catch (error) {
-        throw error;
+        console.error("Ошибка в markAllDevelopingStudents:", error);
     }
 }
 
@@ -302,7 +382,7 @@ async function getStudentResultsGroupedByStudent(): Promise<IStudentResultsGroup
             }
         },
         { $unwind: "$exam" },
-        { $sort: { "exam.date": -1 } },
+        { $sort: { "exam.date": 1 } },
         {
             $group: {
                 _id: "$student._id",
