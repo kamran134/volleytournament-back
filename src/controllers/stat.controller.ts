@@ -6,7 +6,6 @@ import School from "../models/school.model";
 import District from "../models/district.model";
 import { updateStats } from "../services/stats.service";
 import { Types } from "mongoose";
-import { getFiltredStudents } from "../services/student.service";
 
 export const updateStatistics = async (req: Request, res: Response) => {
     try {
@@ -54,6 +53,9 @@ export const getStudentsStatistics = async (req: Request, res: Response) => {
         const teacherIds: Types.ObjectId[] = req.query.teacherIds
             ? (req.query.teacherIds as string).split(',').map(id => new Types.ObjectId(id))
             : [];
+        const grades: number[] = req.query.grades
+            ? (req.query.grades as string).split(',').map(grade => parseInt(grade, 10))
+            : [];
 
         const pipeline: any[] = [
             // 1. Фильтруем результаты по экзаменам месяца
@@ -89,7 +91,8 @@ export const getStudentsStatistics = async (req: Request, res: Response) => {
                 $match: {
                     ...(districtIds.length > 0 && { 'studentData.district._id': { $in: districtIds } }),
                     ...(schoolIds.length > 0 && { 'studentData.school._id': { $in: schoolIds } }),
-                    ...(teacherIds.length > 0 && { 'studentData.teacher._id': { $in: teacherIds } })
+                    ...(teacherIds.length > 0 && { 'studentData.teacher._id': { $in: teacherIds } }),
+                    ...(grades.length > 0 && { 'studentData.grade': { $in: grades } })
                 }
             },
 
