@@ -17,6 +17,7 @@ export interface ISchool extends Document {
     score: number;
     averageScore: number;
     status: string;
+    active: boolean;
 }
 
 const SchoolSchema: Schema = new Schema({
@@ -28,6 +29,7 @@ const SchoolSchema: Schema = new Schema({
     score: { type: Number, required: false },
     averageScore: { type: Number, required: false },
     status: { type: String, required: false },
+    active: { type: Boolean, required: false, default: true },
 });
 
 export default mongoose.model<ISchool>("School", SchoolSchema);

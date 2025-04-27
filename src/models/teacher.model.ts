@@ -17,6 +17,7 @@ export interface ITeacher extends Document {
     score: number;
     averageScore: number;
     status: string;
+    active: boolean;
 }
 
 const TeacherSchema: Schema = new Schema({
@@ -27,6 +28,7 @@ const TeacherSchema: Schema = new Schema({
     score: { type: Number, required: false },
     averageScore: { type: Number, required: false },
     status: { type: String, required: false },
+    active: { type: Boolean, required: false, default: true },
 });
 
 export default mongoose.model<ITeacher>("Teacher", TeacherSchema);

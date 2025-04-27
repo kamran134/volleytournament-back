@@ -63,8 +63,18 @@ export const createAllResults = async (req: Request, res: Response) => {
 
         const {students, studentsWithoutTeacher} = await processStudentResults(correctStudentDataToInsert);
 
-        // нужны только те студенты, которые есть в базе
-        const filtredResults = resultReadedData.filter(result => students.map(student => student.code).includes(result.studentCode));
+        // нужны только те студенты, которые есть в базе и те, у кого totalScore = az + math + lifeKnowledge + logic
+        const filtredResults = resultReadedData.filter(result => 
+            students.map(student => student.code).includes(result.studentCode)
+            && result.totalScore === (result.az + result.math + result.lifeKnowledge + result.logic)
+            && result.totalScore > 0
+        );
+
+        const studentsWithIncorrectResults = resultReadedData.filter(result => 
+            students.map(student => student.code).includes(result.studentCode)
+            && result.totalScore !== (result.az + result.math + result.lifeKnowledge + result.logic)
+            && result.totalScore > 0
+        );
 
         const resultsToInsert: IStudentResultInput[] = filtredResults.map(result => ({
             student: students.find(student => student.code === result.studentCode)!._id as Types.ObjectId,
@@ -99,7 +109,8 @@ export const createAllResults = async (req: Request, res: Response) => {
             message: "Şagirdin nəticələri uğurla yaradıldı!",
             results,
             studentsWithoutTeacher,
-            incorrectStudentCodes
+            incorrectStudentCodes,
+            studentsWithIncorrectResults
         });
     } catch (error) {
         console.error(error);

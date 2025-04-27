@@ -68,6 +68,7 @@ export const createSchool = async (req: Request, res: Response) => {
             code,
             districtCode: existingDistrict.code,
             district: existingDistrict._id,
+            active: true
         });
 
         // Check if school with the same code already exists
@@ -142,7 +143,8 @@ export const createAllSchools = async (req: Request, res: Response) => {
                 address: item.address,
                 code: item.code,
                 districtCode: item.districtCode,
-                district: districtMap[item.districtCode]
+                district: districtMap[item.districtCode],
+                active: true
         }));
 
         // Remove the uploaded file
@@ -223,6 +225,11 @@ export const updateSchool = async (req: Request, res: Response) => {
 
         if (existingSchool.code !== school.code) {
             existingSchool.code = school.code;
+            isUpdated = true;
+        }
+
+        if (existingSchool.active !== school.active) {
+            existingSchool.active = school.active;
             isUpdated = true;
         }
 

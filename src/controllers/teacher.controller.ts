@@ -67,7 +67,8 @@ export const createTeacher = async (req: Request, res: Response) => {
             fullname,
             code,
             district: district._id,
-            school: school._id
+            school: school._id,
+            active: true
         });
 
         const savedTeacher = await teacher.save();
@@ -145,7 +146,8 @@ export const createAllTeachers = async (req: Request, res: Response) => {
                     district: districtMap[item.districtCode],
                     school: schoolMap[item.schoolCode],
                     code: item.code,
-                    fullname: item.fullname
+                    fullname: item.fullname,
+                    active: true
         }));
 
         // Remove the uploaded file
@@ -232,6 +234,11 @@ export const updateTeacher = async (req: Request, res: Response) => {
 
         if (existingTeacher.fullname !== teacher.fullname) {
             existingTeacher.fullname = teacher.fullname;
+            isUpdated = true;
+        }
+
+        if (existingTeacher.active !== teacher.active) {
+            existingTeacher.active = teacher.active;
             isUpdated = true;
         }
 
