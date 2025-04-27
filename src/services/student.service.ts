@@ -50,6 +50,7 @@ export const getFiltredStudents = async (req: Request): Promise<{ data: IStudent
         const defective: boolean = req.query.defective?.toString().toLowerCase() === 'true';
         const sortColumn: string = req.query.sortColumn?.toString() || 'averageScore';
         const sortDirection: string = req.query.sortDirection?.toString() || 'desc';
+        const code: number = req.query.code ? parseInt(req.query.code as string) : 0;
 
         const filter: any = {};
 
@@ -76,6 +77,12 @@ export const getFiltredStudents = async (req: Request): Promise<{ data: IStudent
             if (examIds.length > 0) {
                 const studentsInExam = (await StudentResult.find({ exam: { $in: examIds } })).map(res => res.student);
                 filter._id = { $in: studentsInExam }
+            }
+            if (code) {
+                const codeString = code.toString().padEnd(10, '0');
+                const codeStringEnd = code.toString().padEnd(10, '9');
+
+                filter.code = { $gte: parseInt(codeString), $lte: parseInt(codeStringEnd) };
             }
         }
 

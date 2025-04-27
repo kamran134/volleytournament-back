@@ -6,9 +6,19 @@ export const getDistricts = async (req: Request, res: Response) => {
     try {
         const sortColumn: string = req.query.sortColumn?.toString() || 'averageScore';
         const sortDirection: string = req.query.sortDirection?.toString() || 'desc';
+        const code: number = req.query.code ? parseInt(req.query.code as string) : 0;
+
+        const filter: any = {};
+
+        if (code) {
+            const codeString = code.toString().padEnd(3, '0');
+            const codeStringEnd = code.toString().padEnd(3, '9');
+
+            filter.code = { $gte: codeString, $lte: codeStringEnd };
+        }
 
         const [data, totalCount] = await Promise.all([
-            District.find().sort({ [sortColumn]: sortDirection === 'asc' ? 1 : -1 }),
+            District.find(filter).sort({ [sortColumn]: sortDirection === 'asc' ? 1 : -1 }),
             District.countDocuments()
         ]);
 

@@ -15,11 +15,18 @@ export const getFiltredSchools = async (req: Request): Promise<{ data: ISchool[]
             : [];
         const sortColumn: string = req.query.sortColumn?.toString() || 'averageScore';
         const sortDirection: string = req.query.sortDirection?.toString() || 'desc';
+        const code: number = req.query.code ? parseInt(req.query.code as string) : 0;
 
         const filter: any = {};
 
         if (districtIds.length > 0) {
             filter.district = { $in: districtIds };
+        }
+        if (code) {
+            const codeString = code.toString().padEnd(5, '0');
+            const codeStringEnd = code.toString().padEnd(5, '9');
+
+            filter.code = { $gte: codeString, $lte: codeStringEnd };
         }
 
         const [data, totalCount] = await Promise.all([

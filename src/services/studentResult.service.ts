@@ -293,7 +293,6 @@ export async function markTopStudentsRepublic(month: number, year: number): Prom
     // Группируем результаты по классам
     const gradeGroups: Record<number, IStudentResult[]> = results.reduce((acc, result) => {
         const grade = result.grade;
-        console.log("grade: ", grade);
         if (grade === undefined || grade === null) {
             console.warn("Класс не найден для результата:", result);
             return acc;

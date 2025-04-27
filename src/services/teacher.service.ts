@@ -37,6 +37,7 @@ export const getFiltredTeachers = async (req: Request): Promise<{ data: ITeacher
                 : [];
             const sortColumn: string = req.query.sortColumn?.toString() || 'averageScore';
             const sortDirection: string = req.query.sortDirection?.toString() || 'desc';
+            const code: number = req.query.code ? parseInt(req.query.code as string) : 0;
     
             const filter: any = {};
 
@@ -45,6 +46,19 @@ export const getFiltredTeachers = async (req: Request): Promise<{ data: ITeacher
             }
             if (schoolIds.length > 0) {
                 filter.school = { $in: schoolIds };
+            }
+            if (code) {
+                // коды учителей семизначные, поэтому мы быреём начало кода, сколько не хватает нулей, добавляем
+                // Далее проверяем тех, кто больше этого значения, например: мы ввели 15, а в базе 1500000, 1500001, 1500002 и т.д.
+                // мы проверяем тех, кто больше 1500000, то есть 1500001, 1500002 и т.д.
+                // не в начало, а в конец добавляем нули, чтобы получить 7 значный код
+
+                // например: 15 -> 1500000, 154 -> 1540000, 15455 -> 1545500 и т.д.
+                // но! нам 16 не нужно. Или если мы ввели 15455, то нам нужно до 1545599 включительно, но не 1545600
+                const codeString = code.toString().padEnd(7, '0');
+                const codeStringEnd = code.toString().padEnd(7, '9');
+
+                filter.code = { $gte: parseInt(codeString), $lte: parseInt(codeStringEnd) };
             }
 
             const [data, totalCount] = await Promise.all([

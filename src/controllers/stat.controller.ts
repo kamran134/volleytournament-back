@@ -56,6 +56,15 @@ export const getStudentsStatistics = async (req: Request, res: Response) => {
         const grades: number[] = req.query.grades
             ? (req.query.grades as string).split(',').map(grade => parseInt(grade, 10))
             : [];
+        const code: number = req.query.code ? parseInt(req.query.code as string) : 0;
+
+        let codeString: string = '';
+        let codeStringEnd: string = '';
+
+        if (code) {
+            codeString = code.toString().padEnd(10, '0');
+            codeStringEnd = code.toString().padEnd(10, '9');
+        }
 
         const pipeline: any[] = [
             // 1. Фильтруем результаты по экзаменам месяца
@@ -92,7 +101,8 @@ export const getStudentsStatistics = async (req: Request, res: Response) => {
                     ...(districtIds.length > 0 && { 'studentData.district._id': { $in: districtIds } }),
                     ...(schoolIds.length > 0 && { 'studentData.school._id': { $in: schoolIds } }),
                     ...(teacherIds.length > 0 && { 'studentData.teacher._id': { $in: teacherIds } }),
-                    ...(grades.length > 0 && { 'studentData.grade': { $in: grades } })
+                    ...(grades.length > 0 && { 'studentData.grade': { $in: grades } }),
+                    ...(code && { 'studentData.code': { $gte: parseInt(codeString), $lte: parseInt(codeStringEnd) } })
                 }
             },
 
