@@ -104,7 +104,7 @@ export const getStudentsStatistics = async (req: Request, res: Response) => {
                     ...(grades.length > 0 && { 'studentData.grade': { $in: grades } }),
                     ...(code && { 'studentData.code': { $gte: parseInt(codeString), $lte: parseInt(codeStringEnd) } }),
                     // выберем только тех, у кого studentData.school.active = true и studentData.teacher.active = true
-                    ...({ 'studentData.school.active': true, 'studentData.teacher.active': true })
+                    //...({ 'studentData.school.active': true, 'studentData.teacher.active': true })
                 }
             },
 
