@@ -45,7 +45,7 @@ export const getTeachersForFilter = async (req: Request, res: Response) => {
 
 export const createTeacher = async (req: Request, res: Response) => {
     try {
-        const { fullname, code, district, school } = req.body;
+        const { fullname, code, district, school, active } = req.body;
 
         if (!fullname || !code) {
             res.status(400).json({ message: "Məlumatlar tam deyil" });
@@ -68,10 +68,11 @@ export const createTeacher = async (req: Request, res: Response) => {
             code,
             district: district._id,
             school: school._id,
-            active: true
+            active
         });
 
-        const savedTeacher = await teacher.save();
+        const savedTeacher = await Teacher.create(teacher);
+        await savedTeacher.populate('district school');
         res.status(201).json({message: 'Müəllim uğurla yaradıldı!', data: savedTeacher});
     } catch (error) {
         res.status(500).json({ message: "Müəllimin əlavə edilməsində xəta", error })
