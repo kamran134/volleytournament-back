@@ -78,7 +78,10 @@ export const createSchool = async (req: Request, res: Response) => {
             return;
         }
   
-        const savedSchool = await school.save();
+        // const savedSchool = await school.save();
+        // create a new school and return with populated district
+        const savedSchool = await School.create(school);
+        await savedSchool.populate('district', 'name code');
         res.status(201).json({message: "Məktəb uğurla yaradıldı! ", data: savedSchool});
     } catch (error) {
         res.status(500).json({ message: "Məktəbin yaradılmasında xəta", error });
