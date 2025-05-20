@@ -27,7 +27,7 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(cors({
-    origin: ['http://localhost:4200', 'http://157.230.29.19', 'http://isim.kpm.az', 'https://isim.kpm.az'],
+    origin: ['http://localhost:4200', 'https://isim.kpm.az'],
     credentials: true
 }));
 app.use(express.json());

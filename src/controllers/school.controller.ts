@@ -44,7 +44,7 @@ export const getSchoolsForFilter = async (req: Request, res: Response) => {
 
 export const createSchool = async (req: Request, res: Response) => {
     try {
-        const { name, address, code, district } = req.body;
+        const { name, address, code, district, active } = req.body;
   
         if (!name || !code || !district) {
             res.status(400).json({ message: "Məlumatlar tam deyil" });
@@ -68,7 +68,7 @@ export const createSchool = async (req: Request, res: Response) => {
             code,
             districtCode: existingDistrict.code,
             district: existingDistrict._id,
-            active: true
+            active
         });
 
         // Check if school with the same code already exists
