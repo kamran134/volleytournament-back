@@ -1,5 +1,5 @@
 import express from "express";
-import { createExam, deleteAllExams, deleteExam, getExams } from "../controllers/exam.controller";
+import { createExam, deleteAllExams, deleteExam, getExams, getExamsForFilter } from "../controllers/exam.controller";
 import { authMiddleware } from "../middleware/auth.middleware";
 
 const router = express.Router();
@@ -10,5 +10,7 @@ router.route("/")
     .delete(authMiddleware(["superadmin", "admin"]), deleteAllExams);
 router.route("/:id")
     .delete(authMiddleware(["superadmin", "admin"]), deleteExam);
+router.route("/filter")
+    .get(getExamsForFilter)
 
 export default router;

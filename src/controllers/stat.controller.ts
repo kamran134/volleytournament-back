@@ -26,24 +26,6 @@ export const getStudentsStatistics = async (req: Request, res: Response) => {
     try {
         const { month } = req.query;
 
-        if (!month) {
-            res.status(400).json({ message: "Ay seçilməyib!" });
-            return;
-        }
-
-        const [year, monthStr] = (month as string).split("-");
-        const monthIndex: number = parseInt(monthStr, 10);
-        const selectedMonth = new Date(parseInt(year, 10), monthIndex, 1);
-        const startDate = new Date(selectedMonth);
-        const endDate = new Date(new Date(startDate).setMonth(startDate.getMonth() + 1));
-
-        const examsInMonth = await Exam.find({ date: { $gte: startDate, $lt: endDate } }).select('_id');
-
-        if (examsInMonth.length === 0) {
-            res.status(404).json({ message: "Bu ayda imtahan tapılmadı!" });
-            return;
-        }
-
         const districtIds: Types.ObjectId[] = req.query.districtIds
             ? (req.query.districtIds as string).split(',').map(id => new Types.ObjectId(id))
             : [];
@@ -57,6 +39,36 @@ export const getStudentsStatistics = async (req: Request, res: Response) => {
             ? (req.query.grades as string).split(',').map(grade => parseInt(grade, 10))
             : [];
         const code: number = req.query.code ? parseInt(req.query.code as string) : 0;
+        const examId: Types.ObjectId | null = req.query.examId
+            ? new Types.ObjectId(req.query.examId as string)
+            : null;
+
+        if (!month) {
+            res.status(400).json({ message: "Ay seçilməyib!" });
+            return;
+        }
+
+        const [year, monthStr] = (month as string).split("-");
+        const monthIndex: number = parseInt(monthStr, 10);
+        const selectedMonth = new Date(parseInt(year, 10), monthIndex, 1);
+        const startDate = new Date(selectedMonth);
+        const endDate = new Date(new Date(startDate).setMonth(startDate.getMonth() + 1));
+
+        let examIds: Types.ObjectId[] = [];
+
+        if (examId) {
+            examIds = [examId];
+        }
+        else {
+            examIds = await Exam.find({ date: { $gte: startDate, $lt: endDate } }).select('_id');
+        }
+
+        
+
+        if (examIds.length === 0) {
+            res.status(404).json({ message: "Bu ayda imtahan tapılmadı!" });
+            return;
+        }
 
         let codeString: string = '';
         let codeStringEnd: string = '';
@@ -68,7 +80,7 @@ export const getStudentsStatistics = async (req: Request, res: Response) => {
 
         const pipeline: any[] = [
             // 1. Фильтруем результаты по экзаменам месяца
-            { $match: { exam: { $in: examsInMonth.map(e => e._id) } } },
+            { $match: { exam: { $in: examIds.map(e => e._id) } } },
 
             // 2. Присоединяем данные студентов
             {

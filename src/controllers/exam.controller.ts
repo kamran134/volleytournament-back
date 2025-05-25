@@ -23,6 +23,16 @@ export const getExams = async (req: Request, res: Response) => {
     }
 }
 
+export const getExamsForFilter = async (req: Request, res: Response) => {
+    try {
+        const exams = await Exam.find().sort({ date: -1 });
+        res.status(200).json({ data: exams });
+    }
+    catch (error) {
+        res.status(500).json({ message: "İmtahanların alınmasında xəta", error });
+    }
+}
+
 export const createExam = async (req: Request, res: Response) => {
     try {
         const { name, code, date } = req.body;
