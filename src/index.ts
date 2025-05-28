@@ -10,6 +10,8 @@ import examRoutes from "./routes/exam.routes";
 import studentRoutes from "./routes/student.routes";
 import studentResultRoutes from "./routes/studentResult.routes";
 import statRoutes from "./routes/stat.routes";
+import userRoutes from "./routes/user.routes";
+import userSettingsRoutes from "./routes/userSettings.routes";
 import authRoutes from "./routes/auth.routes";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
@@ -53,7 +55,9 @@ app.use("/api/exams", examRoutes);
 app.use("/api/students", studentRoutes);
 app.use("/api/student-results", studentResultRoutes);
 app.use("/api/stats", statRoutes);
-app.use("/auth", authRoutes)
+app.use("/api/users", userRoutes);
+app.use("/api/user-settings", userSettingsRoutes);
+app.use("/auth", authRoutes);
 
 app.use((req, res, next) => {
     res.status(404).json({ message: 'Məlumat tapılmadı' });

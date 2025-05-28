@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { validationResult } from "express-validator";
 import User from "../models/user.model";
@@ -33,14 +33,13 @@ export const login = async (req: Request, res: Response) => {
 
         res.cookie("token", token, {
             httpOnly: true,
-            secure: false,
-            //secure: process.env.NODE_ENV === "production",
+            secure: true,
             sameSite: "strict",
             path: "/"
         });
         
 
-        res.json({ message: "Uğurlu avtorizasiya", role: user.role, token });
+        res.json({ message: "Uğurlu avtorizasiya", role: user.role, token, id: user._id });
     } catch (error) {
         res.status(500).json({ message: "Serverdə xəta!" });
         console.error(error);
@@ -63,9 +62,21 @@ export const register = async (req: Request, res: Response) => {
             return;
         }
 
-        const passwordHash = await bcrypt.hash(password, 10);
+        if (!errors.isEmpty()) {
+            res.status(400).json({ errors: errors.array() });
+            return;
+        }
+
+        if (!password || typeof password !== "string" || password.trim().length < 6) {
+            res.status(400).json({ message: "Parol təqdim edilməyib və ya düzgün formatda deyil!" });
+            return;
+        }
+
+        console.log('password:', password);
+
+        const passwordHash = await bcrypt.hash(password.toString(), 10);
         const newUser = new User({
-            email, passwordHash, role, isApproved: role === "superadmin"
+            email, passwordHash, role: role || 'user', isApproved: role === "superadmin"
         });
 
         await newUser.save();
