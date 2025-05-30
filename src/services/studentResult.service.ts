@@ -314,6 +314,8 @@ export async function markTopStudentsRepublic(month: number, year: number): Prom
         // Находим максимальный totalScore по всей республике
         const maxTotalScore = Math.max(...gradeResults.map(r => r.totalScore));
 
+        if (maxTotalScore < 47) continue; // Если максимальный балл меньше 47, то не считаем
+        // Если статус не лицейный, то это не успех
         // Определяем лучших учеников
         const topStudents = gradeResults.filter(r => r.totalScore === maxTotalScore);
 
