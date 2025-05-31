@@ -49,7 +49,7 @@ export const getStudentsStatistics = async (req: Request, res: Response) => {
         }
 
         const [year, monthStr] = (month as string).split("-");
-        const monthIndex: number = parseInt(monthStr, 10);
+        const monthIndex: number = parseInt(monthStr, 10) - 1;
         const selectedMonth = new Date(parseInt(year, 10), monthIndex, 1);
         const startDate = new Date(selectedMonth);
         const endDate = new Date(new Date(startDate).setMonth(startDate.getMonth() + 1));
