@@ -2,6 +2,7 @@ import Exam, { IExam } from "../models/exam.model";
 import District from "../models/district.model";
 import School from "../models/school.model";
 import Teacher from "../models/teacher.model";
+import Student from "../models/student.model";
 import { IStudent } from "../models/student.model";
 import StudentResult, { IStudentResult } from "../models/studentResult.model";
 import { markAllDevelopingStudents, markDevelopingStudents, markTopStudents, markTopStudentsRepublic } from "./studentResult.service";
@@ -138,7 +139,7 @@ export const calculateAndSaveScores = async () => {
             updateDistrictScores(districtRates, districtScores),
             updateSchoolScores(districtRates, schoolScores, results),
             updateTeacherScores(districtRates, teacherScores, results),
-            // updateStudentScores(districtRates, studentScores, results)
+            updateStudentScores(districtRates, studentScores, results)
         ]);
 
         console.log("✅ Баллы обновлены.");
@@ -203,21 +204,21 @@ const updateTeacherScores = async (districtRates: Map<string, number>, teacherSc
     }
 }
 
-// const updateStudentScores = async (districtRates: Map<string, number>, studentScores: Map<string, number>, results: IStudentResult[]) => {
-//     try {
-//         console.log("🔄 Обновление баллов студентов...");
-
-//         // Обновляем баллы для студентов
-//         for (const [studentId, score] of studentScores.entries()) {
-//             const student = results.find(r => (r.student._id || '').toString() === studentId)?.student;
-//             const districtId = student?.district?._id.toString();
-//             const rate = districtRates.get(districtId || '') || 1;
-//             await StudentResult.findByIdAndUpdate(studentId, {
-//                 score,
-//                 averageScore: score / rate
-//             });
-//         }
-//     } catch (error) {
-//         console.error('Error updating student scores:', error);
-//     }
-// }
+const updateStudentScores = async (districtRates: Map<string, number>, studentScores: Map<string, number>, results: IStudentResult[]) => {
+    try {
+        console.log("🔄 Обновление баллов студентов...");
+        
+        // Обновляем баллы для студентов
+        for (const [studentId, score] of studentScores.entries()) {
+            const student = results.find(r => (r.student._id || '').toString() === studentId)?.student;
+            const districtId = (student?.district?._id || '').toString();
+            const rate = districtRates.get(districtId || '') || 1;
+            await Student.findByIdAndUpdate(studentId, {
+                score,
+                averageScore: score / rate
+            });
+        }
+    } catch (error) {
+        console.error('Error updating student scores:', error);
+    }
+}

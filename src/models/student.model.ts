@@ -23,8 +23,9 @@ export interface IStudent extends Document {
     grade: number; // sinif
     teacher: ITeacher;
     school?: ISchool;
-    district?: IDistrict;
+    district: IDistrict;
     score: number;
+    averageScore: number;
     maxLevel: number;
     status: string;
 }

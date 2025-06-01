@@ -22,6 +22,7 @@ export const updateStatistics = async (req: Request, res: Response) => {
     }
 }
 
+// Ayın şagirdləri, Respublika üzrə ayın şagirdləri və İnkişaf edən şagirdlərin statistikası
 export const getStudentsStatistics = async (req: Request, res: Response) => {
     try {
         const { month } = req.query;
@@ -62,8 +63,6 @@ export const getStudentsStatistics = async (req: Request, res: Response) => {
         else {
             examIds = await Exam.find({ date: { $gte: startDate, $lt: endDate } }).select('_id');
         }
-
-        
 
         if (examIds.length === 0) {
             res.status(404).json({ message: "Bu ayda imtahan tapılmadı!" });
@@ -167,6 +166,7 @@ export const getStatisticsByExam = async (req: Request, res: Response) => {
     }
 }
 
+// İlin müəllimləri
 export const getTeacherStatistics = async (req: Request, res: Response) => {
     try {
         const districtIds: Types.ObjectId[] = req.query.districtIds
@@ -175,6 +175,11 @@ export const getTeacherStatistics = async (req: Request, res: Response) => {
         const schoolIds: Types.ObjectId[] = req.query.schoolIds
             ? (req.query.schoolIds as string).split(',').map(id => new Types.ObjectId(id))
             : [];
+        const sortColumn: string = req.query.sortColumn?.toString() || 'averageScore';
+        const sortDirection: string = req.query.sortDirection?.toString() || 'desc';
+
+        const sortOptions: any = {};
+        sortOptions[sortColumn] = sortDirection === 'asc' ? 1 : -1;
 
         const filter: any = { score: { $exists: true }, averageScore: { $exists: true } };
 
@@ -190,7 +195,7 @@ export const getTeacherStatistics = async (req: Request, res: Response) => {
             .find(filter)
             .populate("school")
             .populate({ path: "school", populate: { path: "district", model: "District" } })
-            .sort({ averageScore: -1 });
+            .sort(sortOptions);
 
         res.status(200).json({ teachers });
     } catch (error) {
@@ -199,13 +204,18 @@ export const getTeacherStatistics = async (req: Request, res: Response) => {
     }
 }
 
+// İlin məktəbləri
 export const getSchoolStatistics = async (req: Request, res: Response) => {
     try {
         // просто берём школы из базы, тех, у кого есть score и averageScore по убыванию averageScore
         const districtIds: Types.ObjectId[] = req.query.districtIds
             ? (req.query.districtIds as string).split(',').map(id => new Types.ObjectId(id))
             : [];
+        const sortColumn: string = req.query.sortColumn?.toString() || 'averageScore';
+        const sortDirection: string = req.query.sortDirection?.toString() || 'desc';
 
+        const sortOptions: any = {};
+        sortOptions[sortColumn] = sortDirection === 'asc' ? 1 : -1;
         const filter: any = { score: { $exists: true }, averageScore: { $exists: true } };
 
         if (districtIds.length > 0) {
@@ -215,7 +225,7 @@ export const getSchoolStatistics = async (req: Request, res: Response) => {
         const schools = await School
             .find(filter)
             .populate("district")
-            .sort({ averageScore: -1 });
+            .sort(sortOptions);
 
         res.status(200).json({ schools });
     } catch (error) {
@@ -224,12 +234,18 @@ export const getSchoolStatistics = async (req: Request, res: Response) => {
     }
 }
 
+// İlin rayonları
 export const getDistrictStatistics = async (req: Request, res: Response) => {
     try {
+        const sortColumn: string = req.query.sortColumn?.toString() || 'averageScore';
+        const sortDirection: string = req.query.sortDirection?.toString() || 'desc';
+
+        const sortOptions: any = {};
+        sortOptions[sortColumn] = sortDirection === 'asc' ? 1 : -1;
         // просто берём районы из базы, тех, у кого есть score и averageScore по убыванию averageScore
         const districts = await District
             .find({ score: { $exists: true }, averageScore: { $exists: true } })
-            .sort({ averageScore: -1 });
+            .sort(sortOptions);
 
         res.status(200).json({ districts });
     } catch (error) {

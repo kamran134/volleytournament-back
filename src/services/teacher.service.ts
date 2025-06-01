@@ -38,7 +38,7 @@ export const getFiltredTeachers = async (req: Request): Promise<{ data: ITeacher
             const sortColumn: string = req.query.sortColumn?.toString() || 'averageScore';
             const sortDirection: string = req.query.sortDirection?.toString() || 'desc';
             const code: number = req.query.code ? parseInt(req.query.code as string) : 0;
-    
+
             const filter: any = {};
 
             if (districtIds.length > 0 && schoolIds.length == 0) {

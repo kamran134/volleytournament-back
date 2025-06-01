@@ -86,10 +86,14 @@ export const getFiltredStudents = async (req: Request): Promise<{ data: IStudent
             }
         }
 
+        const sortOptions: any = {};
+        sortOptions[sortColumn] = sortDirection === 'asc' ? 1 : -1;
+        console.log(`Sort options: ${JSON.stringify(sortOptions)}`);
+
         const [data, totalCount] = await Promise.all([
             Student.find(filter)
                 .populate('district school teacher')
-                .sort({ [sortColumn]: sortDirection === 'asc' ? 1 : -1 })
+                .sort(sortOptions)
                 .skip(skip)
                 .limit(size),
             Student.countDocuments(filter)
