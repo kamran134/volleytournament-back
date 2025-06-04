@@ -12,8 +12,8 @@ import { Types } from "mongoose";
 export const resetStats = async (): Promise<void> => {
     try {
         console.log("🔄 Сброс статистики...");
-        await District.updateMany({ score: 0, averageScore: 0, rate: 0 });
-        await StudentResult.updateMany({ status: "", score: 1 });
+        await District.updateMany({}, { score: 0, averageScore: 0, rate: 0 });
+        await StudentResult.updateMany({}, { status: "", score: 1 });
         console.log("✅ Статистика сброшена.");
     } catch (error) {
         console.error(error);
