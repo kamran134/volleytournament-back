@@ -22,6 +22,49 @@ export const getFilteredUsers = async (req: Request): Promise<{ data: IUser[], t
     }
 }
 
+export const getUserById = async (id: string): Promise<IUser | null> => {
+    try {
+        const user: IUser | null = await User.findById(id);
+        if (!user) {
+            throw new Error("İstifadəçi tapılmadı");
+        }
+        return user;
+    } catch (error) {
+        console.error("Error fetching user by ID:", error);
+        throw new Error("Failed to fetch user");
+    }
+}
+
+export const getUserByEmail = async (email: string): Promise<IUser | null> => {
+    try {
+        const user: IUser | null = await User.findOne({ email });
+        if (!user) {
+            throw new Error("İstifadəçi tapılmadı");
+        }
+        return user;
+    } catch (error) {
+        console.error("Error fetching user by email:", error);
+        throw new Error("Failed to fetch user");
+    }
+}
+
+export const addUser = async (userData: IUser): Promise<IUser> => {
+    try {
+        const existingUser: IUser | null = await User.findOne({ email: userData.email });
+        if (existingUser) {
+            throw new Error("İstifadəçi artıq mövcuddur");
+        }
+        const newUser: IUser = new User(userData);
+        
+        const createdUser = await User.create(newUser);
+
+        return createdUser;
+    } catch (error) {
+        console.error("User creation error:", error);
+        throw new Error("Failed to create user");
+    }
+}
+
 export const editUser = async (id: string, updateData: Partial<IUser>): Promise<IUser | null> => {
     try {
         const updatedUser: IUser | null = await User.findByIdAndUpdate(id, updateData, { new: true });
@@ -34,7 +77,8 @@ export const editUser = async (id: string, updateData: Partial<IUser>): Promise<
         throw new Error("Failed to update user");
     }
 }
-export const deleteUser = async (id: string): Promise<IUser | null> => {
+
+export const removeUser = async (id: string): Promise<IUser | null> => {
     try {
         const deletedUser: IUser | null = await User.findByIdAndDelete(id);
         if (!deletedUser) {

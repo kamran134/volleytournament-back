@@ -15,6 +15,8 @@ export const login = async (req: Request, res: Response) => {
     try {
         const user = await User.findOne({ email });
 
+        console.log("Found user:", user);
+
         if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
             res.status(400).json({ message: "Yanlış məlumatlar!" });
             return;
@@ -39,7 +41,7 @@ export const login = async (req: Request, res: Response) => {
         });
         
 
-        res.json({ message: "Uğurlu avtorizasiya", role: user.role, token, id: user._id });
+        res.json({ message: "Uğurlu avtorizasiya", token });
     } catch (error) {
         res.status(500).json({ message: "Serverdə xəta!" });
         console.error(error);
@@ -72,8 +74,6 @@ export const register = async (req: Request, res: Response) => {
             return;
         }
 
-        console.log('password:', password);
-
         const passwordHash = await bcrypt.hash(password.toString(), 10);
         const newUser = new User({
             email, passwordHash, role: role || 'user', isApproved: role === "superadmin"
@@ -101,6 +101,25 @@ export const approveUser = async (req: Request, res: Response) => {
         res.status(500).json({ message: "Serverdə xəta!" });
         console.error(error);
     }
+}
+
+export const checkRole = async (req: Request, res: Response) => {
+    const userId = req.params.id;
+
+    console.log("Checking role for user ID:", userId);
+
+    if (!userId) {
+        res.status(401).json({ message: "İstifadəçi tapılmadı!" });
+        return;
+    }
+
+    const role = await User.findById(userId).select("role");
+    if (!role) {
+        res.status(404).json({ message: "İstifadəçi rolu tapılmadı!" });
+        return;
+    }
+
+    res.json({ role: role.role });
 }
 
 export const logout = (req: Request, res: Response) => {

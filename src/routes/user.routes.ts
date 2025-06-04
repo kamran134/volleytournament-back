@@ -1,12 +1,14 @@
 import express from 'express';
-import { getUsers, updateUser } from '../controllers/user.controller';
-import { authMiddleware } from '../middleware/auth.middleware';
+import { createUser, deleteUser, getUsers, updateUser } from '../controllers/user.controller';
+import { authMiddleware, checkAdminRole } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
 router.route("/")
-    .get(authMiddleware(["superadmin", "admin"]), getUsers)
-    .put(authMiddleware(["superadmin", "admin"]), updateUser);
+    .get(checkAdminRole, getUsers)
+    .post(checkAdminRole, createUser)
+    .put(checkAdminRole, updateUser);
+router.route("/:id")
+    .delete(authMiddleware(["superadmin", "admin"]), deleteUser);
 
-// router.route("/:id")
 export default router;

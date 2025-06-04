@@ -3,8 +3,16 @@ import mongoose from "mongoose";
 export interface IUser extends Document {
     email: string;
     passwordHash: string;
-    role: "superadmin" | "admin" | "moderator" | "user";
+    role: UserRole;
     isApproved: boolean;
+}
+
+export enum UserRole {
+    SUPERADMIN = "superadmin",
+    ADMIN = "admin",
+    MODERATOR = "moderator",
+    TEACHER = "teacher",
+    USER = "user"
 }
 
 const UserSchema = new mongoose.Schema({

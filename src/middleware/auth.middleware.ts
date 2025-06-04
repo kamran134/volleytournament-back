@@ -38,3 +38,26 @@ export const authMiddleware = (roles: string[]) => (req: Request, res: Response,
         console.error(error);
     }
 }
+
+export const checkAdminRole = (req: Request, res: Response, next: NextFunction) => {
+    const token = req.cookies.token;
+    if (!token) {
+        res.status(401).json({ message: "Avtorizasiya tələb olunur" });
+        return;
+    }
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; role: string; }
+
+        if (decoded.role !== "admin" && decoded.role !== "superadmin") {
+            res.status(403).json({ message: "Yalnız admin və superadminlər bu əməliyyatı edə bilər" });
+            return;
+        }
+
+        req.user = decoded;
+        next();
+    } catch (error) {
+        res.status(401).json({ message: "Invalid token" });
+        console.error(error);
+    }
+}

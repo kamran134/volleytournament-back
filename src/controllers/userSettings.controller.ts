@@ -4,6 +4,10 @@ import UserSettings, { IUserSettings } from "../models/userSettings.model";
 export const getUserSettings = async (req: Request, res: Response) => {
     try {
         const userId = req.query.userId;
+        if (!userId) {
+            res.status(400).json({ error: "User ID is required" });
+            return;
+        }
         const settings = await UserSettings.findOne({ userId });
         res.json(settings);
     } catch (error) {
