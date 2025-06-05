@@ -113,6 +113,6 @@ export const deleteUser = async (req: Request, res: Response) => {
         res.status(200).json({ message: "İstifadəçi uğurla silindi" });
     } catch (error) {
         console.error("User deletion error:", error);
-        res.status(500).json({ message: "Server xətası" });
+        res.status(500).json({ message: `Server xətası. ${error}` });
     }
 }

@@ -79,11 +79,14 @@ export const removeUser = async (id: string): Promise<IUser | null> => {
     try {
         const deletedUser: IUser | null = await User.findByIdAndDelete(id);
         if (!deletedUser) {
-            throw new Error("User not found");
+            throw new Error("İstifadəçi tapılmadı");
+        }
+        if (deletedUser.role === 'superadmin') {
+            throw new Error("Superadmin istifadəçiləri silinə bilməz");
         }
         return deletedUser;
     } catch (error) {
         console.error("User deletion error:", error);
-        throw new Error("Failed to delete user");
+        throw new Error("Silinmə zamanı xəta baş verdi");
     }
 }
