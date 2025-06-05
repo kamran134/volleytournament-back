@@ -30,7 +30,7 @@ export const createUser = async (req: Request, res: Response) => {
             return;
         }
 
-        newUser.password = await bcrypt.hash(newUser.password, 10); // Hash the password
+        newUser.passwordHash = await bcrypt.hash(newUser.password, 10); // Hash the password
 
         // Create the user
         await addUser(newUser);

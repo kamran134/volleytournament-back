@@ -38,9 +38,6 @@ export const getUserById = async (id: string): Promise<IUser | null> => {
 export const getUserByEmail = async (email: string): Promise<IUser | null> => {
     try {
         const user: IUser | null = await User.findOne({ email });
-        if (!user) {
-            throw new Error("İstifadəçi tapılmadı");
-        }
         return user;
     } catch (error) {
         console.error("Error fetching user by email:", error);
