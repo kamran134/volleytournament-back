@@ -2,14 +2,6 @@ import express from "express";
 import cors from "cors";
 import dontenv from "dotenv";
 import connectDB from "./config/db";
-import districtRoutes from "./routes/district.routes";
-import schoolRoutes from "./routes/school.routes";
-import teacherRoutes from "./routes/teacher.routes";
-import bookletRoutes from "./routes/booklet.routes";
-import examRoutes from "./routes/exam.routes";
-import studentRoutes from "./routes/student.routes";
-import studentResultRoutes from "./routes/studentResult.routes";
-import statRoutes from "./routes/stat.routes";
 import userRoutes from "./routes/user.routes";
 import userSettingsRoutes from "./routes/userSettings.routes";
 import authRoutes from "./routes/auth.routes";
@@ -29,7 +21,7 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(cors({
-    origin: ['http://localhost:4200', 'https://isim.kpm.az'],
+    origin: ['http://localhost:4200', 'https://42n.space'],
     credentials: true
 }));
 app.use(express.json());
@@ -47,14 +39,6 @@ app.get("/", (req, res) => {
 });
 
 // Routes
-app.use("/api/districts", districtRoutes);
-app.use("/api/schools", schoolRoutes);
-app.use("/api/teachers", teacherRoutes);
-app.use("/api/booklets", bookletRoutes);
-app.use("/api/exams", examRoutes);
-app.use("/api/students", studentRoutes);
-app.use("/api/student-results", studentResultRoutes);
-app.use("/api/stats", statRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/user-settings", userSettingsRoutes);
 app.use("/auth", authRoutes);

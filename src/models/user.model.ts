@@ -10,15 +10,15 @@ export interface IUser extends Document {
 export enum UserRole {
     SUPERADMIN = "superadmin",
     ADMIN = "admin",
-    MODERATOR = "moderator",
-    TEACHER = "teacher",
+    COACH = "coach",
+    CAPTAIN = "captain",
     USER = "user"
 }
 
 const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     passwordHash: { type: String, required: true },
-    role: { type: String, enum: ["superadmin", "admin", "moderator", "user"], default: "user" },
+    role: { type: String, enum: ["superadmin", "admin", "coach", "captain", "user"], default: "user" },
     isApproved: { type: Boolean, default: false }
 });
 

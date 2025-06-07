@@ -18,5 +18,5 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t ghcr.io/kamran134/education-system-backend:latest .
-          docker push ghcr.io/kamran134/education-system-backend:latest
+          docker build -t ghcr.io/kamran134/volleytournament-back:latest .
+          docker push ghcr.io/kamran134/volleytournament-back:latest

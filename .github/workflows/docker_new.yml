@@ -21,8 +21,8 @@ jobs:
       - name: Build and Push Backend Image
         run: |
           cd backend  # Если backend в подпапке
-          docker build -t ghcr.io/kamran134/education-system-backend:latest .
-          docker push ghcr.io/kamran134/education-system-backend:latest
+          docker build -t ghcr.io/kamran134/volleytournament-back:latest .
+          docker push ghcr.io/kamran134/volleytournament-back:latest
 
       - name: Install SSH Key
         run: |
@@ -36,5 +36,5 @@ jobs:
           ssh -i deploy_key -o StrictHostKeyChecking=no user@your-server-ip "\
             cd /path/to/project \
             && echo 'MONGO_URI=${MONGO_URI}' > .env \
-            && docker pull ghcr.io/kamran134/education-system-backend:latest \
+            && docker pull ghcr.io/kamran134/volleytournament-back:latest \
             && docker-compose up -d backend"  # Обновляем только backend
