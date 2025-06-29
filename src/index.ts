@@ -2,14 +2,14 @@ import express from "express";
 import cors from "cors";
 import dontenv from "dotenv";
 import connectDB from "./config/db";
-import userRoutes from "./routes/user.routes";
-import userSettingsRoutes from "./routes/userSettings.routes";
 import authRoutes from "./routes/auth.routes";
+import userRoutes from "./routes/user.routes";
+import teamRoutes from "./routes/team.routes";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import { errorHandler } from "./middleware/errorHandler";
+import { errorHandler } from "./middleware/error.middleware";
 
 dontenv.config();
 connectDB();
@@ -39,9 +39,9 @@ app.get("/", (req, res) => {
 });
 
 // Routes
-app.use("/api/users", userRoutes);
-app.use("/api/user-settings", userSettingsRoutes);
 app.use("/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/teams", teamRoutes);
 
 app.use((req, res, next) => {
     res.status(404).json({ message: 'Məlumat tapılmadı' });

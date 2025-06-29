@@ -1,118 +1,77 @@
-import { Request, Response } from 'express';
-import { addUser, editUser, getFilteredUsers, getUserByEmail, getUserById, removeUser } from '../services/user.service';
-import bcrypt from "bcrypt";
+import { NextFunction, Request, Response } from 'express';
+import { UserUseCase } from '../business/user/user.usecase';
+import { CreateUserDto, UpdateUserDto, UserFilterDto } from '../interfaces/user.dto';
+import { validate } from 'class-validator';
+import { AppError } from '../utils/errors';
+import { MESSAGES } from '../constants/messages';
 
-export const getUsers = async (req: Request, res: Response) => {
-    try {
-        const { data, totalCount } = await getFilteredUsers(req);
-        res.status(200).json({ data, totalCount, message: "Users retrieved successfully" });
+export class UserController {
+    constructor(private userUseCase: UserUseCase) {}
+
+    async getUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const filterDto = new UserFilterDto();
+            Object.assign(filterDto, req.query);
+            const errors = await validate(filterDto);
+            if (errors.length > 0) {
+                throw new AppError(errors.map(err => err.toString()).join(', '), 400);
+            }
+
+            const { data, totalCount } = await this.userUseCase.getUsers(filterDto);
+            res.status(200).json({ data, totalCount, message: MESSAGES.USER.SUCCESS_FETCH });
+        } catch (error) {
+            next(error);
+        }
     }
-    catch (error) {
-        console.error("İstifadəçilərin alınmasında xəta:", error);
-        res.status(500).json({ message: "Internal server error" });
+
+    async createUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const createUserDto = new CreateUserDto();
+            Object.assign(createUserDto, req.body);
+            const errors = await validate(createUserDto);
+            if (errors.length > 0) {
+                throw new AppError(errors.map(err => err.toString()).join(', '), 400);
+            }
+
+            const user = await this.userUseCase.createUser(createUserDto);
+            res.status(201).json({ user, message: MESSAGES.USER.SUCCESS_CREATE });
+        } catch (error) {
+            next(error);
+        }
     }
-}
 
-export const createUser = async (req: Request, res: Response) => {
-    try {
-        const newUser = req.body;
+    async updateUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const userId = req.body.id;
+            if (!userId) {
+                throw new AppError(MESSAGES.USER.NOT_FOUND, 404);
+            }
 
-        if (!newUser || typeof newUser !== 'object') {
-            res.status(400).json({ message: "İstifadəçi məlumatları səhvdir" });
-            return;
+            const updateUserDto = new UpdateUserDto();
+            Object.assign(updateUserDto, req.body);
+            const errors = await validate(updateUserDto);
+            if (errors.length > 0) {
+                throw new AppError(errors.map(err => err.toString()).join(', '), 400);
+            }
+
+            const user = await this.userUseCase.updateUser(userId, updateUserDto);
+            res.status(200).json({ user, message: MESSAGES.USER.SUCCESS_UPDATE });
+        } catch (error) {
+            next(error);
         }
-
-        // Check if the user already exists
-        const existingUser = await getUserByEmail(newUser.email);
-
-        if (existingUser) {
-            res.status(400).json({ message: "İstifadəçi artıq mövcuddur" });
-            return;
-        }
-
-        newUser.passwordHash = await bcrypt.hash(newUser.password, 10); // Hash the password
-
-        // Create the user
-        await addUser(newUser);
-        
-        res.status(201).json({ message: "İstifadəçi uğurla yaradıldı" });
-    } catch (error) {
-        console.error("User creation error:", error);
-        res.status(500).json({ message: "Server xətası" });
     }
-}
 
-export const updateUser = async (req: Request, res: Response) => {
-    try {
-        const updateData = req.body;
-        const id = updateData._id;
-        const updateRole = updateData.role;
+    async deleteUser(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const userId = req.params.id;
+            if (!userId) {
+                throw new AppError(MESSAGES.USER.NOT_FOUND, 404);
+            }
 
-        if (!updateData || typeof updateData !== 'object') {
-            res.status(400).json({ message: "Məlumatlar yalnışdır" });
-            return;
+            const user = await this.userUseCase.deleteUser(userId);
+            res.status(200).json({ user, message: MESSAGES.USER.SUCCESS_DELETE });
+        } catch (error) {
+            next(error);
         }
-
-        if (!id) {
-            res.status(400).json({ message: "ID mütləqdir" });
-            return;
-        }
-
-        // Check if the user exists
-        const existingUser = await getUserById(id);
-
-        if (!existingUser) {
-            res.status(404).json({ message: "İstifadəçi tapılmadı" });
-            return;
-        }
-        // Update the user
-        if (existingUser.role === "superadmin") {
-            res.status(403).json({ message: "Superadmini digər istifadəçi redaktə edə bilməz!" });
-            return;
-        }
-
-        if (updateRole === "superadmin") {
-            res.status(403).json({ message: "Superadmin bu üsulla təyin edilə bilməz! Texniki dəstəyə müraciət edin!" });
-            return;
-        }
-
-        await editUser(id, updateData);
-        
-        res.status(200).json({ message: "İstifadəçi məlumatları yeniləndi!" });
-    } catch (error) {
-        console.error("User update error:", error);
-        res.status(500).json({ message: "Server xətası" });
-    }
-}
-
-export const deleteUser = async (req: Request, res: Response) => {
-    try {
-        const { id } = req.params;
-
-        if (!id) {
-            res.status(400).json({ message: "ID mütləqdir" });
-            return;
-        }
-
-        // Check if the user exists
-        const existingUser = await getUserById(id);
-
-        if (!existingUser) {
-            res.status(404).json({ message: "İstifadəçi tapılmadı" });
-            return;
-        }
-
-        if (existingUser.role === "superadmin") {
-            res.status(403).json({ message: "Superadmini silmək olmaz!" });
-            return;
-        }
-
-        // Delete the user
-        await removeUser(id);
-        
-        res.status(200).json({ message: "İstifadəçi uğurla silindi" });
-    } catch (error) {
-        console.error("User deletion error:", error);
-        res.status(500).json({ message: `Server xətası. ${error}` });
     }
 }
