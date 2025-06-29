@@ -2,7 +2,7 @@ import express from 'express';
 import { TournamentController } from '../controllers/tournament.controller';
 import { TournamentService } from '../services/tournament.service';
 import { TournamentUseCase } from '../business/tournament/tournament.usecase';
-import { authMiddleware, checkAdminRole } from '../middleware/auth.middleware';
+import { checkAdminRole } from '../middleware/auth.middleware';
 
 const router = express.Router();
 const tournamentService = new TournamentService();
