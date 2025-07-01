@@ -42,7 +42,7 @@ export class GamerController {
 
     async updateGamer(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const { id } = req.body;
+            const id = req.body._id;
             if (!id) {
                 throw new AppError(MESSAGES.GAMER.INVALID_ID, 400);
             }

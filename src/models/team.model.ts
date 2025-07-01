@@ -1,4 +1,4 @@
-import mongoose, { Types } from "mongoose";
+import mongoose from "mongoose";
 
 export interface ITeam extends Document{
     name: string;
@@ -6,9 +6,10 @@ export interface ITeam extends Document{
     logoUrl?: string;
     country: string;
     city: string;
-    players?: Types.ObjectId[];
-    coaches?: Types.ObjectId[];
-    captain?: Types.ObjectId;
+    // players?: Types.ObjectId[];
+    // coaches?: Types.ObjectId[];
+    // captain?: Types.ObjectId;
+    tournaments?: mongoose.Types.ObjectId[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -19,9 +20,10 @@ const TeamSchema = new mongoose.Schema({
     logoUrl: { type: String, required: false, default: null },
     country: { type: String, required: true },
     city: { type: String, required: true },
-    players: [{ type: mongoose.Schema.Types.ObjectId, ref: "Gamer", required: false }],
-    coaches: [{ type: mongoose.Schema.Types.ObjectId, ref: "Gamer", required: false }],
-    captain: { type: mongoose.Schema.Types.ObjectId, ref: "Gamer", required: false }
+    tournaments: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tournament", required: false }],
+    // players: [{ type: mongoose.Schema.Types.ObjectId, ref: "Gamer", required: false }],
+    // coaches: [{ type: mongoose.Schema.Types.ObjectId, ref: "Gamer", required: false }],
+    // captain: { type: mongoose.Schema.Types.ObjectId, ref: "Gamer", required: false }
 }, {
     timestamps: true
 });

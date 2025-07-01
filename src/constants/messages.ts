@@ -105,6 +105,8 @@ export const MESSAGES = {
         INVALID_COACH_ID: 'Komanda məşqçisinin ID-si düzgün formatda deyil',
         INVALID_COACHES_FORMAT: 'Komanda məşqçiləri siyahı formatında olmalıdır',
         INVALID_CAPTAIN_ID: 'Komanda kapitanının ID-si düzgün formatda deyil',
+        INVALID_TOURNAMENTS_FORMAT: 'Komanda turnirləri düzgün formatda deyil',
+        INVALID_TOURNAMENT_ID: 'Komanda turnirinin ID-si düzgün formatda deyil',
         CAPTAIN_NOT_FOUND: 'Komanda kapitanı tapılmadı',
         PLAYERS_NOT_FOUND: 'Komanda oyunçuları tapılmadı',
         COACHES_NOT_FOUND: 'Komanda məşqçiləri tapılmadı',

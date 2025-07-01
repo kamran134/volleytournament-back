@@ -23,18 +23,23 @@ export class CreateTeamDto {
     city!: string;
 
     @IsOptional()
-    @IsArray({ message: MESSAGES.TEAM.INVALID_PLAYERS_FORMAT })
-    @IsMongoId({ each: true, message: MESSAGES.TEAM.INVALID_PLAYER_ID })
-    players?: string[];
+    @IsArray({ message: MESSAGES.TEAM.INVALID_TOURNAMENTS_FORMAT })
+    @IsMongoId({ each: true, message: MESSAGES.TEAM.INVALID_TOURNAMENT_ID })
+    tournaments?: string[];
 
-    @IsOptional()
-    @IsArray({ message: MESSAGES.TEAM.INVALID_COACHES_FORMAT })
-    @IsMongoId({ each: true, message: MESSAGES.TEAM.INVALID_COACH_ID })
-    coaches?: string[];
+    // @IsOptional()
+    // @IsArray({ message: MESSAGES.TEAM.INVALID_PLAYERS_FORMAT })
+    // @IsMongoId({ each: true, message: MESSAGES.TEAM.INVALID_PLAYER_ID })
+    // players?: string[];
 
-    @IsOptional()
-    @IsMongoId({ message: MESSAGES.TEAM.INVALID_CAPTAIN_ID })
-    captain?: string;
+    // @IsOptional()
+    // @IsArray({ message: MESSAGES.TEAM.INVALID_COACHES_FORMAT })
+    // @IsMongoId({ each: true, message: MESSAGES.TEAM.INVALID_COACH_ID })
+    // coaches?: string[];
+
+    // @IsOptional()
+    // @IsMongoId({ message: MESSAGES.TEAM.INVALID_CAPTAIN_ID })
+    // captain?: string;
 }
 
 export class UpdateTeamDto {
@@ -61,18 +66,23 @@ export class UpdateTeamDto {
     city?: string;
 
     @IsOptional()
-    @IsArray({ message: MESSAGES.TEAM.INVALID_PLAYERS_FORMAT })
-    @IsMongoId({ each: true, message: MESSAGES.TEAM.INVALID_PLAYER_ID })
-    players?: string[];
+    @IsArray({ message: MESSAGES.TEAM.INVALID_TOURNAMENTS_FORMAT })
+    @IsMongoId({ each: true, message: MESSAGES.TEAM.INVALID_TOURNAMENT_ID })
+    tournaments?: string[];
 
-    @IsOptional()
-    @IsArray({ message: MESSAGES.TEAM.INVALID_COACHES_FORMAT })
-    @IsMongoId({ each: true, message: MESSAGES.TEAM.INVALID_COACH_ID })
-    coaches?: string[];
+    // @IsOptional()
+    // @IsArray({ message: MESSAGES.TEAM.INVALID_PLAYERS_FORMAT })
+    // @IsMongoId({ each: true, message: MESSAGES.TEAM.INVALID_PLAYER_ID })
+    // players?: string[];
 
-    @IsOptional()
-    @IsMongoId({ message: MESSAGES.TEAM.INVALID_CAPTAIN_ID })
-    captain?: string;
+    // @IsOptional()
+    // @IsArray({ message: MESSAGES.TEAM.INVALID_COACHES_FORMAT })
+    // @IsMongoId({ each: true, message: MESSAGES.TEAM.INVALID_COACH_ID })
+    // coaches?: string[];
+
+    // @IsOptional()
+    // @IsMongoId({ message: MESSAGES.TEAM.INVALID_CAPTAIN_ID })
+    // captain?: string;
 }
 
 export class TeamFilterDto {

@@ -42,7 +42,8 @@ export class TeamController {
 
     async updateTeam(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const { id } = req.body;
+            const id = req.body._id;
+
             if (!id) {
                 throw new AppError(MESSAGES.TEAM.INVALID_ID, 400);
             }

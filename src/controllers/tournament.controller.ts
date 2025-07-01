@@ -43,7 +43,8 @@ export class TournamentController {
 
     async updateTournament(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const { id } = req.body;
+            const id = req.body._id;
+
             if (!id) {
                 throw new AppError(MESSAGES.TOURNAMENT.INVALID_ID, 400);
             }
