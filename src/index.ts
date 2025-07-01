@@ -5,6 +5,7 @@ import connectDB from "./config/db";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
 import teamRoutes from "./routes/team.routes";
+import tournamentRoutes from "./routes/tournament.routes";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import helmet from "helmet";
@@ -42,6 +43,7 @@ app.get("/", (req, res) => {
 app.use("/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/teams", teamRoutes);
+app.use("/api/tournaments", tournamentRoutes);
 
 app.use((req, res, next) => {
     res.status(404).json({ message: 'Məlumat tapılmadı' });

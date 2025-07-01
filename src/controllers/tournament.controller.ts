@@ -28,6 +28,7 @@ export class TournamentController {
         try {
             const createDto = new CreateTournamentDto();
             Object.assign(createDto, req.body);
+            
             const errors = await validate(createDto);
             if (errors.length > 0) {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);
