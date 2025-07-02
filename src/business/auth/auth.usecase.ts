@@ -23,10 +23,16 @@ export class AuthUseCase {
             throw new AppError(MESSAGES.AUTH.NOT_APPROVED, 403);
         }
 
+        console.log('User logged in:', user.email);
+        console.log('User role:', user.role);
+        console.log('User ID:', user._id);
+
         const token = await this.authService.generateToken({
             userId: user._id as Types.ObjectId,
             role: user.role,
         });
+
+        console.log('Generated token:', token);
 
         return { token, user };
     }

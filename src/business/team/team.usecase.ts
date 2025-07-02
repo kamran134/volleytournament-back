@@ -23,6 +23,7 @@ export class TeamUseCase {
         const teamData: Partial<ITeam> = {
             ...dto,
             tournaments: dto.tournaments ? dto.tournaments.map(id => new Types.ObjectId(id)) : undefined,
+            createdBy: new Types.ObjectId(dto.createdBy),
             // captain: dto.captain ? new Types.ObjectId(dto.captain) : undefined,
             // players: dto.players ? dto.players.map(id => new Types.ObjectId(id)) : undefined,
             // coaches: dto.coaches ? dto.coaches.map(id => new Types.ObjectId(id)) : undefined,
@@ -41,6 +42,7 @@ export class TeamUseCase {
         const teamData: Partial<ITeam> = {
             ...dto,
             tournaments: dto.tournaments ? dto.tournaments.map(id => new Types.ObjectId(id)) : undefined,
+            createdBy: dto.createdBy ? new Types.ObjectId(dto.createdBy) : undefined,
             // captain: dto.captain ? new Types.ObjectId(dto.captain) : undefined,
             // players: dto.players ? dto.players.map(id => new Types.ObjectId(id)) : undefined,
             // coaches: dto.coaches ? dto.coaches.map(id => new Types.ObjectId(id)) : undefined,

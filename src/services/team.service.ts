@@ -1,5 +1,6 @@
 import { ITeam } from '../models/team.model';
 import TeamModel from '../models/team.model';
+import GamerModel from '../models/gamer.model';
 import TournamentModel from '../models/tournament.model';
 import { AppError } from '../utils/errors';
 import { MESSAGES } from '../constants/messages';
@@ -13,6 +14,10 @@ export class TeamService {
             if (filter.country) query.country = { $regex: filter.country, $options: 'i' };
             if (filter.city) query.city = { $regex: filter.city, $options: 'i' };
             if (filter.captain) query.captain = filter.captain;
+            if (filter.createdBy) query.createdBy = filter.createdBy;
+
+            console.log('Fetching teams with filter:', filter);
+            console.log('Query:', query);
 
             const totalCount = await TeamModel.countDocuments(query);
             // const data = await TeamModel.find(query).populate('players coaches captain').sort({ createdAt: -1 });
@@ -25,7 +30,7 @@ export class TeamService {
     }
 
     async getTeamById(id: string): Promise<ITeam> {
-        const team = await TeamModel.findById(id).populate('players coaches captain');
+        const team = await TeamModel.findById(id).populate('players coaches captain createdBy tournaments');
         if (!team) {
             throw new AppError(MESSAGES.TEAM.NOT_FOUND, 404);
         }
@@ -57,13 +62,10 @@ export class TeamService {
             // }
             if (data.tournaments && data.tournaments.length > 0) {
                 const tournaments = await TournamentModel.find({ _id: { $in: data.tournaments } });
-                console.log('Tournaments:', tournaments);
                 if (tournaments.length !== data.tournaments.length) {
                     throw new AppError(MESSAGES.TEAM.INVALID_TOURNAMENTS_FORMAT, 400);
                 }
             }
-
-            console.log('Creating team with data:', data);
 
             return await TeamModel.create(data);
         } catch (error: any) {
@@ -97,7 +99,6 @@ export class TeamService {
 
         if (data.tournaments && data.tournaments.length > 0) {
             const tournaments = await TournamentModel.find({ _id: { $in: data.tournaments } });
-            console.log('Tournaments:', tournaments);
             if (tournaments.length !== data.tournaments.length) {
                 throw new AppError(MESSAGES.TEAM.INVALID_TOURNAMENTS_FORMAT, 400);
             }
@@ -111,10 +112,13 @@ export class TeamService {
     }
 
     async deleteTeam(id: string): Promise<ITeam> {
+        await GamerModel.deleteMany({ team: id });
+        
         const deletedTeam = await TeamModel.findByIdAndDelete(id);
         if (!deletedTeam) {
             throw new AppError(MESSAGES.TEAM.NOT_FOUND, 404);
         }
+        
         return deletedTeam;
     }
 }

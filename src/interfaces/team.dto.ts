@@ -27,6 +27,9 @@ export class CreateTeamDto {
     @IsMongoId({ each: true, message: MESSAGES.TEAM.INVALID_TOURNAMENT_ID })
     tournaments?: string[];
 
+    @IsMongoId({ message: MESSAGES.TEAM.INVALID_CREATED_BY })
+    createdBy!: string;
+
     // @IsOptional()
     // @IsArray({ message: MESSAGES.TEAM.INVALID_PLAYERS_FORMAT })
     // @IsMongoId({ each: true, message: MESSAGES.TEAM.INVALID_PLAYER_ID })
@@ -70,6 +73,10 @@ export class UpdateTeamDto {
     @IsMongoId({ each: true, message: MESSAGES.TEAM.INVALID_TOURNAMENT_ID })
     tournaments?: string[];
 
+    @IsOptional()
+    @IsMongoId({ message: MESSAGES.TEAM.INVALID_CREATED_BY })
+    createdBy?: string;
+
     // @IsOptional()
     // @IsArray({ message: MESSAGES.TEAM.INVALID_PLAYERS_FORMAT })
     // @IsMongoId({ each: true, message: MESSAGES.TEAM.INVALID_PLAYER_ID })
@@ -101,4 +108,8 @@ export class TeamFilterDto {
     @IsOptional()
     @IsMongoId({ message: MESSAGES.TEAM.INVALID_CAPTAIN_ID })
     captain?: string;
+
+    @IsOptional()
+    @IsMongoId({ each: true, message: MESSAGES.TEAM.INVALID_CREATED_BY })
+    createdBy?: string;
 }
