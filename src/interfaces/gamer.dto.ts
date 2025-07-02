@@ -1,9 +1,10 @@
-import { IsBoolean, IsDate, IsEmail, IsMongoId, IsNumber, IsOptional, IsString, MinLength } from "class-validator";
+import { Allow, IsBoolean, IsDateString, IsEmail, IsMongoId, IsNumberString, IsOptional, IsString, MinLength } from "class-validator";
 import { MESSAGES } from "../constants/messages";
+import { Transform } from "class-transformer";
 
 export class CreateGamerDto {
-    @IsNumber({}, { message: MESSAGES.GAMER.INCORRECT_NUMBER })
-    number!: number;
+    @IsNumberString({}, { message: MESSAGES.GAMER.INCORRECT_NUMBER })
+    number!: string;
 
     @IsString({ message: MESSAGES.GAMER.INVALID_NAME })
     @MinLength(2, { message: MESSAGES.GAMER.INVALID_NAME_LENGTH })
@@ -15,19 +16,19 @@ export class CreateGamerDto {
 
     @IsOptional()
     @IsString({ message: MESSAGES.GAMER.INVALID_MIDDLENAME })
-    @MinLength(2, { message: MESSAGES.GAMER.INVALID_MIDDLENAME_LENGTH })
     middleName?: string;
 
-    @IsOptional()
-    @IsEmail({}, { message: MESSAGES.GAMER.INVALID_EMAIL })
-    email?: string;
+    // @IsOptional()
+    // @IsEmail({}, { message: MESSAGES.GAMER.INVALID_EMAIL })
+    // @Allow()
+    // email?: string;
 
     @IsOptional()
-    @IsNumber({}, { message: MESSAGES.GAMER.INVALID_HEIGHT })
-    height?: number;
+    @IsNumberString({}, { message: MESSAGES.GAMER.INVALID_HEIGHT })
+    height?: string;
 
-    @IsDate({ message: MESSAGES.GAMER.INVALID_BIRTHDATE })
-    birthDate!: Date;
+    @IsDateString({}, { message: MESSAGES.GAMER.INVALID_BIRTHDATE })
+    birthDate!: string;
 
     @IsBoolean({ message: MESSAGES.GAMER.INVALID_ROLE })
     isCaptain!: boolean;
@@ -41,8 +42,8 @@ export class CreateGamerDto {
 
 export class UpdateGamerDto {
     @IsOptional()
-    @IsNumber({}, { message: MESSAGES.GAMER.INCORRECT_NUMBER })
-    number?: number;
+    @IsNumberString({}, { message: MESSAGES.GAMER.INCORRECT_NUMBER })
+    number?: string;
 
     @IsOptional()
     @IsString({ message: MESSAGES.GAMER.INVALID_NAME })
@@ -56,20 +57,21 @@ export class UpdateGamerDto {
 
     @IsOptional()
     @IsString({ message: MESSAGES.GAMER.INVALID_MIDDLENAME })
-    @MinLength(2, { message: MESSAGES.GAMER.INVALID_MIDDLENAME_LENGTH })
+    @Transform(({ value }) => (value === '' ? undefined : value))
     middleName?: string;
 
-    @IsOptional()
-    @IsEmail({}, { message: MESSAGES.GAMER.INVALID_EMAIL })
-    email?: string;
+    // @IsOptional()
+    // @IsEmail({}, { message: MESSAGES.GAMER.INVALID_EMAIL })
+    // @Allow()
+    // email?: string;
 
     @IsOptional()
-    @IsNumber({}, { message: MESSAGES.GAMER.INVALID_HEIGHT })
-    height?: number;
+    @IsNumberString({}, { message: MESSAGES.GAMER.INVALID_HEIGHT })
+    height?: string;
 
     @IsOptional()
-    @IsDate({ message: MESSAGES.GAMER.INVALID_BIRTHDATE })
-    birthDate?: Date;
+    @IsDateString({}, { message: MESSAGES.GAMER.INVALID_BIRTHDATE })
+    birthDate?: string;
 
     @IsOptional()
     @IsBoolean({ message: MESSAGES.GAMER.INVALID_ROLE })
