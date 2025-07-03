@@ -42,7 +42,7 @@ export class UserController {
 
     async updateUser(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const userId = req.body.id;
+            const userId = req.body._id;
             if (!userId) {
                 throw new AppError(MESSAGES.USER.NOT_FOUND, 404);
             }
