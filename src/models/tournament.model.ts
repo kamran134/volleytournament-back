@@ -9,6 +9,7 @@ export interface ITournament extends mongoose.Document {
     startDate: Date;
     endDate: Date;
     teams: mongoose.Types.ObjectId[];
+    statute?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -21,6 +22,7 @@ const TournamentSchema = new mongoose.Schema({
     city: { type: String, required: true },
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
+    statute: { type: String, required: false },
     teams: [{ type: mongoose.Schema.Types.ObjectId, ref: "Team" }]
 }, {
     timestamps: true
