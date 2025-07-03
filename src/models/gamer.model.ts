@@ -19,7 +19,7 @@ const GamerSchema = new mongoose.Schema({
     lastName: { type: String, required: true },
     firstName: { type: String, required: true },
     middleName: { type: String, required: false },
-    email: { type: String, required: false, unique: true },
+    email: { type: String, required: false },
     height: { type: Number, required: false },
     birthDate: { type: Date, required: true },
     role: { type: String, required: false },
