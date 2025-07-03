@@ -2,7 +2,7 @@ import express from 'express';
 import { TournamentController } from '../controllers/tournament.controller';
 import { TournamentService } from '../services/tournament.service';
 import { TournamentUseCase } from '../business/tournament/tournament.usecase';
-import { checkAdminRole } from '../middleware/auth.middleware';
+import { checkAdminCoachCaptainRole, checkAdminRole } from '../middleware/auth.middleware';
 
 const router = express.Router();
 const tournamentService = new TournamentService();
@@ -11,7 +11,7 @@ const tournamentController = new TournamentController(tournamentUseCase);
 
 router
     .route('/')
-    .get(checkAdminRole, tournamentController.getTournaments.bind(tournamentController))
+    .get(checkAdminCoachCaptainRole, tournamentController.getTournaments.bind(tournamentController))
     .post(checkAdminRole, tournamentController.createTournament.bind(tournamentController))
     .put(checkAdminRole, tournamentController.updateTournament.bind(tournamentController));
 

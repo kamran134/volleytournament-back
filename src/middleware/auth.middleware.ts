@@ -40,3 +40,9 @@ export const authMiddleware = (roles: UserRole[]) => (
 }
 
 export const checkAdminRole = authMiddleware([UserRole.ADMIN, UserRole.SUPERADMIN]);
+export const checkAdminCoachCaptainRole = authMiddleware([
+    UserRole.ADMIN,
+    UserRole.COACH,
+    UserRole.CAPTAIN,
+    UserRole.SUPERADMIN,
+]);
