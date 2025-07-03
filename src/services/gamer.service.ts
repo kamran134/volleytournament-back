@@ -34,10 +34,18 @@ export class GamerService {
 
     async createGamer(data: Partial<IGamer>): Promise<IGamer> {
         try {
-            const existingGamer = await GamerModel.findOne({ email: data.email });
-            if (existingGamer) {
-                throw new AppError(MESSAGES.GAMER.EMAIL_EXISTS, 400);
+            if (data.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+                const existingGamer = await GamerModel.findOne({ email: data.email });
+                if (existingGamer) {
+                    throw new AppError(MESSAGES.GAMER.EMAIL_EXISTS, 400);
+                }
             }
+
+            const existingGamerNumber = await GamerModel.findOne({ number: data.number, team: data.team });
+            if (existingGamerNumber) {
+                throw new AppError(MESSAGES.GAMER.NUMBER_EXISTS, 400);
+            }
+            
             const team = await TeamModel.findById(data.team);
             if (!team) {
                 throw new AppError(MESSAGES.GAMER.TEAM_NOT_FOUND, 400);
