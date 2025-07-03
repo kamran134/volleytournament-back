@@ -34,7 +34,7 @@ export class GamerService {
 
     async createGamer(data: Partial<IGamer>): Promise<IGamer> {
         try {
-            if (data.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+            if (data.email && data.email.trim().length > 0) {
                 const existingGamer = await GamerModel.findOne({ email: data.email });
                 if (existingGamer) {
                     throw new AppError(MESSAGES.GAMER.EMAIL_EXISTS, 400);
