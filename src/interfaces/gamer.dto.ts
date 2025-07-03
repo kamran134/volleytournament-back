@@ -18,11 +18,6 @@ export class CreateGamerDto {
     @IsString({ message: MESSAGES.GAMER.INVALID_MIDDLENAME })
     middleName?: string;
 
-    // @IsOptional()
-    // @IsEmail({}, { message: MESSAGES.GAMER.INVALID_EMAIL })
-    // @Allow()
-    // email?: string;
-
     @IsOptional()
     @IsNumberString({}, { message: MESSAGES.GAMER.INVALID_HEIGHT })
     height?: string;
@@ -59,11 +54,6 @@ export class UpdateGamerDto {
     @IsString({ message: MESSAGES.GAMER.INVALID_MIDDLENAME })
     @Transform(({ value }) => (value === '' ? undefined : value))
     middleName?: string;
-
-    // @IsOptional()
-    // @IsEmail({}, { message: MESSAGES.GAMER.INVALID_EMAIL })
-    // @Allow()
-    // email?: string;
 
     @IsOptional()
     @IsNumberString({}, { message: MESSAGES.GAMER.INVALID_HEIGHT })
