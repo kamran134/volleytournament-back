@@ -4,19 +4,26 @@ import TeamModel from '../models/team.model';
 import { AppError } from '../utils/errors';
 import { MESSAGES } from '../constants/messages';
 import { logger } from '../utils/logger';
+import { Types } from 'mongoose';
+import { GamerFilterDto } from '../interfaces/gamer.dto';
 
 export class GamerService {
-    async getFilteredGamers(filter: any): Promise<{ data: IGamer[]; totalCount: number }> {
+    async getFilteredGamers(filter: GamerFilterDto): Promise<{ data: IGamer[]; totalCount: number }> {
         try {
+            const page = parseInt(filter.page || '1', 10);
+            const size = parseInt(filter.size || '10', 10);
+            const limit = size > 0 ? size : 10;
+            const offset = page * limit;
             const query: any = {};
             if (filter.lastName) query.lastName = { $regex: filter.lastName, $options: 'i' };
             if (filter.firstName) query.firstName = { $regex: filter.firstName, $options: 'i' };
-            if (filter.team) query.team = filter.team;
-            if (filter.isCaptain !== undefined) query.isCaptain = filter.isCaptain;
-            if (filter.isCoach !== undefined) query.isCoach = filter.isCoach;
+            if (filter.team) query.team = new Types.ObjectId(filter.team as string);
+            if (filter.teams) query.team = { $in: filter.teams.split(',').map((team: string) => new Types.ObjectId(team)) };
+            if (filter.isCaptain !== undefined) query.isCaptain = filter.isCaptain === 'true';
+            if (filter.isCoach !== undefined) query.isCoach = filter.isCoach === 'true';
 
             const totalCount = await GamerModel.countDocuments(query);
-            const data = await GamerModel.find(query).populate('team').sort({ createdAt: -1 });
+            const data = await GamerModel.find(query).populate('team').sort({ team: 1, number: 1 }).limit(limit).skip(offset);
             return { data, totalCount };
         } catch (error) {
             logger.error('Error fetching gamers:', error);

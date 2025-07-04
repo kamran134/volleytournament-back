@@ -2,8 +2,7 @@ import express from 'express';
 import { GamerController } from '../controllers/gamer.controller';
 import { GamerService } from '../services/gamer.service';
 import { GamerUseCase } from '../business/gamer/gamer.usecase';
-import { authMiddleware, checkAdminRole } from '../middleware/auth.middleware';
-import { UserRole } from '../constants/roles';
+import { checkAdminCoachCaptainRole, checkAdminRole, checkUserRole } from '../middleware/auth.middleware';
 
 const router = express.Router();
 const gamerService = new GamerService();
@@ -12,9 +11,9 @@ const gamerController = new GamerController(gamerUseCase);
 
 router
     .route('/')
-    .get(authMiddleware([UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.COACH, UserRole.CAPTAIN, UserRole.USER]), gamerController.getGamers.bind(gamerController))
-    .post(authMiddleware([UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.COACH, UserRole.CAPTAIN]), gamerController.createGamer.bind(gamerController))
-    .put(authMiddleware([UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.COACH, UserRole.CAPTAIN]), gamerController.updateGamer.bind(gamerController));
+    .get(checkUserRole, gamerController.getGamers.bind(gamerController))
+    .post(checkAdminCoachCaptainRole, gamerController.createGamer.bind(gamerController))
+    .put(checkAdminCoachCaptainRole, gamerController.updateGamer.bind(gamerController));
 
 router
     .route('/:id')

@@ -77,6 +77,14 @@ export class UpdateGamerDto {
 
 export class GamerFilterDto {
     @IsOptional()
+    @IsString({ message: MESSAGES.GAMER.INVALID_PAGE })
+    page?: string;
+
+    @IsOptional()
+    @IsString({ message: MESSAGES.GAMER.INVALID_PAGE_SIZE })
+    size?: string;
+
+    @IsOptional()
     @IsString({ message: MESSAGES.GAMER.INVALID_SURNAME })
     lastName?: string;
 
@@ -85,14 +93,18 @@ export class GamerFilterDto {
     firstName?: string;
 
     @IsOptional()
-    @IsMongoId({ message: MESSAGES.GAMER.INVALID_TEAM })
+    @IsString({ message: MESSAGES.GAMER.INVALID_TEAM })
     team?: string;
 
     @IsOptional()
-    @IsBoolean({ message: MESSAGES.GAMER.INVALID_ROLE })
-    isCaptain?: boolean;
+    @IsString({ message: MESSAGES.GAMER.INVALID_ROLE })
+    isCaptain?: string;
 
     @IsOptional()
-    @IsBoolean({ message: MESSAGES.GAMER.INVALID_ROLE })
-    isCoach?: boolean;
+    @IsString({ message: MESSAGES.GAMER.INVALID_ROLE })
+    isCoach?: string;
+
+    @IsOptional()
+    @IsString({ message: MESSAGES.GAMER.INVALID_TEAM })
+    teams?: string;
 }

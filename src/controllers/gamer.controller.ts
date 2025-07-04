@@ -14,6 +14,7 @@ export class GamerController {
             Object.assign(filterDto, req.query);
             const errors = await validate(filterDto);
             if (errors.length > 0) {
+                console.error('Validation errors:', errors);
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);
             }
 

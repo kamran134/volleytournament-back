@@ -46,3 +46,10 @@ export const checkAdminCoachCaptainRole = authMiddleware([
     UserRole.CAPTAIN,
     UserRole.SUPERADMIN,
 ]);
+export const checkUserRole = authMiddleware([
+    UserRole.USER,
+    UserRole.ADMIN,
+    UserRole.SUPERADMIN,
+    UserRole.COACH,
+    UserRole.CAPTAIN,
+]);
