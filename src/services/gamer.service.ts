@@ -57,7 +57,24 @@ export class GamerService {
             if (!team) {
                 throw new AppError(MESSAGES.GAMER.TEAM_NOT_FOUND, 400);
             }
-            return await GamerModel.create(data);
+            const createdGamer = await GamerModel.create(data);
+            if (!createdGamer) {
+                throw new AppError(MESSAGES.GAMER.CREATE_FAILED, 500);
+            }
+            // update the team with the new gamer and if it's a captain or coach update the team accordingly
+            if (data.isCaptain || data.isCoach) {
+                const updateData: any = {};
+                if (data.isCaptain) {
+                    updateData.captain = createdGamer._id;
+                }
+                if (data.isCoach) {
+                    updateData.coach = createdGamer._id;
+                }
+                await TeamModel.findByIdAndUpdate(data.team, updateData, { new: true });
+            }
+            await TeamModel.findByIdAndUpdate(data.team, { $push: { players: createdGamer._id } }, { new: true });
+            
+            return createdGamer;
         } catch (error: any) {
             logger.error('Error creating gamer:', error);
             if (error.code === 11000) {

@@ -15,10 +15,10 @@ export class CreateGameDto {
     tournament!: string;                    
 
     @IsMongoId({ message: MESSAGES.GAME.INVALID_TEAM_A })
-    teamA!: string;
+    team1!: string;
 
     @IsMongoId({ message: MESSAGES.GAME.INVALID_TEAM_B })
-    teamB!: string;
+    team2!: string;
 
     @IsOptional()
     @IsMongoId({ message: MESSAGES.GAME.INVALID_WINNER })
@@ -44,11 +44,11 @@ export class UpdateGameDto {
 
     @IsOptional()
     @IsMongoId({ message: MESSAGES.GAME.INVALID_TEAM_A })
-    teamA?: string;
+    team1?: string;
 
     @IsOptional()
     @IsMongoId({ message: MESSAGES.GAME.INVALID_TEAM_B })
-    teamB?: string;
+    team2?: string;
 
     @IsOptional()
     @IsMongoId({ message: MESSAGES.GAME.INVALID_WINNER })
@@ -63,4 +63,8 @@ export class GameFilterDto {
     @IsOptional()
     @IsMongoId({ message: MESSAGES.GAME.INVALID_WINNER_ID })
     winner?: string;
+
+    @IsOptional()
+    @IsMongoId({ message: MESSAGES.GAME.INVALID_TOURNAMENT_ID })
+    tournament?: string;
 }

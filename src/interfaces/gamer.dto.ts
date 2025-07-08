@@ -1,10 +1,10 @@
-import { Allow, IsBoolean, IsDateString, IsEmail, IsMongoId, IsNumberString, IsOptional, IsString, MinLength } from "class-validator";
+import { Allow, IsBoolean, IsDateString, IsEmail, IsMongoId, IsNumber, IsNumberString, IsOptional, IsString, MinLength } from "class-validator";
 import { MESSAGES } from "../constants/messages";
 import { Transform } from "class-transformer";
 
 export class CreateGamerDto {
-    @IsNumberString({}, { message: MESSAGES.GAMER.INCORRECT_NUMBER })
-    number!: string;
+    @IsNumber({}, { message: MESSAGES.GAMER.INCORRECT_NUMBER })
+    number!: number;
 
     @IsString({ message: MESSAGES.GAMER.INVALID_NAME })
     @MinLength(2, { message: MESSAGES.GAMER.INVALID_NAME_LENGTH })
@@ -19,8 +19,8 @@ export class CreateGamerDto {
     middleName?: string;
 
     @IsOptional()
-    @IsNumberString({}, { message: MESSAGES.GAMER.INVALID_HEIGHT })
-    height?: string;
+    @IsNumber({}, { message: MESSAGES.GAMER.INVALID_HEIGHT })
+    height?: number;
 
     @IsDateString({}, { message: MESSAGES.GAMER.INVALID_BIRTHDATE })
     birthDate!: string;
@@ -37,8 +37,8 @@ export class CreateGamerDto {
 
 export class UpdateGamerDto {
     @IsOptional()
-    @IsNumberString({}, { message: MESSAGES.GAMER.INCORRECT_NUMBER })
-    number?: string;
+    @IsNumber({}, { message: MESSAGES.GAMER.INCORRECT_NUMBER })
+    number?: number;
 
     @IsOptional()
     @IsString({ message: MESSAGES.GAMER.INVALID_NAME })
@@ -56,8 +56,8 @@ export class UpdateGamerDto {
     middleName?: string;
 
     @IsOptional()
-    @IsNumberString({}, { message: MESSAGES.GAMER.INVALID_HEIGHT })
-    height?: string;
+    @IsNumber({}, { message: MESSAGES.GAMER.INVALID_HEIGHT })
+    height?: number;
 
     @IsOptional()
     @IsDateString({}, { message: MESSAGES.GAMER.INVALID_BIRTHDATE })

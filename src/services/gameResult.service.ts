@@ -6,9 +6,10 @@ import TeamModel from '../models/team.model';
 import { AppError } from '../utils/errors';
 import { MESSAGES } from '../constants/messages';
 import { logger } from '../utils/logger';
+import { GameResultFilterDto } from '../interfaces/gameResult.dto';
 
 export class GameResultService {
-    async getFilteredGameResults(filter: any): Promise<{ data: IGameResult[]; totalCount: number }> {
+    async getFilteredGameResults(filter: GameResultFilterDto): Promise<{ data: IGameResult[]; totalCount: number }> {
         try {
             const query: any = {};
             if (filter.game) query.game = filter.game;

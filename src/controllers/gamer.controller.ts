@@ -50,6 +50,7 @@ export class GamerController {
 
             const updateDto = new UpdateGamerDto();
             Object.assign(updateDto, req.body);
+
             const errors = await validate(updateDto);
             if (errors.length > 0) {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);

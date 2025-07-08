@@ -1,7 +1,5 @@
 import { GameService } from '../../services/game.service';
 import { CreateGameDto, UpdateGameDto, GameFilterDto } from '../../interfaces/game.dto';
-import { AppError } from '../../utils/errors';
-import { MESSAGES } from '../../constants/messages';
 import { IGame } from '../../models/game.model';
 import { Types } from 'mongoose';
 
@@ -18,8 +16,8 @@ export class GameUseCase {
             startDate: dto.startDate ? new Date(dto.startDate) : undefined,
             endDate: dto.endDate ? new Date(dto.endDate) : undefined,
             tournament: dto.tournament ? new Types.ObjectId(dto.tournament) : undefined,
-            teamA: new Types.ObjectId(dto.teamA),
-            teamB: new Types.ObjectId(dto.teamB),
+            team1: new Types.ObjectId(dto.team1),
+            team2: new Types.ObjectId(dto.team2),
             winner: dto.winner ? new Types.ObjectId(dto.winner) : undefined,
         };
 
@@ -32,8 +30,8 @@ export class GameUseCase {
             startDate: dto.startDate ? new Date(dto.startDate) : undefined,
             endDate: dto.endDate ? new Date(dto.endDate) : undefined,
             tournament: dto.tournament ? new Types.ObjectId(dto.tournament) : undefined,
-            teamA: dto.teamA ? new Types.ObjectId(dto.teamA) : undefined,
-            teamB: dto.teamB ? new Types.ObjectId(dto.teamB) : undefined,
+            team1: dto.team1 ? new Types.ObjectId(dto.team1) : undefined,
+            team2: dto.team2 ? new Types.ObjectId(dto.team2) : undefined,
             winner: dto.winner ? new Types.ObjectId(dto.winner) : undefined,
         };
 

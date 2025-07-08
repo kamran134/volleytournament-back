@@ -21,13 +21,11 @@ export class GamerUseCase {
 
         const gamerData: Partial<IGamer> = {
             ...dto,
-            number: dto.number ? parseInt(dto.number, 10) : undefined,
             firstName: dto.firstName.trim(),
             lastName: dto.lastName.trim(),
             middleName: dto.middleName ? dto.middleName.trim() : undefined,
             team: dto.team ? new Types.ObjectId(dto.team) : undefined,
             birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
-            height: dto.height ? parseFloat(dto.height) : undefined,
         }
 
         return this.gamerService.createGamer(gamerData);
@@ -43,11 +41,9 @@ export class GamerUseCase {
 
         const gamerData: Partial<IGamer> = {
             ...dto,
-            number: dto.number ? parseInt(dto.number, 10) : undefined,
             firstName: dto.firstName ? dto.firstName.trim() : undefined,
             lastName: dto.lastName ? dto.lastName.trim() : undefined,
             middleName: dto.middleName ? dto.middleName.trim() : undefined,
-            height: dto.height ? parseFloat(dto.height) : undefined,
             team: dto.team ? new Types.ObjectId(dto.team) : undefined,
             birthDate: dto.birthDate ? new Date(dto.birthDate) : undefined,
         }
