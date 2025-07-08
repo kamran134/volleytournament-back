@@ -38,9 +38,9 @@ export class GameService {
                 }
             }
 
-            if (data.teamA && data.teamB) {
-                const teamA = await TeamModel.findById(data.teamA);
-                const teamB = await TeamModel.findById(data.teamB);
+            if (data.team1 && data.team2) {
+                const teamA = await TeamModel.findById(data.team1);
+                const teamB = await TeamModel.findById(data.team2);
                 if (!teamA || !teamB) {
                     throw new AppError(MESSAGES.GAME.TEAMS_NOT_FOUND, 400);
                 }
@@ -72,9 +72,9 @@ export class GameService {
             }
         }
 
-        if (data.teamA && data.teamB) {
-            const teamA = await TeamModel.findById(data.teamA);
-            const teamB = await TeamModel.findById(data.teamB);
+        if (data.team1 && data.team2) {
+            const teamA = await TeamModel.findById(data.team1);
+            const teamB = await TeamModel.findById(data.team2);
             if (!teamA || !teamB) {
                 throw new AppError(MESSAGES.GAME.TEAMS_NOT_FOUND, 400);
             }
