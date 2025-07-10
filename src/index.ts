@@ -7,6 +7,7 @@ import userRoutes from "./routes/user.routes";
 import tournamentRoutes from "./routes/tournament.routes";
 import teamRoutes from "./routes/team.routes";
 import gamerRoutes from "./routes/gamer.routes";
+import gameRoutes from "./routes/game.routes";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import helmet from "helmet";
@@ -46,6 +47,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/tournaments", tournamentRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/gamers", gamerRoutes);
+app.use("/api/games", gameRoutes);
 
 app.use((req, res, next) => {
     res.status(404).json({ message: 'Məlumat tapılmadı' });

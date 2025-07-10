@@ -18,7 +18,6 @@ export class GameUseCase {
             tournament: dto.tournament ? new Types.ObjectId(dto.tournament) : undefined,
             team1: new Types.ObjectId(dto.team1),
             team2: new Types.ObjectId(dto.team2),
-            winner: dto.winner ? new Types.ObjectId(dto.winner) : undefined,
         };
 
         return this.gameService.createGame(gameData);
@@ -32,7 +31,6 @@ export class GameUseCase {
             tournament: dto.tournament ? new Types.ObjectId(dto.tournament) : undefined,
             team1: dto.team1 ? new Types.ObjectId(dto.team1) : undefined,
             team2: dto.team2 ? new Types.ObjectId(dto.team2) : undefined,
-            winner: dto.winner ? new Types.ObjectId(dto.winner) : undefined,
         };
 
         return this.gameService.updateGame(id, gameData);

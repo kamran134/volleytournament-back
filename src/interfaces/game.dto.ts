@@ -19,10 +19,6 @@ export class CreateGameDto {
 
     @IsMongoId({ message: MESSAGES.GAME.INVALID_TEAM_B })
     team2!: string;
-
-    @IsOptional()
-    @IsMongoId({ message: MESSAGES.GAME.INVALID_WINNER })
-    winner?: string;
 }
 
 export class UpdateGameDto {
@@ -49,10 +45,6 @@ export class UpdateGameDto {
     @IsOptional()
     @IsMongoId({ message: MESSAGES.GAME.INVALID_TEAM_B })
     team2?: string;
-
-    @IsOptional()
-    @IsMongoId({ message: MESSAGES.GAME.INVALID_WINNER })
-    winner?: string;
 }
 
 export class GameFilterDto {

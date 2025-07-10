@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
+import './gameSet.model';
 
 export interface IGameSet extends mongoose.Document {
     game: mongoose.Types.ObjectId;
-    gameResult: mongoose.Types.ObjectId;
     team1: mongoose.Types.ObjectId;
     team2: mongoose.Types.ObjectId;
     scoreTeam1: number;
@@ -14,7 +14,6 @@ export interface IGameSet extends mongoose.Document {
 
 const GameSetSchema = new mongoose.Schema({
     game: { type: mongoose.Schema.Types.ObjectId, ref: "Game", required: true },
-    gameResult: { type: mongoose.Schema.Types.ObjectId, ref: "GameResult", required: true },
     team1: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: true },
     team2: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: true },
     scoreTeam1: { type: Number, required: true },

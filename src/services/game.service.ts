@@ -1,6 +1,7 @@
 import { IGame } from '../models/game.model';
 import GameModel from '../models/game.model';
 import TeamModel from '../models/team.model';
+import TournamentModel from '../models/tournament.model';
 import { AppError } from '../utils/errors';
 import { MESSAGES } from '../constants/messages';
 import { logger } from '../utils/logger';
@@ -13,7 +14,7 @@ export class GameService {
             if (filter.winner) query.winner = filter.winner;
 
             const totalCount = await GameModel.countDocuments(query);
-            const data = await GameModel.find(query).populate('gameResults winner').sort({ startDate: -1 });
+            const data = await GameModel.find(query).populate('tournament team1 team2 winner').sort({ startDate: -1 });
             return { data, totalCount };
         } catch (error) {
             logger.error('Error fetching games:', error);
@@ -22,7 +23,7 @@ export class GameService {
     }
 
     async getGameById(id: string): Promise<IGame> {
-        const game = await GameModel.findById(id).populate('gameResults winner');
+        const game = await GameModel.findById(id).populate('tournament team1 team2 winner');
         if (!game) {
             throw new AppError(MESSAGES.GAME.NOT_FOUND, 404);
         }
@@ -48,8 +49,7 @@ export class GameService {
                     throw new AppError(MESSAGES.GAME.SAME_TEAMS, 400);
                 }
             }
-
-            const tournament = await GameModel.findById(data.tournament);
+            const tournament = await TournamentModel.findById(data.tournament);
             if (!tournament) {
                 throw new AppError(MESSAGES.GAME.TOURNAMENT_NOT_FOUND, 400);
             }
