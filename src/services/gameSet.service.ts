@@ -2,7 +2,6 @@ import { MESSAGES } from "../constants/messages";
 import { GamerFilterDto } from "../interfaces/gamer.dto";
 import { CreateGameSetDto } from "../interfaces/gameSet.dto";
 import GameModel from "../models/game.model";
-import GameResultModel from "../models/gameResult.model";
 import TeamModel from "../models/team.model";
 import GameSetModel, { IGameSet } from "../models/gameSet.model";
 import { AppError } from "../utils/errors";
@@ -16,16 +15,12 @@ export class GameSetService {
     // Example method to create a game set
     async createGameSet(data: Partial<IGameSet>): Promise<IGameSet> {
         try {
-            const { game, gameResult, team1, team2, winner } = data;
+            const { game, team1, team2, winner } = data;
 
             // Checking input data
             const existingGame = await GameModel.findById(game);
             if (!existingGame) {
                 throw new AppError(MESSAGES.GAME_SET.GAME_NOT_FOUND, 404);
-            }
-            const existingGameResult = await GameResultModel.findById(gameResult);
-            if (!existingGameResult) {
-                throw new AppError(MESSAGES.GAME_SET.GAME_RESULT_NOT_FOUND, 404);
             }
             const existingTeam1 = await TeamModel.findById(team1);
             const existingTeam2 = await TeamModel.findById(team2);
@@ -53,7 +48,7 @@ export class GameSetService {
     // Example method to update a game set
     async updateGameSet(id: string, data: Partial<IGameSet>): Promise<IGameSet> {
         try {
-            const { game, gameResult, team1, team2, winner } = data;
+            const { game, team1, team2, winner } = data;
             const gameSet = await GameSetModel.findById(id);
             if (!gameSet) {
                 throw new AppError(MESSAGES.GAME_SET.NOT_FOUND, 404);
@@ -62,11 +57,6 @@ export class GameSetService {
             const existingGame = await GameModel.findById(game);
             if (game && !existingGame) {
                 throw new AppError(MESSAGES.GAME_SET.GAME_NOT_FOUND, 404);
-            }
-
-            const existingGameResult = await GameResultModel.findById(gameResult);
-            if (gameResult && !existingGameResult) {
-                throw new AppError(MESSAGES.GAME_SET.GAME_RESULT_NOT_FOUND, 404);
             }
 
             const existingTeam1 = await TeamModel.findById(team1);
