@@ -42,7 +42,7 @@ export class GameController {
 
     async updateGame(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const { id } = req.body;
+            const id = req.body._id;
             if (!id) {
                 throw new AppError(MESSAGES.GAME.INVALID_ID, 400);
             }

@@ -83,12 +83,12 @@ export class GameService {
             }
         }
 
-        const tournament = await GameModel.findById(data.tournament);
+        const tournament = await TournamentModel.findById(data.tournament);
         if (!tournament) {
             throw new AppError(MESSAGES.GAME.TOURNAMENT_NOT_FOUND, 400);
         }
 
-        const updatedGame = await GameModel.findByIdAndUpdate(id, data, { new: true }).populate('gameResults winner');
+        const updatedGame = await GameModel.findByIdAndUpdate(id, data, { new: true }).populate('tournament team1 team2 winner');
         if (!updatedGame) {
             throw new AppError(MESSAGES.GAME.NOT_FOUND, 404);
         }

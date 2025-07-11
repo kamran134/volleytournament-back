@@ -157,7 +157,7 @@ export const MESSAGES = {
         DELETE_FAILED: 'Oyun silinməsi mümkün olmadı',
         INVALID_NAME: 'Oyun adı düzgün formatda deyil',
         INVALID_DATA: 'Oyun məlumatları yalnışdır',
-        INVALID_ID: 'Oyun ID mütləqdir',
+        INVALID_ID: 'Oyun ID-si mütləqdir',
         INVALID_TOURNAMENT: 'Turnir düzgün formatda deyil',
         INVALID_TOURNAMENT_ID: 'Turnir ID-si düzgün formatda deyil',
         INVALID_TEAM_A: 'A komandasının ID-si düzgün formatda deyil',
