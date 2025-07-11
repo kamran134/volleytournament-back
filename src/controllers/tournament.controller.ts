@@ -29,12 +29,14 @@ export class TournamentController {
             const createDto = new CreateTournamentDto();
             Object.assign(createDto, req.body);
             
+            console.log('Create Tournament DTO:', req.file);
+
             const errors = await validate(createDto);
             if (errors.length > 0) {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);
             }
 
-            await this.tournamentUseCase.createTournament(createDto);
+            await this.tournamentUseCase.createTournament(createDto, req.file);
             res.status(201).json({ message: MESSAGES.TOURNAMENT.SUCCESS_CREATE });
         } catch (error) {
             next(error);
@@ -56,7 +58,7 @@ export class TournamentController {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);
             }
 
-            await this.tournamentUseCase.updateTournament(id, updateDto);
+            await this.tournamentUseCase.updateTournament(id, updateDto, req.file);
             res.status(200).json({ message: MESSAGES.TOURNAMENT.SUCCESS_UPDATE });
         } catch (error) {
             next(error);

@@ -10,7 +10,7 @@ export class TournamentUseCase {
         return this.tournamentService.getFilteredTournaments(filter);
     }
 
-    async createTournament(dto: CreateTournamentDto): Promise<ITournament> {
+    async createTournament(dto: CreateTournamentDto, file?: Express.Multer.File): Promise<ITournament> {
         const tournamentData: Partial<ITournament> = {
             ...dto,
             teams: dto.teams ? dto.teams.map(id => new Types.ObjectId(id)) : undefined,
@@ -18,18 +18,18 @@ export class TournamentUseCase {
             endDate: dto.endDate ? new Date(dto.endDate) : undefined,
         };
 
-        return this.tournamentService.createTournament(tournamentData);
+        return this.tournamentService.createTournament(tournamentData, file);
     }
 
-    async updateTournament(id: string, dto: UpdateTournamentDto): Promise<ITournament> {
+    async updateTournament(id: string, dto: UpdateTournamentDto, file?: Express.Multer.File): Promise<ITournament> {
         const tournamentData: Partial<ITournament> = {
             ...dto,
             teams: dto.teams ? dto.teams.map(id => new Types.ObjectId(id)) : undefined,
             startDate: dto.startDate ? new Date(dto.startDate) : undefined,
             endDate: dto.endDate ? new Date(dto.endDate) : undefined,
         };
-        
-        return this.tournamentService.updateTournament(id, tournamentData);
+
+        return this.tournamentService.updateTournament(id, tournamentData, file);
     }
 
     async deleteTournament(id: string): Promise<ITournament> {

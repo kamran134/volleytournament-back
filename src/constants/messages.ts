@@ -71,6 +71,7 @@ export const MESSAGES = {
         INVALID_LOCATION: 'Turnirin yeri düzgün formatda deyil',
         INVALID_TEAM_ID: 'Komanda ID-si düzgün formatda deyil',
         INVALID_TEAMS_FORMAT: 'Turnirin komandaları siyahı formatında olmalıdır',
+        LOGO_UPLOAD_FAILED: 'Turnir loqosunun yüklənməsi mümkün olmadı',
     },
     TEAM: {
         SUCCESS_FETCH: 'Komandalar uğurla əldə edildi',
