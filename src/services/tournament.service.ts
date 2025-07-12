@@ -9,11 +9,11 @@ import fs from 'fs';
 import sharp from 'sharp';
 
 export class TournamentService {
-    async uploadTournamentLogo(file: Express.Multer.File): Promise<string> {
+    async uploadTournamentLogo(id: string, file: Express.Multer.File): Promise<string> {
         try {
             const uploadDir = path.join(__dirname, '../../uploads/tournaments');
             await fs.promises.mkdir(uploadDir, { recursive: true });
-            const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}.webp`;
+            const fileName = `${Date.now()}-${id}.webp`;
             const outputPath = path.join(uploadDir, fileName);
 
             await sharp(file.buffer).resize({ width: 300}).webp({ quality: 80 }).toFile(outputPath);
@@ -51,10 +51,6 @@ export class TournamentService {
 
     async createTournament(data: Partial<ITournament>, file?: Express.Multer.File): Promise<ITournament> {
         try {
-            if (file) {
-                const logoUrl = await this.uploadTournamentLogo(file);
-                data.logoUrl = logoUrl;
-            }
             if (data.teams && data.teams.length > 0) {
                 const teams = await TeamModel.find({ _id: { $in: data.teams } });
                 if (teams.length !== data.teams.length) {
@@ -62,14 +58,15 @@ export class TournamentService {
                 }
             }
 
-            if (data.logoUrl && !/^https?:\/\/.+\.(jpg|jpeg|png|gif)$/.test(data.logoUrl)) {
-                throw new AppError(MESSAGES.TOURNAMENT.INVALID_LOGO_URL, 400);
-            } else if (data.logoUrl) {
-                data.logoUrl = data.logoUrl.trim();
+            const tournament: ITournament = await TournamentModel.create(data) as ITournament;
+
+            if (file) {
+                const logoUrl = await this.uploadTournamentLogo(tournament._id.toString(), file);
+                tournament.logoUrl = logoUrl;
+                await tournament.save();
             }
 
-
-            return await TournamentModel.create(data);
+            return tournament;
         } catch (error: any) {
             logger.error('Error creating tournament:', error);
             if (error.code === 11000) {
@@ -80,20 +77,24 @@ export class TournamentService {
     }
 
     async updateTournament(id: string, data: Partial<ITournament>, file?: Express.Multer.File): Promise<ITournament> {
-        if (file) {
-            const logoUrl = await this.uploadTournamentLogo(file);
-            data.logoUrl = logoUrl;
-        }
         if (data.teams && data.teams.length > 0) {
             const teams = await TeamModel.find({ _id: { $in: data.teams } });
             if (teams.length !== data.teams.length) {
                 throw new AppError(MESSAGES.TOURNAMENT.TEAMS_NOT_FOUND, 400);
             }
         }
+
         const updatedTournament = await TournamentModel.findByIdAndUpdate(id, data, { new: true }).populate('teams');
         if (!updatedTournament) {
             throw new AppError(MESSAGES.TOURNAMENT.NOT_FOUND, 404);
         }
+
+        if (file) {
+            const logoUrl = await this.uploadTournamentLogo(updatedTournament._id.toString(), file);
+            updatedTournament.logoUrl = logoUrl;
+            await updatedTournament.save();
+        }
+        
         return updatedTournament;
     }
 

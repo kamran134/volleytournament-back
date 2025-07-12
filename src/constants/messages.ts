@@ -50,6 +50,8 @@ export const MESSAGES = {
         SUCCESS_CREATE: 'Turnir uğurla yaradıldı',
         SUCCESS_UPDATE: 'Turnir məlumatları yeniləndi!',
         SUCCESS_DELETE: 'Turnir uğurla silindi',
+        SUCCESS_UPLOAD_LOGO: 'Komanda loqosu uğurla yükləndi',
+        LOGO_UPLOAD_FAILED: 'Komanda loqosunun yüklənməsi mümkün olmadı',
         NOT_FOUND: 'Turnir tapılmadı',
         TEAMS_NOT_FOUND: 'Turnirin komandaları tapılmadı',
         FETCH_FAILED: 'Turnirləri əldə etmək mümkün olmadı',
@@ -71,7 +73,6 @@ export const MESSAGES = {
         INVALID_LOCATION: 'Turnirin yeri düzgün formatda deyil',
         INVALID_TEAM_ID: 'Komanda ID-si düzgün formatda deyil',
         INVALID_TEAMS_FORMAT: 'Turnirin komandaları siyahı formatında olmalıdır',
-        LOGO_UPLOAD_FAILED: 'Turnir loqosunun yüklənməsi mümkün olmadı',
     },
     TEAM: {
         SUCCESS_FETCH: 'Komandalar uğurla əldə edildi',

@@ -28,8 +28,6 @@ export class TournamentController {
         try {
             const createDto = new CreateTournamentDto();
             Object.assign(createDto, req.body);
-            
-            console.log('Create Tournament DTO:', req.file);
 
             const errors = await validate(createDto);
             if (errors.length > 0) {
@@ -74,6 +72,20 @@ export class TournamentController {
 
             await this.tournamentUseCase.deleteTournament(id);
             res.status(200).json({ message: MESSAGES.TOURNAMENT.SUCCESS_DELETE });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async uploadTournamentLogo(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            if (!req.file) {
+                throw new AppError(MESSAGES.TOURNAMENT.LOGO_UPLOAD_FAILED, 400);
+            }
+
+            const logoUrl = await this.tournamentUseCase.uploadTournamentLogo(req.body._id, req.file);
+
+            res.status(200).json({ message: MESSAGES.TOURNAMENT.SUCCESS_UPLOAD_LOGO, logoUrl });
         } catch (error) {
             next(error);
         }

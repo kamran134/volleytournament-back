@@ -13,24 +13,7 @@ import morgan from "morgan";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { errorHandler } from "./middleware/error.middleware";
-import multer from 'multer';
 import path from 'path';
-
-const storage = multer.memoryStorage();
-const upload = multer({
-    storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
-    fileFilter: (req, file, cb) => {
-        const fileTypes = /jpeg|jpg|png|webp/;
-        const mimeType = fileTypes.test(file.mimetype);
-        const extName = fileTypes.test(path.extname(file.originalname).toLowerCase());
-
-        if (mimeType && extName) {
-            return cb(null, true);
-        }
-        cb(new Error('Invalid file type'));
-    }
-});
 
 dontenv.config();
 connectDB();
@@ -39,10 +22,12 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: false, // Разрешает кросс-доменные запросы
+}));
 app.use(morgan("dev"));
 app.use(cors({
-    origin: ['http://localhost:4200', 'https://42n.space'],
+    origin: ['http://localhost:4200', 'https://42n.space', 'https://volleytour.az'],
     credentials: true
 }));
 app.use(express.json());
@@ -67,7 +52,13 @@ app.use("/api/teams", teamRoutes);
 app.use("/api/gamers", gamerRoutes);
 app.use("/api/games", gameRoutes);
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", cors({
+    origin: ['http://localhost:4200', 'https://42n.space', 'https://volleytour.az'],
+    credentials: true
+}), (req, res, next) => {
+    console.log('Serving file:', req.path); // Лог для отладки
+    next();
+}, express.static(path.join(__dirname, "..", "uploads")));
 
 app.use((req, res, next) => {
     res.status(404).json({ message: 'Məlumat tapılmadı' });

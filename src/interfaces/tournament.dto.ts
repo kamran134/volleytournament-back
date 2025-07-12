@@ -8,17 +8,16 @@ export class CreateTournamentDto {
 
     @IsString({ message: MESSAGES.TOURNAMENT.INVALID_SHORT_NAME })
     @MinLength(2, { message: MESSAGES.TOURNAMENT.INVALID_SHORT_NAME_LENGTH })
-    shortName!: string;
-
-    @IsString({ message: MESSAGES.TOURNAMENT.INVALID_LOGO_URL })
     @IsOptional()
-    logoUrl?: string;
+    shortName?: string;
 
     @IsString({ message: MESSAGES.TOURNAMENT.INVALID_COUNTRY })
-    country!: string;
+    @IsOptional()
+    country?: string;
 
     @IsString({ message: MESSAGES.TOURNAMENT.INVALID_CITY })
-    city!: string;
+    @IsOptional()
+    city?: string;
 
     @IsDateString({}, { message: MESSAGES.TOURNAMENT.INVALID_START_DATE })
     startDate!: string;
@@ -42,10 +41,6 @@ export class UpdateTournamentDto {
     @IsString({ message: MESSAGES.TOURNAMENT.INVALID_SHORT_NAME })
     @MinLength(2, { message: MESSAGES.TOURNAMENT.INVALID_SHORT_NAME_LENGTH })
     shortName?: string;
-
-    @IsOptional()
-    @IsString({ message: MESSAGES.TOURNAMENT.INVALID_LOGO_URL })
-    logoUrl?: string;
 
     @IsOptional()
     @IsString({ message: MESSAGES.TOURNAMENT.INVALID_COUNTRY })

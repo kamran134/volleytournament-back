@@ -35,4 +35,8 @@ export class TournamentUseCase {
     async deleteTournament(id: string): Promise<ITournament> {
         return this.tournamentService.deleteTournament(id);
     }
+
+    async uploadTournamentLogo(id: string, file: Express.Multer.File): Promise<string> {
+        return this.tournamentService.uploadTournamentLogo(id, file);
+    }
 }
