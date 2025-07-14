@@ -23,6 +23,21 @@ export class TournamentService {
             throw new AppError(MESSAGES.TOURNAMENT.LOGO_UPLOAD_FAILED, 500);
         }
     }
+
+    async deleteTournamentLogo(logoUrl: string | undefined): Promise<void> {
+        if (!logoUrl) return;
+
+        try {
+            const filePath = path.join(__dirname, '../../', logoUrl);
+            await fs.unlinkSync(filePath);
+        } catch (error: any) {
+            // Игнорируем ошибку, если файл не существует
+            if (error.code !== 'ENOENT') {
+                logger.error('Error deleting tournament logo:', error);
+                throw new AppError(MESSAGES.TOURNAMENT.LOGO_DELETE_FAILED, 500);
+            }
+        }
+    }
     
     async getFilteredTournaments(filter: any): Promise<{ data: ITournament[]; totalCount: number }> {
         try {
@@ -90,6 +105,10 @@ export class TournamentService {
         }
 
         if (file) {
+            if (updatedTournament.logoUrl) {
+                await this.deleteTournamentLogo(updatedTournament.logoUrl);
+            }
+
             const logoUrl = await this.uploadTournamentLogo(updatedTournament._id.toString(), file);
             updatedTournament.logoUrl = logoUrl;
             await updatedTournament.save();
@@ -103,6 +122,11 @@ export class TournamentService {
         if (!deletedTournament) {
             throw new AppError(MESSAGES.TOURNAMENT.NOT_FOUND, 404);
         }
+
+        if (deletedTournament.logoUrl) {
+            await this.deleteTournamentLogo(deletedTournament.logoUrl);
+        }
+
         return deletedTournament;
     }
 }
