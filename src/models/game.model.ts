@@ -11,6 +11,7 @@ export interface IGame extends mongoose.Document {
     scoreTeam2?: number;
     winner?: mongoose.Types.ObjectId;
     gameSets?: mongoose.Types.ObjectId[];
+    location: mongoose.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -26,6 +27,7 @@ const GameSchema = new mongoose.Schema({
     scoreTeam2: { type: Number, required: false, default: 0 },
     winner: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: false },
     gameSets: [{ type: mongoose.Schema.Types.ObjectId, ref: "GameSet", required: false }],
+    location: { type: mongoose.Schema.Types.ObjectId, ref: "Location", required: true },
 }, {
     timestamps: true
 });

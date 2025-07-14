@@ -10,6 +10,10 @@ export class GameUseCase {
         return this.gameService.getFilteredGames(filter);
     }
 
+    async getGame(id: string): Promise<IGame | null> {
+        return this.gameService.getGameById(id);
+    }
+
     async createGame(dto: CreateGameDto): Promise<IGame> {
         const gameData: Partial<IGame> = {
             ...dto,

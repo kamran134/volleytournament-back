@@ -17,6 +17,7 @@ router
 
 router
     .route('/:id')
+    .get(gameController.getGame.bind(gameController))
     .delete(checkAdminRole, gameController.deleteGame.bind(gameController));
 
 export default router;

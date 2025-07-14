@@ -24,6 +24,23 @@ export class GameController {
         }
     }
 
+    async getGame(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const id = req.params.id;
+            if (!id) {
+                throw new AppError(MESSAGES.GAME.INVALID_ID, 400);
+            }
+
+            const game = await this.gameUseCase.getGame(id);
+            if (!game) {
+                throw new AppError(MESSAGES.GAME.NOT_FOUND, 404);
+            }
+            res.status(200).json({ data: game, message: MESSAGES.GAME.SUCCESS_FETCH });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async createGame(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const createDto = new CreateGameDto();

@@ -23,7 +23,7 @@ export class GameService {
     }
 
     async getGameById(id: string): Promise<IGame> {
-        const game = await GameModel.findById(id).populate('tournament team1 team2 winner');
+        const game = await GameModel.findById(id).populate('tournament team1 team2 winner location');
         if (!game) {
             throw new AppError(MESSAGES.GAME.NOT_FOUND, 404);
         }
