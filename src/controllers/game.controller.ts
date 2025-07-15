@@ -41,6 +41,15 @@ export class GameController {
         }
     }
 
+    async getUpcomingGames(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const upcomingGames = await this.gameUseCase.getUpcomingGames();
+            res.status(200).json({ data: upcomingGames, message: MESSAGES.GAME.SUCCESS_FETCH });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async createGame(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const createDto = new CreateGameDto();

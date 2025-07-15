@@ -16,6 +16,10 @@ router
     .put(checkAdminRole, gameController.updateGame.bind(gameController));
 
 router
+    .route('/upcoming')
+    .get(gameController.getUpcomingGames.bind(gameController));
+
+router
     .route('/:id')
     .get(gameController.getGame.bind(gameController))
     .delete(checkAdminRole, gameController.deleteGame.bind(gameController));

@@ -14,6 +14,10 @@ export class GameUseCase {
         return this.gameService.getGameById(id);
     }
 
+    async getUpcomingGames(): Promise<IGame[]> {
+        return this.gameService.getUpcomingGames();
+    }
+
     async createGame(dto: CreateGameDto): Promise<IGame> {
         const gameData: Partial<IGame> = {
             ...dto,

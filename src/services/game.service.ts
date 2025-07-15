@@ -30,6 +30,18 @@ export class GameService {
         return game;
     }
 
+    async getUpcomingGames(): Promise<IGame[]> {
+        try {
+            const upcomingGames = await GameModel.find({ startDate: { $gte: new Date() } })
+                .populate('tournament team1 team2 winner location')
+                .sort({ startDate: 1 });
+            return upcomingGames;
+        } catch (error) {
+            logger.error('Error fetching upcoming games:', error);
+            throw new AppError(MESSAGES.GAME.FETCH_FAILED, 500);
+        }
+    }
+
     async createGame(data: Partial<IGame>): Promise<IGame> {
         try {
             if (data.winner) {
