@@ -14,7 +14,7 @@ export class GameService {
             if (filter.winner) query.winner = filter.winner;
 
             const totalCount = await GameModel.countDocuments(query);
-            const data = await GameModel.find(query).populate('tournament team1 team2 winner').sort({ startDate: -1 });
+            const data = await GameModel.find(query).populate('tournament tour team1 team2 winner').sort({ startDate: -1 });
             return { data, totalCount };
         } catch (error) {
             logger.error('Error fetching games:', error);
@@ -23,7 +23,7 @@ export class GameService {
     }
 
     async getGameById(id: string): Promise<IGame> {
-        const game = await GameModel.findById(id).populate('tournament team1 team2 winner location');
+        const game = await GameModel.findById(id).populate('tournament tour team1 team2 winner location');
         if (!game) {
             throw new AppError(MESSAGES.GAME.NOT_FOUND, 404);
         }
@@ -33,7 +33,7 @@ export class GameService {
     async getUpcomingGames(): Promise<IGame[]> {
         try {
             const upcomingGames = await GameModel.find({ startDate: { $gte: new Date() } })
-                .populate('tournament team1 team2 winner location')
+                .populate('tournament tour team1 team2 winner location')
                 .sort({ startDate: 1 });
             return upcomingGames;
         } catch (error) {

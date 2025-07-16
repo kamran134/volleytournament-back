@@ -35,6 +35,10 @@ router
     .put(checkAdminRole, upload.single('logo'), tournamentController.updateTournament.bind(tournamentController));
 
 router
+    .route('/by-short-name')
+    .get(tournamentController.getTournamentByShortName.bind(tournamentController));
+
+router
     .route('/upload-logo')
     .post(checkAdminRole, tournamentController.uploadTournamentLogo.bind(tournamentController));
 

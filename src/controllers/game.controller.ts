@@ -80,8 +80,8 @@ export class GameController {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);
             }
 
-            await this.gameUseCase.updateGame(id, updateDto);
-            res.status(200).json({ message: MESSAGES.GAME.SUCCESS_UPDATE });
+            const game = await this.gameUseCase.updateGame(id, updateDto);
+            res.status(200).json({ data: game, message: MESSAGES.GAME.SUCCESS_UPDATE });
         } catch (error) {
             next(error);
         }
@@ -94,8 +94,8 @@ export class GameController {
                 throw new AppError(MESSAGES.GAME.INVALID_ID, 400);
             }
 
-            await this.gameUseCase.deleteGame(id);
-            res.status(200).json({ message: MESSAGES.GAME.SUCCESS_DELETE });
+            const deletedGame = await this.gameUseCase.deleteGame(id);
+            res.status(200).json({ data: deletedGame, message: MESSAGES.GAME.SUCCESS_DELETE });
         } catch (error) {
             next(error);
         }

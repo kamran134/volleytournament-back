@@ -10,6 +10,10 @@ export class TournamentUseCase {
         return this.tournamentService.getFilteredTournaments(filter);
     }
 
+    async getTournamentByShortName(shortName: string): Promise<ITournament | null> {
+        return this.tournamentService.getTournamentByShortName(shortName);
+    }
+
     async createTournament(dto: CreateTournamentDto, file?: Express.Multer.File): Promise<ITournament> {
         const tournamentData: Partial<ITournament> = {
             ...dto,

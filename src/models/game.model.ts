@@ -4,7 +4,8 @@ export interface IGame extends mongoose.Document {
     name?: string;
     startDate: Date;
     endDate: Date;
-    tournament?: mongoose.Types.ObjectId;
+    tournament: mongoose.Types.ObjectId;
+    tour: mongoose.Types.ObjectId;
     team1: mongoose.Types.ObjectId;
     team2: mongoose.Types.ObjectId;
     scoreTeam1?: number;
@@ -21,6 +22,7 @@ const GameSchema = new mongoose.Schema({
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
     tournament: { type: mongoose.Schema.Types.ObjectId, ref: "Tournament", required: true  },
+    tour: { type: mongoose.Schema.Types.ObjectId, ref: "Tour", required: true },
     team1: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: true },
     team2: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: true },
     scoreTeam1: { type: Number, required: false, default: 0 },

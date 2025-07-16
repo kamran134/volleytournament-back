@@ -24,6 +24,23 @@ export class TournamentController {
         }
     }
 
+    async getTournamentByShortName(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const shortName = req.params.shortName;
+            if (!shortName) {
+                throw new AppError(MESSAGES.TOURNAMENT.INVALID_SHORT_NAME, 400);
+            }
+
+            const tournament = await this.tournamentUseCase.getTournamentByShortName(shortName);
+            if (!tournament) {
+                throw new AppError(MESSAGES.TOURNAMENT.NOT_FOUND, 404);
+            }
+            res.status(200).json({ data: tournament, message: MESSAGES.TOURNAMENT.SUCCESS_FETCH });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async createTournament(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const createDto = new CreateTournamentDto();

@@ -56,6 +56,10 @@ export class TournamentService {
         }
     }
 
+    async getTournamentByShortName(shortName: string): Promise<ITournament | null> {
+        return TournamentModel.findOne({ shortName });
+    }
+
     async getTournamentById(id: string): Promise<ITournament> {
         const tournament = await TournamentModel.findById(id).populate('teams');
         if (!tournament) {

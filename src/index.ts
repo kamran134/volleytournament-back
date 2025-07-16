@@ -5,6 +5,7 @@ import connectDB from "./config/db";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
 import tournamentRoutes from "./routes/tournament.routes";
+import tourRoutes from "./routes/tour.routes";
 import teamRoutes from "./routes/team.routes";
 import gamerRoutes from "./routes/gamer.routes";
 import gameRoutes from "./routes/game.routes";
@@ -49,6 +50,7 @@ app.get("/", (req, res) => {
 app.use("/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/tournaments", tournamentRoutes);
+app.use("/api/tours", tourRoutes);
 app.use("/api/teams", teamRoutes);
 app.use("/api/gamers", gamerRoutes);
 app.use("/api/games", gameRoutes);
