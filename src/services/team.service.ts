@@ -47,7 +47,17 @@ export class TeamService {
                 }
             }
 
-            return await TeamModel.create(data);
+            const createdTeam = await TeamModel.create(data);
+
+            if (createdTeam._id) {
+                // Update Tournament with new Team
+                await TournamentModel.updateMany(
+                    { _id: { $in: data.tournaments } },
+                    { $addToSet: { teams: createdTeam._id } }
+                );
+            }
+
+            return createdTeam;
         } catch (error: any) {
             // logger.error('Error creating team:', error);
             if (error.code === 11000) {
@@ -66,6 +76,7 @@ export class TeamService {
         }
 
         const updatedTeam = await TeamModel.findByIdAndUpdate(id, data, { new: true }).populate('players coaches captain');
+
         if (!updatedTeam) {
             throw new AppError(MESSAGES.TEAM.NOT_FOUND, 404);
         }
@@ -79,6 +90,12 @@ export class TeamService {
         if (!deletedTeam) {
             throw new AppError(MESSAGES.TEAM.NOT_FOUND, 404);
         }
+
+        // Remove team from all tournaments
+        await TournamentModel.updateMany(
+            { teams: id },
+            { $pull: { teams: id } }
+        );
         
         return deletedTeam;
     }

@@ -10,6 +10,7 @@ import teamRoutes from "./routes/team.routes";
 import gamerRoutes from "./routes/gamer.routes";
 import gameRoutes from "./routes/game.routes";
 import locationRoutes from "./routes/location.routes";
+import statRoutes from "./routes/stat.routes";
 import cookieParser from "cookie-parser";
 import morgan from "morgan";
 import helmet from "helmet";
@@ -55,6 +56,7 @@ app.use("/api/teams", teamRoutes);
 app.use("/api/gamers", gamerRoutes);
 app.use("/api/games", gameRoutes);
 app.use("/api/locations", locationRoutes);
+app.use("/api/stats", statRoutes);
 
 app.use("/uploads", cors({
     origin: ['http://localhost:4200', 'https://42n.space', 'https://volleytour.az'],

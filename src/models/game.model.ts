@@ -1,18 +1,22 @@
 import mongoose from "mongoose";
+import { ITour } from "./tour.model";
+import { ITeam } from "./team.model";
+import { IGameSet } from "./gameSet.model";
+import { ILocation } from "./location.model";
 
 export interface IGame extends mongoose.Document {
     name?: string;
     startDate: Date;
     endDate: Date;
     tournament: mongoose.Types.ObjectId;
-    tour: mongoose.Types.ObjectId;
-    team1: mongoose.Types.ObjectId;
-    team2: mongoose.Types.ObjectId;
+    tour: mongoose.Types.ObjectId | ITour;
+    team1: mongoose.Types.ObjectId | ITeam;
+    team2: mongoose.Types.ObjectId | ITeam;
     scoreTeam1?: number;
     scoreTeam2?: number;
-    winner?: mongoose.Types.ObjectId;
-    gameSets?: mongoose.Types.ObjectId[];
-    location: mongoose.Types.ObjectId;
+    winner?: mongoose.Types.ObjectId | ITeam;
+    gameSets?: mongoose.Types.ObjectId[] | IGameSet[];
+    location: mongoose.Types.ObjectId | ILocation;
     createdAt: Date;
     updatedAt: Date;
 }

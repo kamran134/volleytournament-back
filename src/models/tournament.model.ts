@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { ITeam } from "./team.model";
 
 export interface ITournament extends mongoose.Document {
     _id: mongoose.Types.ObjectId;
@@ -9,7 +10,7 @@ export interface ITournament extends mongoose.Document {
     city: string;
     startDate: Date;
     endDate: Date;
-    teams: mongoose.Types.ObjectId[];
+    teams: mongoose.Types.ObjectId[] | ITeam[];
     statute?: string;
     createdAt: Date;
     updatedAt: Date;

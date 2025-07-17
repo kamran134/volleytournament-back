@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 
 export interface ITeam extends Document{
+    _id: mongoose.Types.ObjectId;
     name: string;
     shortName?: string;
     logoUrl?: string;
@@ -13,6 +14,15 @@ export interface ITeam extends Document{
     createdBy: mongoose.Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
+}
+
+export interface ITeamStats {
+    team: ITeam;
+    points: number; // Очки
+    matchesPlayed: number; // Сыграно матчей
+    matchesWon: number; // Выиграно матчей
+    matchesLost: number; // Проиграно матчей
+    matchesDrawn: number; // Ничьи
 }
 
 const TeamSchema = new mongoose.Schema({
