@@ -84,7 +84,17 @@ export class StatService {
                 }
             });
 
-            teamsStats.sort((a, b) => b.points - a.points);
+            // if points are equal, sort by wins, then by matches played
+            teamsStats.sort((a, b) => {
+                if (b.points === a.points) {
+                    if (b.matchesWon === a.matchesWon) {
+                        return b.matchesPlayed - a.matchesPlayed;
+                    }
+                    return b.matchesWon - a.matchesWon;
+                }
+                return b.points - a.points;
+            });
+            // teamsStats.sort((a, b) => b.points - a.points);
 
             return { tournament, teams: teamsStats, games };
         } catch (error) {
