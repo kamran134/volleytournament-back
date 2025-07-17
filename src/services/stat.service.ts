@@ -84,6 +84,8 @@ export class StatService {
                 }
             });
 
+            teamsStats.sort((a, b) => b.points - a.points);
+
             return { tournament, teams: teamsStats, games };
         } catch (error) {
             logger.error('Error fetching tournament table:', error);
