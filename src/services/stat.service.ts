@@ -16,7 +16,7 @@ export class StatService {
                 throw new AppError(MESSAGES.TOURNAMENT.NOT_FOUND, 404);
             }
 
-            const games = await GameModel.find({ tournament: tournamentId }).populate('team1 team2');
+            const games = await GameModel.find({ tournament: tournamentId }).populate('team1 team2 tour');
             const teamsStats: ITeamStats[] = (tournament.teams as ITeam[]).map(team => ({
                 team,
                 points: 0,
