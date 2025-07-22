@@ -95,7 +95,7 @@ export class TournamentService {
         }
     }
 
-    async updateTournament(id: string, data: Partial<ITournament>, file?: Express.Multer.File): Promise<ITournament> {
+    async updateTournament(data: Partial<ITournament>, file?: Express.Multer.File): Promise<ITournament> {
         if (data.teams && data.teams.length > 0) {
             const teams = await TeamModel.find({ _id: { $in: data.teams } });
             if (teams.length !== data.teams.length) {
@@ -103,7 +103,7 @@ export class TournamentService {
             }
         }
 
-        const updatedTournament = await TournamentModel.findByIdAndUpdate(id, data, { new: true }).populate('teams');
+        const updatedTournament = await TournamentModel.findByIdAndUpdate(data._id, data, { new: true }).populate('teams');
         if (!updatedTournament) {
             throw new AppError(MESSAGES.TOURNAMENT.NOT_FOUND, 404);
         }

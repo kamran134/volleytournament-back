@@ -25,7 +25,7 @@ export class TournamentUseCase {
         return this.tournamentService.createTournament(tournamentData, file);
     }
 
-    async updateTournament(id: string, dto: UpdateTournamentDto, file?: Express.Multer.File): Promise<ITournament> {
+    async updateTournament(dto: UpdateTournamentDto, file?: Express.Multer.File): Promise<ITournament> {
         const tournamentData: Partial<ITournament> = {
             ...dto,
             teams: dto.teams ? dto.teams.map(id => new Types.ObjectId(id)) : undefined,
@@ -33,7 +33,7 @@ export class TournamentUseCase {
             endDate: dto.endDate ? new Date(dto.endDate) : undefined,
         };
 
-        return this.tournamentService.updateTournament(id, tournamentData, file);
+        return this.tournamentService.updateTournament(tournamentData, file);
     }
 
     async deleteTournament(id: string): Promise<ITournament> {

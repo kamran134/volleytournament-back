@@ -57,6 +57,11 @@ export class UpdateTournamentDto {
     @IsOptional()
     @IsDateString({}, { message: MESSAGES.TOURNAMENT.INVALID_END_DATE })
     endDate?: string;
+
+    @IsOptional()
+    @IsArray({ message: MESSAGES.TOURNAMENT.INVALID_TEAMS_FORMAT })
+    @IsMongoId({ each: true, message: MESSAGES.TOURNAMENT.INVALID_TEAM_ID })
+    teams?: string[];
 }
 
 export class TournamentFilterDto {

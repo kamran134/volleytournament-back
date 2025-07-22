@@ -4,6 +4,8 @@ import { CreateTournamentDto, UpdateTournamentDto, TournamentFilterDto } from '.
 import { validate } from 'class-validator';
 import { AppError } from '../utils/errors';
 import { MESSAGES } from '../constants/messages';
+import { plainToClass } from 'class-transformer';
+import mongoose from 'mongoose';
 
 export class TournamentController {
     constructor(private tournamentUseCase: TournamentUseCase) { }
@@ -60,20 +62,22 @@ export class TournamentController {
 
     async updateTournament(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const id = req.body._id;
+            // const id = req.body._id;
 
-            if (!id) {
-                throw new AppError(MESSAGES.TOURNAMENT.INVALID_ID, 400);
-            }
+            // if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+            //     throw new AppError(MESSAGES.TOURNAMENT.INVALID_ID, 400);
+            // }
 
-            const updateDto = new UpdateTournamentDto();
-            Object.assign(updateDto, req.body);
+            // const updateDto = new UpdateTournamentDto();
+            // Object.assign(updateDto, req.body);
+
+            const updateDto = plainToClass(UpdateTournamentDto, req.body);
             const errors = await validate(updateDto);
             if (errors.length > 0) {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);
             }
 
-            await this.tournamentUseCase.updateTournament(id, updateDto, req.file);
+            await this.tournamentUseCase.updateTournament(updateDto, req.file);
             res.status(200).json({ message: MESSAGES.TOURNAMENT.SUCCESS_UPDATE });
         } catch (error) {
             next(error);

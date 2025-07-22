@@ -6,6 +6,7 @@ import { checkAdminRole } from '../middleware/auth.middleware';
 
 import multer from 'multer';
 import path from 'path';
+import { parseFormDataTeams } from '../middleware/formData.middleware';
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -32,7 +33,7 @@ router
     .route('/')
     .get(tournamentController.getTournaments.bind(tournamentController))
     .post(checkAdminRole, upload.single('logo'), tournamentController.createTournament.bind(tournamentController))
-    .put(checkAdminRole, upload.single('logo'), tournamentController.updateTournament.bind(tournamentController));
+    .put(checkAdminRole, upload.single('logo'), parseFormDataTeams, tournamentController.updateTournament.bind(tournamentController));
 
 router
     .route('/by-short-name/:shortName')

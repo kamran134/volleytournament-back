@@ -12,6 +12,7 @@ export interface ITournament extends mongoose.Document {
     endDate: Date;
     teams: mongoose.Types.ObjectId[] | ITeam[];
     statute?: string;
+    isActive?: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -25,6 +26,7 @@ const TournamentSchema = new mongoose.Schema({
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
     statute: { type: String, required: false },
+    isActive: { type: Boolean, default: true },
     teams: [{ type: mongoose.Schema.Types.ObjectId, ref: "Team" }]
 }, {
     timestamps: true
