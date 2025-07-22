@@ -280,5 +280,25 @@ export const MESSAGES = {
         INVALID_NAME_LENGTH: 'Yer adı ən azı 3 simvoldan ibarət olmalıdır',
         INVALID_ADDRESS_LENGTH: 'Yer ünvanı ən azı 5 simvoldan ibarət olmalıdır',
         INVALID_URL_LENGTH: 'Yer URL ən azı 5 simvoldan ibarət olmalıdır',
-    }
+    },
+    PHOTO: {
+        SUCCESS_FETCH: 'Fotolar uğurla əldə edildi',
+        SUCCESS_CREATE: 'Foto uğurla yaradıldı',
+        SUCCESS_UPDATE: 'Foto məlumatları yeniləndi!',
+        SUCCESS_DELETE: 'Foto uğurla silindi',
+        NOT_FOUND: 'Foto tapılmadı',
+        FETCH_FAILED: 'Fotoları əldə etmək mümkün olmadı',
+        CREATE_FAILED: 'Foto yaratmaq mümkün olmadı',
+        UPDATE_FAILED: 'Foto yenilənməsi mümkün olmadı',
+        DELETE_FAILED: 'Foto silinməsi mümkün olmadı',
+        INVALID_URL: 'Foto URL düzgün formatda deyil',
+        INVALID_DESCRIPTION: 'Foto təsviri düzgün formatda deyil',
+        INVALID_TOURNAMENT: 'Turnir düzgün formatda deyil',
+        INVALID_TOURNAMENT_ID: 'Turnir ID-si düzgün formatda deyil',
+        INVALID_TOUR: 'Tur düzgün formatda deyil',
+        INVALID_TOUR_ID: 'Tur ID-si düzgün formatda deyil',
+        INVALID_TEAM: 'Komanda düzgün formatda deyil',
+        INVALID_TEAM_ID: 'Komanda ID-si düzgün formatda deyil',
+    },
+
 };
