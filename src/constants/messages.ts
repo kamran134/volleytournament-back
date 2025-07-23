@@ -137,6 +137,8 @@ export const MESSAGES = {
         CAPTAIN_NOT_FOUND: 'Komanda kapitanı tapılmadı',
         PLAYERS_NOT_FOUND: 'Komanda oyunçuları tapılmadı',
         COACHES_NOT_FOUND: 'Komanda məşqçiləri tapılmadı',
+        LOGO_UPLOAD_FAILED: 'Komanda loqosu yüklənməsi mümkün olmadı',
+        LOGO_DELETE_FAILED: 'Komanda loqosu silinməsi mümkün olmadı',
     },
     GAMER: {
         SUCCESS_FETCH: 'Oyunçular uğurla əldə edildi',

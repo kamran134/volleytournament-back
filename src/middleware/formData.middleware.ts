@@ -13,3 +13,30 @@ export const parseFormDataTeams = (req: Request, res: Response, next: NextFuncti
         next(new AppError('Invalid FormData format', 400));
     }
 };
+
+export const parseFormDataTournaments = (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const parsedData = {
+            ...req.body,
+            tournaments: req.body.tournaments ? JSON.parse(req.body.tournaments) : undefined, // или Object.values(req.body.tournaments)
+        };
+        req.body = parsedData;
+        next();
+    } catch (error) {
+        next(new AppError('Invalid FormData format', 400));
+    }
+}
+
+// universal middleware for parsing FormData
+export const parseFormData = (req: Request, res: Response, next: NextFunction, stringArrayFieldName: string) => {
+    try {
+        const parsedData = {
+            ...req.body,
+            [stringArrayFieldName]: req.body[stringArrayFieldName] ? JSON.parse(req.body[stringArrayFieldName]) : undefined,
+        };
+        req.body = parsedData;
+        next();
+    } catch (error) {
+        next(new AppError(`Invalid FormData format for ${stringArrayFieldName}`, 400));
+    }
+}

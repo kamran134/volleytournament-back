@@ -12,42 +12,24 @@ export class TeamUseCase {
         return this.teamService.getFilteredTeams(filter);
     }
 
-    async createTeam(dto: CreateTeamDto): Promise<ITeam> {
-        // if (dto.captain) {
-        //     const captain = await GamerModel.findById(dto.captain);
-        //     if (!captain || !captain.isCaptain) {
-        //         throw new AppError(MESSAGES.TEAM.CAPTAIN_NOT_FOUND, 400);
-        //     }
-        // }
-
+    async createTeam(dto: CreateTeamDto, file?: Express.Multer.File): Promise<ITeam> {
         const teamData: Partial<ITeam> = {
             ...dto,
             tournaments: dto.tournaments ? dto.tournaments.map(id => new Types.ObjectId(id)) : undefined,
             createdBy: new Types.ObjectId(dto.createdBy),
-            // captain: dto.captain ? new Types.ObjectId(dto.captain) : undefined,
-            // players: dto.players ? dto.players.map(id => new Types.ObjectId(id)) : undefined,
-            // coaches: dto.coaches ? dto.coaches.map(id => new Types.ObjectId(id)) : undefined,
         };
-        return this.teamService.createTeam(teamData);
+
+        return this.teamService.createTeam(teamData, file);
     }
 
-    async updateTeam(id: string, dto: UpdateTeamDto): Promise<ITeam> {
-        // if (dto.captain) {
-        //     const captain = await GamerModel.findById(dto.captain);
-        //     if (!captain || !captain.isCaptain) {
-        //         throw new AppError(MESSAGES.TEAM.CAPTAIN_NOT_FOUND, 400);
-        //     }
-        // }
-
+    async updateTeam(dto: UpdateTeamDto, file?: Express.Multer.File): Promise<ITeam> {
         const teamData: Partial<ITeam> = {
             ...dto,
             tournaments: dto.tournaments ? dto.tournaments.map(id => new Types.ObjectId(id)) : undefined,
             createdBy: dto.createdBy ? new Types.ObjectId(dto.createdBy) : undefined,
-            // captain: dto.captain ? new Types.ObjectId(dto.captain) : undefined,
-            // players: dto.players ? dto.players.map(id => new Types.ObjectId(id)) : undefined,
-            // coaches: dto.coaches ? dto.coaches.map(id => new Types.ObjectId(id)) : undefined,
         };
-        return this.teamService.updateTeam(id, teamData);
+
+        return this.teamService.updateTeam(teamData, file);
     }
 
     async deleteTeam(id: string): Promise<ITeam> {

@@ -4,6 +4,7 @@ import { CreateTeamDto, UpdateTeamDto, TeamFilterDto } from '../interfaces/team.
 import { validate } from 'class-validator';
 import { AppError } from '../utils/errors';
 import { MESSAGES } from '../constants/messages';
+import { plainToClass } from 'class-transformer';
 
 export class TeamController {
     constructor(private teamUseCase: TeamUseCase) { }
@@ -26,14 +27,13 @@ export class TeamController {
 
     async createTeam(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const createDto = new CreateTeamDto();
-            Object.assign(createDto, req.body);
+            const createDto = plainToClass(CreateTeamDto, req.body);
             const errors = await validate(createDto);
             if (errors.length > 0) {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);
             }
 
-            await this.teamUseCase.createTeam(createDto);
+            await this.teamUseCase.createTeam(createDto, req.file);
             res.status(201).json({ message: MESSAGES.TEAM.SUCCESS_CREATE });
         } catch (error) {
             next(error);
@@ -48,14 +48,13 @@ export class TeamController {
                 throw new AppError(MESSAGES.TEAM.INVALID_ID, 400);
             }
 
-            const updateDto = new UpdateTeamDto();
-            Object.assign(updateDto, req.body);
+            const updateDto = plainToClass(UpdateTeamDto, req.body);
             const errors = await validate(updateDto);
             if (errors.length > 0) {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);
             }
 
-            await this.teamUseCase.updateTeam(id, updateDto);
+            await this.teamUseCase.updateTeam(updateDto, req.file);
             res.status(200).json({ message: MESSAGES.TEAM.SUCCESS_UPDATE });
         } catch (error) {
             next(error);

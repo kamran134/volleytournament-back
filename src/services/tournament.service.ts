@@ -81,9 +81,10 @@ export class TournamentService {
 
             if (file) {
                 const logoUrl = await this.uploadTournamentLogo(tournament._id.toString(), file);
-                tournament.logoUrl = logoUrl;
+                tournament.logoUrl = logoUrl;            
                 await tournament.save();
             }
+
 
             return tournament;
         } catch (error: any) {

@@ -45,9 +45,7 @@ export class TournamentController {
 
     async createTournament(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const createDto = new CreateTournamentDto();
-            Object.assign(createDto, req.body);
-
+            const createDto = plainToClass(CreateTournamentDto, req.body);
             const errors = await validate(createDto);
             if (errors.length > 0) {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);
@@ -62,15 +60,6 @@ export class TournamentController {
 
     async updateTournament(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            // const id = req.body._id;
-
-            // if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-            //     throw new AppError(MESSAGES.TOURNAMENT.INVALID_ID, 400);
-            // }
-
-            // const updateDto = new UpdateTournamentDto();
-            // Object.assign(updateDto, req.body);
-
             const updateDto = plainToClass(UpdateTournamentDto, req.body);
             const errors = await validate(updateDto);
             if (errors.length > 0) {
