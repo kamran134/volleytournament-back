@@ -301,6 +301,7 @@ export const MESSAGES = {
         INVALID_TOUR_ID: 'Tur ID-si düzgün formatda deyil',
         INVALID_TEAM: 'Komanda düzgün formatda deyil',
         INVALID_TEAM_ID: 'Komanda ID-si düzgün formatda deyil',
+        UPLOAD_FAILED: 'Foto yüklənməsi mümkün olmadı',
     },
 
 };
