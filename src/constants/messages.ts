@@ -294,6 +294,7 @@ export const MESSAGES = {
         UPDATE_FAILED: 'Foto yenilənməsi mümkün olmadı',
         DELETE_FAILED: 'Foto silinməsi mümkün olmadı',
         INVALID_URL: 'Foto URL düzgün formatda deyil',
+        INVALID_ID: 'Foto ID-si düzgün formatda deyil',
         INVALID_DESCRIPTION: 'Foto təsviri düzgün formatda deyil',
         INVALID_TOURNAMENT: 'Turnir düzgün formatda deyil',
         INVALID_TOURNAMENT_ID: 'Turnir ID-si düzgün formatda deyil',

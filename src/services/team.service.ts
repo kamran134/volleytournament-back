@@ -11,36 +11,6 @@ import { logger } from '../utils/logger';
 //import { logger } from '../utils/errors';
 
 export class TeamService {
-    async uploadTeamLogo(id: string, file: Express.Multer.File): Promise<string> {
-        try {
-            const uploadDir = path.join(__dirname, '../../uploads/teams');
-            await fs.promises.mkdir(uploadDir, { recursive: true });
-            const fileName = `${Date.now()}-${id}.webp`;
-            const outputPath = path.join(uploadDir, fileName);
-
-            await sharp(file.buffer).resize({ width: 300}).webp({ quality: 80 }).toFile(outputPath);
-            return `/uploads/teams/${fileName}`;
-        } catch (error) {
-            logger.error('Error uploading team logo:', error);
-            throw new AppError(MESSAGES.TEAM.LOGO_UPLOAD_FAILED, 500);
-        }
-    }
-
-    async deleteTeamLogo(logoUrl: string | undefined): Promise<void> {
-        if (!logoUrl) return;
-
-        try {
-            const filePath = path.join(__dirname, '../../', logoUrl);
-            await fs.unlinkSync(filePath);
-        } catch (error: any) {
-            // Игнорируем ошибку, если файл не существует
-            if (error.code !== 'ENOENT') {
-                logger.error('Error deleting team logo:', error);
-                throw new AppError(MESSAGES.TEAM.LOGO_DELETE_FAILED, 500);
-            }
-        }
-    }
-
     async getFilteredTeams(filter: any): Promise<{ data: ITeam[]; totalCount: number }> {
         try {
             const query: any = {};
@@ -146,5 +116,35 @@ export class TeamService {
         );
         
         return deletedTeam;
+    }
+
+    async uploadTeamLogo(id: string, file: Express.Multer.File): Promise<string> {
+        try {
+            const uploadDir = path.join(__dirname, '../../uploads/teams');
+            await fs.promises.mkdir(uploadDir, { recursive: true });
+            const fileName = `${Date.now()}-${id}.webp`;
+            const outputPath = path.join(uploadDir, fileName);
+
+            await sharp(file.buffer).resize({ width: 300}).webp({ quality: 80 }).toFile(outputPath);
+            return `/uploads/teams/${fileName}`;
+        } catch (error) {
+            logger.error('Error uploading team logo:', error);
+            throw new AppError(MESSAGES.TEAM.LOGO_UPLOAD_FAILED, 500);
+        }
+    }
+
+    async deleteTeamLogo(logoUrl: string | undefined): Promise<void> {
+        if (!logoUrl) return;
+
+        try {
+            const filePath = path.join(__dirname, '../../', logoUrl);
+            await fs.unlinkSync(filePath);
+        } catch (error: any) {
+            // Игнорируем ошибку, если файл не существует
+            if (error.code !== 'ENOENT') {
+                logger.error('Error deleting team logo:', error);
+                throw new AppError(MESSAGES.TEAM.LOGO_DELETE_FAILED, 500);
+            }
+        }
     }
 }

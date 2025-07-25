@@ -14,39 +14,6 @@ import PhotoModel from '../models/photo.model';
 export class PhotoService {
     constructor() {}
 
-    async uploadPhoto(file: Express.Multer.File, type: 'tournament' | 'team'): Promise<string> {
-        try {
-            const uploadDir = path.join(__dirname, `../../uploads/${type}s`);
-            await fs.promises.mkdir(uploadDir, { recursive: true });
-            const fileName = `${Date.now()}-${file.originalname}`;
-            const outputPath = path.join(uploadDir, fileName);
-
-            await sharp(file.buffer).resize({ width: 300 }).webp({ quality: 80 }).toFile(outputPath);
-            return `/uploads/${type}s/${fileName}`;
-        } catch (error) {
-            logger.error(`Error uploading ${type} photo:`, error);
-            throw new AppError(`Photo upload failed for ${type}`, 500);
-        }
-    }
-
-    async uploadPhotos(files: Express.Multer.File[], type: 'tournament' | 'team'): Promise<string[]> {
-        try {
-            const uploadDir = path.join(__dirname, `../../uploads/${type}s`);
-            await fs.promises.mkdir(uploadDir, { recursive: true });
-            const fileUrls: string[] = [];
-            for (const file of files) {
-                const fileName = `${Date.now()}-${file.originalname}`;
-                const outputPath = path.join(uploadDir, fileName);
-                await sharp(file.buffer).resize({ width: 300 }).webp({ quality: 80 }).toFile(outputPath);
-                fileUrls.push(`/uploads/${type}s/${fileName}`);
-            }
-            return fileUrls;
-        } catch (error) {
-            logger.error(`Error uploading ${type} photos:`, error);
-            throw new AppError(`Photo upload failed for ${type}`, 500);
-        }
-    }
-
     async getPhotoByUrl(photoUrl: string): Promise<string | null> {
         try {
             const filePath = path.join(__dirname, '../../', photoUrl);
@@ -70,17 +37,53 @@ export class PhotoService {
         return existingPhotos;
     }
 
-    async deletePhoto(photoUrl: string | undefined): Promise<void> {
-        if (!photoUrl) return;
-
+    async getFilteredPhotos(filter: any): Promise<{ data: IPhoto[]; totalCount: number }> {
         try {
-            const filePath = path.join(__dirname, '../../', photoUrl);
-            await fs.promises.unlink(filePath);
-        } catch (error: any) {
-            if (error.code !== 'ENOENT') {
-                logger.error('Error deleting photo:', error);
-                throw new AppError('Photo delete failed', 500);
-            }
+            const query: any = {};
+            if (filter.tournament) query.tournament = filter.tournament;
+            if (filter.tour) query.tour = filter.tour;
+            if (filter.team) query.team = filter.team;
+
+            const totalCount = await PhotoModel.countDocuments(query);
+            const data = await PhotoModel.find(query).populate('tournament tour team').sort({ createdAt: -1 });
+            return { data, totalCount };
+        } catch (error) {
+            logger.error('Error fetching photos:', error);
+            throw new AppError(MESSAGES.PHOTO.FETCH_FAILED, 500);
+        }
+    }
+
+    async createPhoto(data: Partial<IPhoto>, file: Express.Multer.File): Promise<IPhoto> {
+        try {
+            const photoUrl = await this.uploadPhoto(file, 'photos');
+            const photoData: Partial<IPhoto> = {
+                ...data,
+                url: photoUrl,
+            };
+            return await PhotoModel.create(photoData);
+        } catch (error) {
+            logger.error('Error creating photo:', error);
+            throw new AppError(MESSAGES.PHOTO.CREATE_FAILED, 500);
+        }
+    }
+
+    async uploadPhoto(file: Express.Multer.File, type: string): Promise<string> {
+        try {
+            const uploadDir = path.join(__dirname, '../../uploads', type);
+            await fs.promises.mkdir(uploadDir, { recursive: true });
+
+            const fileName = `${Date.now()}-${file.originalname}`;
+            const outputPath = path.join(uploadDir, fileName);
+
+            await sharp(file.buffer)
+                .resize({ width: 800 })
+                .webp({ quality: 80 })
+                .toFile(outputPath);
+
+            return `/uploads/${type}/${fileName}`;
+        } catch (error) {
+            logger.error('Error uploading photo:', error);
+            throw new AppError(MESSAGES.PHOTO.UPLOAD_FAILED, 500);
         }
     }
 
@@ -140,6 +143,54 @@ export class PhotoService {
         } catch (error) {
             logger.error('Error uploading multiple photos:', error);
             throw new AppError(MESSAGES.PHOTO.UPLOAD_FAILED, 500);
+        }
+    }
+
+    async updatePhoto(data: Partial<IPhoto>, file?: Express.Multer.File): Promise<IPhoto> {
+        if (!data._id) {
+            throw new AppError(MESSAGES.PHOTO.INVALID_ID, 400);
+        }
+
+        try {
+            const photo = await PhotoModel.findById(data._id);
+            if (!photo) {
+                throw new AppError(MESSAGES.PHOTO.NOT_FOUND, 404);
+            }
+
+            // Обновляем данные фото
+            Object.assign(photo, data);
+            await photo.save();
+
+            // Если есть новый файл, загружаем его
+            if (file) {
+                const photoUrl = await this.uploadPhoto(file, 'photos');
+                photo.url = photoUrl;
+                await photo.save();
+
+                // Удаляем старое фото, если оно существует
+                if (photo.url) {
+                    await this.deletePhoto(photo.url);
+                }
+            }
+
+            return photo;
+        } catch (error) {
+            logger.error('Error updating photo:', error);
+            throw new AppError(MESSAGES.PHOTO.UPDATE_FAILED, 500);
+        }
+    }
+
+    async deletePhoto(photoUrl: string | undefined): Promise<void> {
+        if (!photoUrl) return;
+
+        try {
+            const filePath = path.join(__dirname, '../../', photoUrl);
+            await fs.promises.unlink(filePath);
+        } catch (error: any) {
+            if (error.code !== 'ENOENT') {
+                logger.error('Error deleting photo:', error);
+                throw new AppError('Photo delete failed', 500);
+            }
         }
     }
 }

@@ -4,17 +4,14 @@ import { MESSAGES } from "../constants/messages";
 import { CreateTourDto, TourFilterDto, UpdateTourDto } from "../interfaces/tour.dto";
 import { validate } from "class-validator";
 import { AppError } from "../utils/errors";
+import { plainToClass } from "class-transformer";
 
 export class TourController {
     constructor(private tourUseCase: TourUseCase) { }
 
     async getTours(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const filterDto = new TourFilterDto();
-            Object.assign(filterDto, req.query);
-
-            console.log('Filter DTO:', filterDto);
-
+            const filterDto = plainToClass(TourFilterDto, req.query);
             const errors = await validate(filterDto);
             if (errors.length > 0) {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);
@@ -55,8 +52,7 @@ export class TourController {
 
     async createTour(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const createDto = new CreateTourDto();
-            Object.assign(createDto, req.body);
+            const createDto = plainToClass(CreateTourDto, req.body);
             const errors = await validate(createDto);
             if (errors.length > 0) {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);
@@ -76,8 +72,7 @@ export class TourController {
                 throw new AppError(MESSAGES.TOUR.INVALID_ID, 400);
             }
 
-            const updateDto = new UpdateTourDto();
-            Object.assign(updateDto, req.body);
+            const updateDto = plainToClass(UpdateTourDto, req.body);
             const errors = await validate(updateDto);
             if (errors.length > 0) {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);
