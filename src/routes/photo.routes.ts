@@ -10,7 +10,7 @@ import { parseFormDataTeams } from '../middleware/formData.middleware';
 const storage = multer.memoryStorage();
 const upload = multer({
     storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+    limits: { fileSize: 100 * 1024 * 1024 }, // 100 MB
     fileFilter: (req, file, cb) => {
         const fileTypes = /jpeg|jpg|png|webp/;
         const mimeType = fileTypes.test(file.mimetype);
