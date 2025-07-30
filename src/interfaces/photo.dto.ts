@@ -12,8 +12,9 @@ export class CreatePhotoDto {
     @IsMongoId({ message: MESSAGES.PHOTO.INVALID_TOUR })
     tour!: string;
 
-    @IsMongoId({ message: MESSAGES.PHOTO.INVALID_TEAM })
-    team!: string;
+    @IsOptional()
+    @IsMongoId({ each: true, message: MESSAGES.PHOTO.INVALID_TEAM })
+    teams?: string[];
 }
 
 export class UpdatePhotoDto {
@@ -30,8 +31,8 @@ export class UpdatePhotoDto {
     tour?: string;
 
     @IsOptional()
-    @IsMongoId({ message: MESSAGES.PHOTO.INVALID_TEAM })
-    team?: string;
+    @IsMongoId({ each: true, message: MESSAGES.PHOTO.INVALID_TEAM })
+    teams?: string[];
 }
 
 export class PhotoFilterDto {
@@ -48,6 +49,6 @@ export class PhotoFilterDto {
     tour?: string;
 
     @IsOptional()
-    @IsMongoId({ message: MESSAGES.PHOTO.INVALID_TEAM_ID })
-    team?: string;
+    @IsMongoId({ each: true, message: MESSAGES.PHOTO.INVALID_TEAM_ID })
+    teams?: string[];
 }

@@ -27,6 +27,19 @@ export const parseFormDataTournaments = (req: Request, res: Response, next: Next
     }
 }
 
+export const parseFormDataTours = (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const parsedData = {
+            ...req.body,
+            tours: req.body.tours ? JSON.parse(req.body.tours) : undefined, // или Object.values(req.body.tours)
+        };
+        req.body = parsedData;
+        next();
+    } catch (error) {
+        next(new AppError('Invalid FormData format', 400));
+    }
+}
+
 // universal middleware for parsing FormData
 export const parseFormData = (req: Request, res: Response, next: NextFunction, stringArrayFieldName: string) => {
     try {

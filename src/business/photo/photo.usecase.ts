@@ -15,10 +15,21 @@ export class PhotoUseCase {
             ...dto,
             tournament: dto.tournament ? new Types.ObjectId(dto.tournament) : undefined,
             tour: dto.tour ? new Types.ObjectId(dto.tour) : undefined,
-            team: dto.team ? new Types.ObjectId(dto.team) : undefined,
+            teams: dto.teams ? dto.teams.map(id => new Types.ObjectId(id)) : undefined,
         };
 
         return this.photoService.createPhoto(photoData, file);
+    }
+
+    async createPhotos(dto: CreatePhotoDto, files: Express.Multer.File[]): Promise<IPhoto[]> {
+        const photosData: Partial<IPhoto> = {
+            ...dto,
+            tournament: dto.tournament ? new Types.ObjectId(dto.tournament) : undefined,
+            tour: dto.tour ? new Types.ObjectId(dto.tour) : undefined,
+            teams: dto.teams ? dto.teams.map(id => new Types.ObjectId(id)) : undefined,
+        };
+        const photos: IPhoto[] = await this.photoService.createPhotos(photosData, files);
+        return photos;
     }
 
     async updatePhoto(dto: UpdatePhotoDto, file?: Express.Multer.File): Promise<IPhoto> {
@@ -26,7 +37,7 @@ export class PhotoUseCase {
             ...dto,
             tournament: dto.tournament ? new Types.ObjectId(dto.tournament) : undefined,
             tour: dto.tour ? new Types.ObjectId(dto.tour) : undefined,
-            team: dto.team ? new Types.ObjectId(dto.team) : undefined,
+            teams: dto.teams ? dto.teams.map(id => new Types.ObjectId(id)) : undefined,
         };
 
         return this.photoService.updatePhoto(photoData, file);

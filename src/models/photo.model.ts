@@ -9,7 +9,7 @@ export interface IPhoto extends mongoose.Document {
     description: string;
     tournament: mongoose.Types.ObjectId | ITournament;
     tour: mongoose.Types.ObjectId | ITour;
-    team: mongoose.Types.ObjectId | ITeam;
+    teams?: mongoose.Types.ObjectId[] | ITeam[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -20,7 +20,7 @@ const PhotoSchema = new mongoose.Schema({
     description: { type: String, required: false },
     tournament: { type: mongoose.Schema.Types.ObjectId, ref: "Tournament", required: true },
     tour: { type: mongoose.Schema.Types.ObjectId, ref: "Tour", required: true },
-    team: { type: mongoose.Schema.Types.ObjectId, ref: "Team", required: true },
+    teams: [{ type: mongoose.Schema.Types.ObjectId, ref: "Team", required: false }],
 }, {
     timestamps: true
 });

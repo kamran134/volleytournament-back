@@ -42,10 +42,10 @@ export class PhotoService {
             const query: any = {};
             if (filter.tournament) query.tournament = filter.tournament;
             if (filter.tour) query.tour = filter.tour;
-            if (filter.team) query.team = filter.team;
+            if (filter.teams) query.teams = { $in: filter.teams };
 
             const totalCount = await PhotoModel.countDocuments(query);
-            const data = await PhotoModel.find(query).populate('tournament tour team').sort({ createdAt: -1 });
+            const data = await PhotoModel.find(query).populate('tournament tour teams').sort({ createdAt: -1 });
             return { data, totalCount };
         } catch (error) {
             logger.error('Error fetching photos:', error);
@@ -67,33 +67,13 @@ export class PhotoService {
         }
     }
 
-    async uploadPhoto(file: Express.Multer.File, type: string): Promise<string> {
-        try {
-            const uploadDir = path.join(__dirname, '../../uploads', type);
-            await fs.promises.mkdir(uploadDir, { recursive: true });
-
-            const fileName = `${Date.now()}-${file.originalname}`;
-            const outputPath = path.join(uploadDir, fileName);
-
-            await sharp(file.buffer)
-                .resize({ width: 800 })
-                .webp({ quality: 80 })
-                .toFile(outputPath);
-
-            return `/uploads/${type}/${fileName}`;
-        } catch (error) {
-            logger.error('Error uploading photo:', error);
-            throw new AppError(MESSAGES.PHOTO.UPLOAD_FAILED, 500);
-        }
-    }
-
-    async uploadMultiplePhotos(data: Partial<IPhoto>, files: Express.Multer.File[]): Promise<IPhoto[]> {
+    async createPhotos(data: Partial<IPhoto>, files: Express.Multer.File[]): Promise<IPhoto[]> {
         try {
             // Проверяем существование связанных сущностей
-            const [tournament, tour, team] = await Promise.all([
+            const [tournament, tour, teams] = await Promise.all([
                 TournamentModel.findById(data.tournament),
                 TourModel.findById(data.tour),
-                TeamModel.findById(data.team),
+                TeamModel.find({ _id: { $in: data.teams || [] } }),
             ]);
 
             if (!tournament) {
@@ -102,7 +82,7 @@ export class PhotoService {
             if (!tour) {
                 throw new AppError(MESSAGES.TOUR.NOT_FOUND, 404);
             }
-            if (!team) {
+            if (!teams) {
                 throw new AppError(MESSAGES.TEAM.NOT_FOUND, 404);
             }
 
@@ -130,7 +110,7 @@ export class PhotoService {
                     description: data.description || '',
                     tournament: data.tournament,
                     tour: data.tour,
-                    team: data.team,
+                    teams: data.teams ? data.teams.map(team => new Types.ObjectId(team._id)) : [],
                 };
 
                 return PhotoModel.create(photoData);
@@ -142,6 +122,26 @@ export class PhotoService {
             return photos;
         } catch (error) {
             logger.error('Error uploading multiple photos:', error);
+            throw new AppError(MESSAGES.PHOTO.UPLOAD_FAILED, 500);
+        }
+    }
+
+    async uploadPhoto(file: Express.Multer.File, type: string): Promise<string> {
+        try {
+            const uploadDir = path.join(__dirname, '../../uploads', type);
+            await fs.promises.mkdir(uploadDir, { recursive: true });
+
+            const fileName = `${Date.now()}-${file.originalname}`;
+            const outputPath = path.join(uploadDir, fileName);
+
+            await sharp(file.buffer)
+                .resize({ width: 800 })
+                .webp({ quality: 80 })
+                .toFile(outputPath);
+
+            return `/uploads/${type}/${fileName}`;
+        } catch (error) {
+            logger.error('Error uploading photo:', error);
             throw new AppError(MESSAGES.PHOTO.UPLOAD_FAILED, 500);
         }
     }
@@ -180,7 +180,29 @@ export class PhotoService {
         }
     }
 
-    async deletePhoto(photoUrl: string | undefined): Promise<void> {
+    async deletePhoto(id: string): Promise<void> {
+        if (!id) {
+            throw new AppError(MESSAGES.PHOTO.INVALID_ID, 400);
+        }
+
+        try {
+            const photo = await PhotoModel.findById(id);
+            if (!photo) {
+                throw new AppError(MESSAGES.PHOTO.NOT_FOUND, 404);
+            }
+
+            // Удаляем фото из базы данных
+            await PhotoModel.deleteOne({ _id: id });
+
+            // Удаляем файл с диска
+            await this.deletePhotoFromFolder(photo.url);
+        } catch (error) {
+            logger.error('Error deleting photo:', error);
+            throw new AppError(MESSAGES.PHOTO.DELETE_FAILED, 500);
+        }
+    }
+
+    async deletePhotoFromFolder(photoUrl: string | undefined): Promise<void> {
         if (!photoUrl) return;
 
         try {

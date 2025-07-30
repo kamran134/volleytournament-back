@@ -1,6 +1,11 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
+import { PhotoService } from '../services/photo.service';
+import { PhotoUseCase } from '../business/photo/photo.usecase';
+import { PhotoController } from '../controllers/photo.controller';
+import { checkAdminRole } from '../middleware/auth.middleware';
+import { parseFormDataTeams } from '../middleware/formData.middleware';
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -18,3 +23,23 @@ const upload = multer({
     }
 });
 
+const router = express.Router();
+const photoService = new PhotoService();
+const photoUseCase = new PhotoUseCase(photoService);
+const photoController = new PhotoController(photoUseCase);
+router
+    .route('/')
+    .get(photoController.getPhotos.bind(photoController))
+    .post(checkAdminRole, upload.single('file'), parseFormDataTeams, photoController.createPhoto.bind(photoController));
+router
+    .route('/bulk')
+    .post(checkAdminRole, upload.array('files', 50), parseFormDataTeams, photoController.createPhotos.bind(photoController));
+router
+    .route('/:id')
+    //.get(photoController.getPhoto.bind(photoController))
+    .delete(checkAdminRole, photoController.deletePhoto.bind(photoController));
+router
+    .route('/update')
+    .put(checkAdminRole, upload.single('photo'), parseFormDataTeams, photoController.updatePhoto.bind(photoController));
+
+export default router;
