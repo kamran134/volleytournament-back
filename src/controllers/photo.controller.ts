@@ -88,4 +88,18 @@ export class PhotoController {
             next(error);
         }
     }
+
+    async deletePhotos(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const ids = req.body.ids;
+            if (!ids || !Array.isArray(ids) || ids.length === 0) {
+                throw new AppError(MESSAGES.PHOTO.INVALID_IDS, 400);
+            }
+
+            await this.photoUseCase.deletePhotos(ids);
+            res.status(200).json({ message: MESSAGES.PHOTO.SUCCESS_DELETE });
+        } catch (error) {
+            next(error);
+        }
+    }
 }

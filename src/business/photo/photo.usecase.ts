@@ -46,4 +46,8 @@ export class PhotoUseCase {
     async deletePhoto(id: string): Promise<void> {
         await this.photoService.deletePhoto(id);
     }
+
+    async deletePhotos(ids: string[]): Promise<void> {
+        await this.photoService.deletePhotos(ids);
+    }
 }

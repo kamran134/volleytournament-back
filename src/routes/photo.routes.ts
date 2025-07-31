@@ -33,13 +33,13 @@ router
     .post(checkAdminRole, upload.single('file'), parseFormDataTeams, photoController.createPhoto.bind(photoController));
 router
     .route('/bulk')
-    .post(checkAdminRole, upload.array('files', 50), parseFormDataTeams, photoController.createPhotos.bind(photoController));
-router
-    .route('/:id')
-    //.get(photoController.getPhoto.bind(photoController))
-    .delete(checkAdminRole, photoController.deletePhoto.bind(photoController));
+    .post(checkAdminRole, upload.array('files', 50), parseFormDataTeams, photoController.createPhotos.bind(photoController))
+    .delete(checkAdminRole, photoController.deletePhotos.bind(photoController));
 router
     .route('/update')
     .put(checkAdminRole, upload.single('photo'), parseFormDataTeams, photoController.updatePhoto.bind(photoController));
+router
+    .route('/:id')
+    .delete(checkAdminRole, photoController.deletePhoto.bind(photoController));
 
 export default router;

@@ -202,6 +202,29 @@ export class PhotoService {
         }
     }
 
+    async deletePhotos(ids: string[]): Promise<void> {
+        if (!ids || ids.length === 0) {
+            throw new AppError(MESSAGES.PHOTO.INVALID_IDS, 400);
+        }
+        try {
+            const photos = await PhotoModel.find({ _id: { $in: ids } });
+            if (photos.length === 0) {
+                throw new AppError(MESSAGES.PHOTO.NOT_FOUND, 404);
+            }
+
+            // Удаляем фото из базы данных
+            await PhotoModel.deleteMany({ _id: { $in: ids } });
+
+            // Удаляем файлы с диска
+            for (const photo of photos) {
+                await this.deletePhotoFromFolder(photo.url);
+            }
+        } catch (error) {
+            logger.error('Error deleting multiple photos:', error);
+            throw new AppError(MESSAGES.PHOTO.DELETE_FAILED, 500);
+        }
+    }
+
     async deletePhotoFromFolder(photoUrl: string | undefined): Promise<void> {
         if (!photoUrl) return;
 
