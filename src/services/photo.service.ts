@@ -45,8 +45,6 @@ export class PhotoService {
             if (filter.tour) query.tour = filter.tour;
             if (filter.teams) query.teams = { $in: filter.teams };
 
-            console.log('Photo filter query:', query);
-
             const totalCount = await PhotoModel.countDocuments(query);
             const data = await PhotoModel.find(query).populate('tournament tour teams').sort({ createdAt: -1 });
             return { data, totalCount };
@@ -58,7 +56,7 @@ export class PhotoService {
 
     async getLastPhotos(): Promise<{ data: IPhoto[]; totalCount: number }> {
         try {
-            const data = await PhotoModel.find().sort({ createdAt: -1 }).limit(8).populate('tournament tour teams');
+            const data = await PhotoModel.find().sort({ createdAt: -1 }).limit(10).populate('tournament tour teams');
             const totalCount = await PhotoModel.countDocuments();
             return { data, totalCount };
         } catch (error) {
