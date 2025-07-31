@@ -24,6 +24,21 @@ export class PhotoController {
         }
     }
 
+    async getLastPhotos(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const filterDto = plainToClass(PhotoFilterDto, req.query);
+            const errors = await validate(filterDto);
+            if (errors.length > 0) {
+                throw new AppError(errors.map((e) => e.toString()).join(', '), 400);
+            }
+
+            const { data, totalCount } = await this.photoUseCase.getLastPhotos();
+            res.status(200).json({ data, totalCount, message: MESSAGES.PHOTO.SUCCESS_FETCH });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     async createPhoto(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const dto = plainToClass(CreatePhotoDto, req.body);

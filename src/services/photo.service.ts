@@ -10,6 +10,7 @@ import TeamModel from '../models/team.model';
 import { MESSAGES } from '../constants/messages';
 import mongoose, { Types } from 'mongoose';
 import PhotoModel from '../models/photo.model';
+import { PhotoFilterDto } from '../interfaces/photo.dto';
 
 export class PhotoService {
     constructor() {}
@@ -37,18 +38,31 @@ export class PhotoService {
         return existingPhotos;
     }
 
-    async getFilteredPhotos(filter: any): Promise<{ data: IPhoto[]; totalCount: number }> {
+    async getFilteredPhotos(filter: PhotoFilterDto): Promise<{ data: IPhoto[]; totalCount: number }> {
         try {
             const query: any = {};
             if (filter.tournament) query.tournament = filter.tournament;
             if (filter.tour) query.tour = filter.tour;
             if (filter.teams) query.teams = { $in: filter.teams };
 
+            console.log('Photo filter query:', query);
+
             const totalCount = await PhotoModel.countDocuments(query);
             const data = await PhotoModel.find(query).populate('tournament tour teams').sort({ createdAt: -1 });
             return { data, totalCount };
         } catch (error) {
             logger.error('Error fetching photos:', error);
+            throw new AppError(MESSAGES.PHOTO.FETCH_FAILED, 500);
+        }
+    }
+
+    async getLastPhotos(): Promise<{ data: IPhoto[]; totalCount: number }> {
+        try {
+            const data = await PhotoModel.find().sort({ createdAt: -1 }).limit(8).populate('tournament tour teams');
+            const totalCount = await PhotoModel.countDocuments();
+            return { data, totalCount };
+        } catch (error) {
+            logger.error('Error fetching last photos:', error);
             throw new AppError(MESSAGES.PHOTO.FETCH_FAILED, 500);
         }
     }

@@ -10,6 +10,10 @@ export class PhotoUseCase {
         return this.photoService.getFilteredPhotos(filter);
     }
 
+    async getLastPhotos(): Promise<{ data: IPhoto[]; totalCount: number }> {
+        return this.photoService.getLastPhotos();
+    }
+
     async createPhoto(dto: CreatePhotoDto, file: Express.Multer.File): Promise<IPhoto> {
         const photoData: Partial<IPhoto> = {
             ...dto,

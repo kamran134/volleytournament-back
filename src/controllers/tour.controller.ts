@@ -12,6 +12,7 @@ export class TourController {
     async getTours(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const filterDto = plainToClass(TourFilterDto, req.query);
+            console.log('Filter DTO:', filterDto);
             const errors = await validate(filterDto);
             if (errors.length > 0) {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);

@@ -32,6 +32,9 @@ router
     .get(photoController.getPhotos.bind(photoController))
     .post(checkAdminRole, upload.single('file'), parseFormDataTeams, photoController.createPhoto.bind(photoController));
 router
+    .route('/last')
+    .get(photoController.getLastPhotos.bind(photoController)); // Assuming this is for getting the last photos
+router
     .route('/bulk')
     .post(checkAdminRole, upload.array('files', 50), parseFormDataTeams, photoController.createPhotos.bind(photoController))
     .delete(checkAdminRole, photoController.deletePhotos.bind(photoController));
