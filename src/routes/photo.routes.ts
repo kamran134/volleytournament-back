@@ -30,7 +30,8 @@ const photoController = new PhotoController(photoUseCase);
 router
     .route('/')
     .get(photoController.getPhotos.bind(photoController))
-    .post(checkAdminRole, upload.single('file'), parseFormDataTeams, photoController.createPhoto.bind(photoController));
+    .post(checkAdminRole, upload.single('file'), parseFormDataTeams, photoController.createPhoto.bind(photoController))
+    .put(checkAdminRole, upload.single('file'), parseFormDataTeams, photoController.updatePhoto.bind(photoController));
 router
     .route('/last')
     .get(photoController.getLastPhotos.bind(photoController)); // Assuming this is for getting the last photos
@@ -38,9 +39,6 @@ router
     .route('/bulk')
     .post(checkAdminRole, upload.array('files', 50), parseFormDataTeams, photoController.createPhotos.bind(photoController))
     .delete(checkAdminRole, photoController.deletePhotos.bind(photoController));
-router
-    .route('/update')
-    .put(checkAdminRole, upload.single('photo'), parseFormDataTeams, photoController.updatePhoto.bind(photoController));
 router
     .route('/:id')
     .delete(checkAdminRole, photoController.deletePhoto.bind(photoController));

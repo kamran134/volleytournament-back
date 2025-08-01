@@ -164,6 +164,7 @@ export class PhotoService {
     }
 
     async updatePhoto(data: Partial<IPhoto>, file?: Express.Multer.File): Promise<IPhoto> {
+        console.log('Update Photo Data:', data);
         if (!data._id) {
             throw new AppError(MESSAGES.PHOTO.INVALID_ID, 400);
         }
