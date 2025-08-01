@@ -1,4 +1,4 @@
-import { IsMongoId, IsOptional, IsString } from "class-validator";
+import { IsMongoId, IsNumber, IsNumberString, IsOptional, IsString } from "class-validator";
 import { MESSAGES } from "../constants/messages";
 
 export class CreatePhotoDto {
@@ -36,6 +36,14 @@ export class UpdatePhotoDto {
 }
 
 export class PhotoFilterDto {
+    @IsOptional()
+    @IsNumberString({}, { message: MESSAGES.PHOTO.INVALID_PAGE })
+    page?: number;
+
+    @IsOptional()
+    @IsNumberString({}, { message: MESSAGES.PHOTO.INVALID_SIZE })
+    size?: number;
+
     @IsOptional()
     @IsString({ message: MESSAGES.PHOTO.INVALID_DESCRIPTION })
     description?: string;

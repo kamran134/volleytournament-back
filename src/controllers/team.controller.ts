@@ -11,8 +11,7 @@ export class TeamController {
 
     async getTeams(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const filterDto = new TeamFilterDto();
-            Object.assign(filterDto, req.query);
+            const filterDto = plainToClass(TeamFilterDto, req.query);
             const errors = await validate(filterDto);
             if (errors.length > 0) {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);
