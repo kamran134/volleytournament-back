@@ -7,9 +7,9 @@ export interface ITeam extends Document{
     logoUrl?: string;
     country: string;
     city: string;
-    // players?: Types.ObjectId[];
-    // coaches?: Types.ObjectId[];
-    // captain?: Types.ObjectId;
+    // players?: mongoose.Types.ObjectId[];
+    // coaches?: mongoose.Types.ObjectId[];
+    // captain?: mongoose.Types.ObjectId;
     tournaments?: mongoose.Types.ObjectId[];
     createdBy: mongoose.Types.ObjectId;
     createdAt: Date;

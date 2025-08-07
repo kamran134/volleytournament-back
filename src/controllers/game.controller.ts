@@ -4,6 +4,7 @@ import { CreateGameDto, UpdateGameDto, GameFilterDto } from '../interfaces/game.
 import { validate } from 'class-validator';
 import { AppError } from '../utils/errors';
 import { MESSAGES } from '../constants/messages';
+import { plainToClass } from 'class-transformer';
 
 export class GameController {
     constructor(private gameUseCase: GameUseCase) { }
@@ -12,6 +13,21 @@ export class GameController {
         try {
             const filterDto = new GameFilterDto();
             Object.assign(filterDto, req.query);
+            const errors = await validate(filterDto);
+            if (errors.length > 0) {
+                throw new AppError(errors.map((e) => e.toString()).join(', '), 400);
+            }
+
+            const { data, totalCount } = await this.gameUseCase.getGames(filterDto);
+            res.status(200).json({ data, totalCount, message: MESSAGES.GAME.SUCCESS_FETCH });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getLastGames(req: Request, res: Response, next: NextFunction): Promise<void> {
+        try {
+            const filterDto = plainToClass(GameFilterDto, req.query);
             const errors = await validate(filterDto);
             if (errors.length > 0) {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);

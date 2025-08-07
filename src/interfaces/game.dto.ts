@@ -1,4 +1,4 @@
-import { IsString, MinLength, IsDateString, IsOptional, IsMongoId, IsArray } from 'class-validator';
+import { IsString, MinLength, IsDateString, IsOptional, IsMongoId, IsArray, IsBoolean } from 'class-validator';
 import { MESSAGES } from '../constants/messages';
 
 export class CreateGameDto {
@@ -59,4 +59,16 @@ export class GameFilterDto {
     @IsOptional()
     @IsMongoId({ message: MESSAGES.GAME.INVALID_TOURNAMENT_ID })
     tournament?: string;
+
+    @IsOptional()
+    @IsMongoId({ message: MESSAGES.GAME.INVALID_TOUR_ID })
+    tour?: string;
+
+    @IsOptional()
+    @IsString({ message: MESSAGES.GAME.INVALID_LAST_TOURNAMENT })
+    isLastTournament?: string;
+
+    @IsOptional()
+    @IsString({ message: MESSAGES.GAME.INVALID_LAST_TOUR })
+    isLastTour?: string;
 }

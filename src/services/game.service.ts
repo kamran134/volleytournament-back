@@ -5,15 +5,37 @@ import TournamentModel from '../models/tournament.model';
 import { AppError } from '../utils/errors';
 import { MESSAGES } from '../constants/messages';
 import { logger } from '../utils/logger';
+import { GameFilterDto } from '../interfaces/game.dto';
 
 export class GameService {
-    async getFilteredGames(filter: any): Promise<{ data: IGame[]; totalCount: number }> {
+    async getFilteredGames(filter: GameFilterDto): Promise<{ data: IGame[]; totalCount: number }> {
         try {
             const query: any = {};
             if (filter.name) query.name = { $regex: filter.name, $options: 'i' };
             if (filter.winner) query.winner = filter.winner;
 
             const totalCount = await GameModel.countDocuments(query);
+
+            // if isLastTournament or isLastTour is true, we need to filter by the latest tournament or tour
+            if (filter.isLastTournament) {
+                const latestTournament = await TournamentModel.findOne().sort({ startDate: -1 }).select('_id');
+                if (latestTournament) {
+                    query.tournament = latestTournament._id;
+                } else {
+                    query.tournament = null; // No tournaments found
+                }
+            }
+            if (filter.isLastTour) {
+                // we need to find the latest tournament before today
+                const latestTour = await GameModel.findOne({ startDate: { $lt: new Date() } }).sort({ startDate: -1 }).select('tour');
+                if (latestTour && latestTour.tour) {
+                    query.tour = latestTour.tour._id;
+                    
+                } else {
+                    query.tour = null; // No tours found
+                }
+            }
+
             const data = await GameModel.find(query).populate('tournament tour team1 team2 winner').sort({ startDate: -1 });
             return { data, totalCount };
         } catch (error) {
