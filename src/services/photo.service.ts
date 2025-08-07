@@ -41,12 +41,17 @@ export class PhotoService {
     async getFilteredPhotos(filter: PhotoFilterDto): Promise<{ data: IPhoto[]; totalCount: number }> {
         try {
             const query: any = {};
+            const { page = 1, size = 10 } = filter;
             if (filter.tournament) query.tournament = filter.tournament;
             if (filter.tour) query.tour = filter.tour;
             if (filter.teams) query.teams = { $in: filter.teams };
 
             const totalCount = await PhotoModel.countDocuments(query);
-            const data = await PhotoModel.find(query).populate('tournament tour teams').sort({ createdAt: -1 });
+            const data = await PhotoModel.find(query)
+                .populate('tournament tour teams')
+                .sort({ createdAt: -1 })
+                .skip((page - 1) * size)
+                .limit(size);
             return { data, totalCount };
         } catch (error) {
             logger.error('Error fetching photos:', error);
@@ -159,6 +164,7 @@ export class PhotoService {
     }
 
     async updatePhoto(data: Partial<IPhoto>, file?: Express.Multer.File): Promise<IPhoto> {
+        console.log('Update Photo Data:', data);
         if (!data._id) {
             throw new AppError(MESSAGES.PHOTO.INVALID_ID, 400);
         }

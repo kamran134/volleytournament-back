@@ -296,6 +296,8 @@ export const MESSAGES = {
         CREATE_FAILED: 'Foto yaratmaq mümkün olmadı',
         UPDATE_FAILED: 'Foto yenilənməsi mümkün olmadı',
         DELETE_FAILED: 'Foto silinməsi mümkün olmadı',
+        INVALID_PAGE: 'Səhifə nömrəsi düzgün formatda deyil',
+        INVALID_SIZE: 'Səhifə ölçüsü düzgün formatda deyil',
         INVALID_URL: 'Foto URL düzgün formatda deyil',
         INVALID_ID: 'Foto ID-si düzgün formatda deyil',
         INVALID_IDS: 'Foto ID-ləri düzgün formatda deyil',

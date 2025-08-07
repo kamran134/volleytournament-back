@@ -9,36 +9,6 @@ import fs from 'fs';
 import sharp from 'sharp';
 
 export class TournamentService {
-    async uploadTournamentLogo(id: string, file: Express.Multer.File): Promise<string> {
-        try {
-            const uploadDir = path.join(__dirname, '../../uploads/tournaments');
-            await fs.promises.mkdir(uploadDir, { recursive: true });
-            const fileName = `${Date.now()}-${id}.webp`;
-            const outputPath = path.join(uploadDir, fileName);
-
-            await sharp(file.buffer).resize({ width: 300}).webp({ quality: 80 }).toFile(outputPath);
-            return `/uploads/tournaments/${fileName}`;
-        } catch (error) {
-            logger.error('Error uploading tournament logo:', error);
-            throw new AppError(MESSAGES.TOURNAMENT.LOGO_UPLOAD_FAILED, 500);
-        }
-    }
-
-    async deleteTournamentLogo(logoUrl: string | undefined): Promise<void> {
-        if (!logoUrl) return;
-
-        try {
-            const filePath = path.join(__dirname, '../../', logoUrl);
-            await fs.unlinkSync(filePath);
-        } catch (error: any) {
-            // Игнорируем ошибку, если файл не существует
-            if (error.code !== 'ENOENT') {
-                logger.error('Error deleting tournament logo:', error);
-                throw new AppError(MESSAGES.TOURNAMENT.LOGO_DELETE_FAILED, 500);
-            }
-        }
-    }
-    
     async getFilteredTournaments(filter: any): Promise<{ data: ITournament[]; totalCount: number }> {
         try {
             const query: any = {};
@@ -133,5 +103,35 @@ export class TournamentService {
         }
 
         return deletedTournament;
+    }
+
+    async uploadTournamentLogo(id: string, file: Express.Multer.File): Promise<string> {
+        try {
+            const uploadDir = path.join(__dirname, '../../uploads/tournaments');
+            await fs.promises.mkdir(uploadDir, { recursive: true });
+            const fileName = `${Date.now()}-${id}.webp`;
+            const outputPath = path.join(uploadDir, fileName);
+
+            await sharp(file.buffer).resize({ width: 300}).webp({ quality: 80 }).toFile(outputPath);
+            return `/uploads/tournaments/${fileName}`;
+        } catch (error) {
+            logger.error('Error uploading tournament logo:', error);
+            throw new AppError(MESSAGES.TOURNAMENT.LOGO_UPLOAD_FAILED, 500);
+        }
+    }
+
+    async deleteTournamentLogo(logoUrl: string | undefined): Promise<void> {
+        if (!logoUrl) return;
+
+        try {
+            const filePath = path.join(__dirname, '../../', logoUrl);
+            await fs.unlinkSync(filePath);
+        } catch (error: any) {
+            // Игнорируем ошибку, если файл не существует
+            if (error.code !== 'ENOENT') {
+                logger.error('Error deleting tournament logo:', error);
+                throw new AppError(MESSAGES.TOURNAMENT.LOGO_DELETE_FAILED, 500);
+            }
+        }
     }
 }

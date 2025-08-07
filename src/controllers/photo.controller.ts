@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { PhotoUseCase } from "../business/photo/photo.usecase";
-import { CreatePhotoDto, PhotoFilterDto } from "../interfaces/photo.dto";
+import { CreatePhotoDto, PhotoFilterDto, UpdatePhotoDto } from "../interfaces/photo.dto";
 import { plainToClass } from "class-transformer";
 import { validate } from "class-validator";
 import { AppError } from "../utils/errors";
@@ -77,7 +77,7 @@ export class PhotoController {
 
     async updatePhoto(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const dto = plainToClass(CreatePhotoDto, req.body);
+            const dto = plainToClass(UpdatePhotoDto, req.body);
             const errors = await validate(dto);
             if (errors.length > 0) {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);

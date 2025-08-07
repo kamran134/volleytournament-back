@@ -8,10 +8,11 @@ import fs from 'fs';
 import path from 'path';
 import sharp from 'sharp';
 import { logger } from '../utils/logger';
+import { TeamFilterDto } from '../interfaces/team.dto';
 //import { logger } from '../utils/errors';
 
 export class TeamService {
-    async getFilteredTeams(filter: any): Promise<{ data: ITeam[]; totalCount: number }> {
+    async getFilteredTeams(filter: TeamFilterDto): Promise<{ data: ITeam[]; totalCount: number }> {
         try {
             const query: any = {};
             if (filter.name) query.name = { $regex: filter.name, $options: 'i' };
@@ -19,6 +20,8 @@ export class TeamService {
             if (filter.city) query.city = { $regex: filter.city, $options: 'i' };
             if (filter.captain) query.captain = filter.captain;
             if (filter.createdBy) query.createdBy = filter.createdBy;
+
+            console.log('Team filter query:', query);
 
             const totalCount = await TeamModel.countDocuments(query);
             const data = await TeamModel.find(query).populate('tournaments').sort({ createdAt: -1 });
