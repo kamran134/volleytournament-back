@@ -2,7 +2,7 @@ import express from 'express';
 import { TeamController } from '../controllers/team.controller';
 import { TeamService } from '../services/team.service';
 import { TeamUseCase } from '../business/team/team.usecase';
-import { checkAdminCoachCaptainRole, checkAdminRole } from '../middleware/auth.middleware';
+import { checkAdminCoachCaptainRoleWithRefreshToken, checkAdminRoleWithRefreshToken } from '../middleware/auth.middleware';
 import { parseFormDataTournaments } from '../middleware/formData.middleware';
 import multer from 'multer';
 import path from 'path';
@@ -30,12 +30,12 @@ const teamController = new TeamController(teamUseCase);
 
 router
     .route('/')
-    .get(checkAdminCoachCaptainRole, teamController.getTeams.bind(teamController))
-    .post(checkAdminCoachCaptainRole, upload.single('logo'), parseFormDataTournaments, teamController.createTeam.bind(teamController))
-    .put(checkAdminCoachCaptainRole, upload.single('logo'), parseFormDataTournaments, teamController.updateTeam.bind(teamController));
+    .get(checkAdminCoachCaptainRoleWithRefreshToken, teamController.getTeams.bind(teamController))
+    .post(checkAdminCoachCaptainRoleWithRefreshToken, upload.single('logo'), parseFormDataTournaments, teamController.createTeam.bind(teamController))
+    .put(checkAdminCoachCaptainRoleWithRefreshToken, upload.single('logo'), parseFormDataTournaments, teamController.updateTeam.bind(teamController));
 
 router
     .route('/:id')
-    .delete(checkAdminRole, teamController.deleteTeam.bind(teamController));
+    .delete(checkAdminRoleWithRefreshToken, teamController.deleteTeam.bind(teamController));
 
 export default router;

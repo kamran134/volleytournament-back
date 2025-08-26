@@ -2,7 +2,7 @@ import express from 'express';
 import { GamerController } from '../controllers/gamer.controller';
 import { GamerService } from '../services/gamer.service';
 import { GamerUseCase } from '../business/gamer/gamer.usecase';
-import { checkAdminCoachCaptainRole, checkAdminRole, checkUserRole } from '../middleware/auth.middleware';
+import { checkAdminCoachCaptainRoleWithRefreshToken, checkAdminRoleWithRefreshToken, checkUserRoleWithRefreshToken } from '../middleware/auth.middleware';
 
 const router = express.Router();
 const gamerService = new GamerService();
@@ -11,12 +11,12 @@ const gamerController = new GamerController(gamerUseCase);
 
 router
     .route('/')
-    .get(checkUserRole, gamerController.getGamers.bind(gamerController))
-    .post(checkAdminCoachCaptainRole, gamerController.createGamer.bind(gamerController))
-    .put(checkAdminCoachCaptainRole, gamerController.updateGamer.bind(gamerController));
+    .get(checkUserRoleWithRefreshToken, gamerController.getGamers.bind(gamerController))
+    .post(checkAdminCoachCaptainRoleWithRefreshToken, gamerController.createGamer.bind(gamerController))
+    .put(checkAdminCoachCaptainRoleWithRefreshToken, gamerController.updateGamer.bind(gamerController));
 
 router
     .route('/:id')
-    .delete(checkAdminRole, gamerController.deleteGamer.bind(gamerController));
+    .delete(checkAdminRoleWithRefreshToken, gamerController.deleteGamer.bind(gamerController));
 
 export default router;

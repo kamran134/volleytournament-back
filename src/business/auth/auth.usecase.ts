@@ -4,6 +4,8 @@ import { LoginDto, RegisterDto } from "../../interfaces/auth.dto";
 import { AuthService } from "../../services/auth.service";
 import { AppError } from "../../utils/errors";
 import { UserRole } from "../../constants/roles";
+// REFRESH TOKEN IMPORTS - UNCOMMENT AFTER REFACTORING
+import { RefreshTokenService } from "../../services/refreshToken.service";
 
 export class AuthUseCase {
     constructor(private authService: AuthService) {}
@@ -23,18 +25,39 @@ export class AuthUseCase {
             throw new AppError(MESSAGES.AUTH.NOT_APPROVED, 403);
         }
 
-        console.log('User logged in:', user.email);
-        console.log('User role:', user.role);
-        console.log('User ID:', user._id);
-
         const token = await this.authService.generateToken({
             userId: user._id as Types.ObjectId,
             role: user.role,
         });
 
-        console.log('Generated token:', token);
-
         return { token, user };
+    }
+
+    // REFRESH TOKEN LOGIN METHOD - UNCOMMENT AFTER REFACTORING
+    async loginWithRefreshToken(dto: LoginDto): Promise<{ accessToken: string; refreshToken: string; user: any }> {
+        const user = await this.authService.findUserByEmail(dto.email);
+        if (!user) {
+            throw new AppError(MESSAGES.AUTH.INVALID_CREDENTIALS, 404);
+        }
+
+        const isPasswordValid = await this.authService.comparePassword(dto.password, user.passwordHash);
+        if (!isPasswordValid) {
+            throw new AppError(MESSAGES.AUTH.INVALID_CREDENTIALS, 400);
+        }
+
+        if (!user.isApproved) {
+            throw new AppError(MESSAGES.AUTH.NOT_APPROVED, 403);
+        }
+
+        const { accessToken, refreshToken } = await this.authService.generateTokenPair({
+            userId: user._id as Types.ObjectId,
+            role: user.role,
+        });
+
+        // Add the refresh token to user sessions tracking
+        RefreshTokenService.addUserSession((user._id || '').toString(), refreshToken);
+
+        return { accessToken, refreshToken, user };
     }
 
     async register(dto: RegisterDto): Promise<void> {
@@ -86,5 +109,29 @@ export class AuthUseCase {
         // Но это зависит от реализации клиента
         // В данном случае, просто возвращаем успешный ответ
         return Promise.resolve();
+    }
+
+    // REFRESH TOKEN METHODS - UNCOMMENT AFTER REFACTORING
+    async refreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }> {
+        if (!refreshToken) {
+            throw new AppError(MESSAGES.AUTH.REFRESH_TOKEN_REQUIRED, 401);
+        }
+
+        try {
+            const tokens = await this.authService.refreshAccessToken(refreshToken);
+            return tokens;
+        } catch (error) {
+            throw new AppError(MESSAGES.AUTH.INVALID_REFRESH_TOKEN, 401);
+        }
+    }
+
+    async logoutWithRefreshToken(userId: Types.ObjectId): Promise<void> {
+        // Revoke the refresh token from the database
+        await this.authService.revokeRefreshToken(userId);
+    }
+
+    async logoutAllDevices(userId: Types.ObjectId): Promise<void> {
+        // Revoke all refresh tokens for the user
+        await this.authService.revokeAllRefreshTokens(userId);
     }
 }

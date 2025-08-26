@@ -2,7 +2,7 @@ import express from 'express';
 import { GameController } from '../controllers/game.controller';
 import { GameService } from '../services/game.service';
 import { GameUseCase } from '../business/game/game.usecase';
-import { checkAdminRole } from '../middleware/auth.middleware';
+import { checkAdminRoleWithRefreshToken } from '../middleware/auth.middleware';
 
 const router = express.Router();
 const gameService = new GameService();
@@ -12,8 +12,8 @@ const gameController = new GameController(gameUseCase);
 router
     .route('/')
     .get(gameController.getGames.bind(gameController))
-    .post(checkAdminRole, gameController.createGame.bind(gameController))
-    .put(checkAdminRole, gameController.updateGame.bind(gameController));
+    .post(checkAdminRoleWithRefreshToken, gameController.createGame.bind(gameController))
+    .put(checkAdminRoleWithRefreshToken, gameController.updateGame.bind(gameController));
 
 router
     .route('/upcoming')
@@ -22,6 +22,6 @@ router
 router
     .route('/:id')
     .get(gameController.getGame.bind(gameController))
-    .delete(checkAdminRole, gameController.deleteGame.bind(gameController));
+    .delete(checkAdminRoleWithRefreshToken, gameController.deleteGame.bind(gameController));
 
 export default router;

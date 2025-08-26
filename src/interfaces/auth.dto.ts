@@ -15,10 +15,16 @@ export class RegisterDto {
     email!: string;
 
     @IsString({ message: "Parol təqdim edilməyib və ya düzgün formatda deyil!" })
-    @MinLength(6, { message: 'Parol ən azı 6 simvol olmalıdır' })
+    @MinLength(6, { message: "Parol ən azı 6 simvoldan ibarət olmalıdır!" })
     password!: string;
 
     @IsOptional()
-    @IsEnum(UserRole, { message: "Rol düzgün formatda olmalıdır" })
+    @IsEnum(UserRole, { message: "Rol düzgün formatda deyil!" })
     role?: UserRole;
+}
+
+// REFRESH TOKEN DTO - UNCOMMENT AFTER REFACTORING
+export class RefreshTokenDto {
+    @IsString({ message: "Refresh token təqdim edilməyib və ya düzgün formatda deyil!" })
+    refreshToken!: string;
 }

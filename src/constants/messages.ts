@@ -13,6 +13,12 @@ export const MESSAGES = {
         INVALID_TOKEN: 'Invalid token',
         INVALID_ROLE: 'Yalnız admin və superadminlər bu əməliyyatı edə bilər',
         INVALID_PASSWORD: 'Parol təqdim edilməyib və ya düzgün formatda deyil!',
+        // REFRESH TOKEN MESSAGES - UNCOMMENT AFTER REFACTORING
+        SUCCESS_TOKEN_REFRESH: 'Token uğurla yeniləndi',
+        INVALID_REFRESH_TOKEN: 'Yanlış və ya müddəti bitmiş refresh token',
+        REFRESH_TOKEN_REQUIRED: 'Refresh token tələb olunur',
+        REFRESH_TOKEN_EXPIRED: 'Refresh token müddəti bitib',
+        REFRESH_TOKEN_NOT_FOUND: 'Refresh token tapılmadı',
     },
     JWT_SECRET_NOT_FOUND: 'JWT secret not found in environment variables',
     USER: {

@@ -7,6 +7,9 @@ export interface IUser extends Document {
     passwordHash: string;
     role: UserRole;
     isApproved: boolean;
+    // REFRESH TOKEN FIELDS - UNCOMMENT AFTER REFACTORING
+    refreshToken?: string;
+    refreshTokenExpiresAt?: Date;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -15,6 +18,9 @@ const UserSchema = new Schema<IUser>(
         passwordHash: { type: String, required: true },
         role: { type: String, enum: Object.values(UserRole), default: UserRole.USER },
         isApproved: { type: Boolean, default: false },
+        // REFRESH TOKEN SCHEMA FIELDS - UNCOMMENT AFTER REFACTORING
+        refreshToken: { type: String },
+        refreshTokenExpiresAt: { type: Date },
     }, {
         timestamps: true,
     }

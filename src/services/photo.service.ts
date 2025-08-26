@@ -114,8 +114,8 @@ export class PhotoService {
 
                 // Обработка изображения
                 await sharp(file.buffer)
-                    .resize({ width: 800 })
-                    .webp({ quality: 80 })
+                    .resize({ width: 1600 })
+                    .webp({ quality: 90 })
                     .toFile(outputPath);
 
                 const photoUrl = `/uploads/photos/${fileName}`;
@@ -152,8 +152,8 @@ export class PhotoService {
             const outputPath = path.join(uploadDir, fileName);
 
             await sharp(file.buffer)
-                .resize({ width: 800 })
-                .webp({ quality: 80 })
+                .resize({ width: 1600 })
+                .webp({ quality: 90 })
                 .toFile(outputPath);
 
             return `/uploads/${type}/${fileName}`;
@@ -164,7 +164,6 @@ export class PhotoService {
     }
 
     async updatePhoto(data: Partial<IPhoto>, file?: Express.Multer.File): Promise<IPhoto> {
-        console.log('Update Photo Data:', data);
         if (!data._id) {
             throw new AppError(MESSAGES.PHOTO.INVALID_ID, 400);
         }

@@ -2,7 +2,7 @@ import express from 'express';
 import { TournamentController } from '../controllers/tournament.controller';
 import { TournamentService } from '../services/tournament.service';
 import { TournamentUseCase } from '../business/tournament/tournament.usecase';
-import { checkAdminRole } from '../middleware/auth.middleware';
+import { checkAdminRoleWithRefreshToken } from '../middleware/auth.middleware';
 
 import multer from 'multer';
 import path from 'path';
@@ -32,8 +32,8 @@ const tournamentController = new TournamentController(tournamentUseCase);
 router
     .route('/')
     .get(tournamentController.getTournaments.bind(tournamentController))
-    .post(checkAdminRole, upload.single('logo'), tournamentController.createTournament.bind(tournamentController))
-    .put(checkAdminRole, upload.single('logo'), parseFormDataTeams, tournamentController.updateTournament.bind(tournamentController));
+    .post(checkAdminRoleWithRefreshToken, upload.single('logo'), tournamentController.createTournament.bind(tournamentController))
+    .put(checkAdminRoleWithRefreshToken, upload.single('logo'), parseFormDataTeams, tournamentController.updateTournament.bind(tournamentController));
 
 router
     .route('/by-short-name/:shortName')
@@ -41,10 +41,10 @@ router
 
 router
     .route('/upload-logo')
-    .post(checkAdminRole, tournamentController.uploadTournamentLogo.bind(tournamentController));
+    .post(checkAdminRoleWithRefreshToken, tournamentController.uploadTournamentLogo.bind(tournamentController));
 
 router
     .route('/:id')
-    .delete(checkAdminRole, tournamentController.deleteTournament.bind(tournamentController));
+    .delete(checkAdminRoleWithRefreshToken, tournamentController.deleteTournament.bind(tournamentController));
 
 export default router;

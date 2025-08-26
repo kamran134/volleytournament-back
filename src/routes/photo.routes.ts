@@ -4,7 +4,7 @@ import path from 'path';
 import { PhotoService } from '../services/photo.service';
 import { PhotoUseCase } from '../business/photo/photo.usecase';
 import { PhotoController } from '../controllers/photo.controller';
-import { checkAdminRole } from '../middleware/auth.middleware';
+import { checkAdminRoleWithRefreshToken } from '../middleware/auth.middleware';
 import { parseFormDataTeams } from '../middleware/formData.middleware';
 
 const storage = multer.memoryStorage();
@@ -30,17 +30,17 @@ const photoController = new PhotoController(photoUseCase);
 router
     .route('/')
     .get(photoController.getPhotos.bind(photoController))
-    .post(checkAdminRole, upload.single('file'), parseFormDataTeams, photoController.createPhoto.bind(photoController))
-    .put(checkAdminRole, upload.single('file'), parseFormDataTeams, photoController.updatePhoto.bind(photoController));
+    .post(checkAdminRoleWithRefreshToken, upload.single('file'), parseFormDataTeams, photoController.createPhoto.bind(photoController))
+    .put(checkAdminRoleWithRefreshToken, upload.single('file'), parseFormDataTeams, photoController.updatePhoto.bind(photoController));
 router
     .route('/last')
     .get(photoController.getLastPhotos.bind(photoController)); // Assuming this is for getting the last photos
 router
     .route('/bulk')
-    .post(checkAdminRole, upload.array('files', 50), parseFormDataTeams, photoController.createPhotos.bind(photoController))
-    .delete(checkAdminRole, photoController.deletePhotos.bind(photoController));
+    .post(checkAdminRoleWithRefreshToken, upload.array('files', 50), parseFormDataTeams, photoController.createPhotos.bind(photoController))
+    .delete(checkAdminRoleWithRefreshToken, photoController.deletePhotos.bind(photoController));
 router
     .route('/:id')
-    .delete(checkAdminRole, photoController.deletePhoto.bind(photoController));
+    .delete(checkAdminRoleWithRefreshToken, photoController.deletePhoto.bind(photoController));
 
 export default router;
