@@ -1,6 +1,5 @@
 import express from 'express';
 import { checkAdminRoleWithRefreshToken } from '../middleware/auth.middleware';
-import { UserRole } from '../constants/roles';
 import { UserService } from '../services/user.service';
 import { UserUseCase } from '../business/user/user.usecase';
 import { UserController } from '../controllers/user.controller';
