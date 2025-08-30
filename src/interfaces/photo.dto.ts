@@ -53,8 +53,16 @@ export class PhotoFilterDto {
     tournament?: string;
 
     @IsOptional()
+    @IsMongoId({ each: true, message: MESSAGES.PHOTO.INVALID_TOURNAMENT_ID })
+    tournaments?: string[];
+
+    @IsOptional()
     @IsMongoId({ message: MESSAGES.PHOTO.INVALID_TOUR_ID })
     tour?: string;
+
+    @IsOptional()
+    @IsMongoId({ each: true, message: MESSAGES.PHOTO.INVALID_TOUR_ID })
+    tours?: string[];
 
     @IsOptional()
     @IsMongoId({ each: true, message: MESSAGES.PHOTO.INVALID_TEAM_ID })

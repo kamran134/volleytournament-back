@@ -1,12 +1,12 @@
 import { Types } from "mongoose";
-import { CreateTourDto, UpdateTourDto } from "../../interfaces/tour.dto";
+import { CreateTourDto, TourFilterDto, UpdateTourDto } from "../../interfaces/tour.dto";
 import { ITour, ITourWithGames } from "../../models/tour.model";
 import { TourService } from "../../services/tour.service";
 
 export class TourUseCase {
     constructor(private tourService: TourService) { }
 
-    async getTours(filter: any): Promise<{ data: ITour[]; totalCount: number }> {
+    async getTours(filter: TourFilterDto): Promise<{ data: ITour[]; totalCount: number }> {
         return this.tourService.getFilteredTours(filter);
     }
 

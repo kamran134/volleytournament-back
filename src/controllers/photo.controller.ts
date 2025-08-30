@@ -11,7 +11,25 @@ export class PhotoController {
 
     async getPhotos(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const filterDto = plainToClass(PhotoFilterDto, req.query);
+            // Parse query parameters properly for arrays
+            const queryParams = { ...req.query };
+            
+            // Handle comma-separated tournaments parameter
+            if (queryParams.tournaments && typeof queryParams.tournaments === 'string') {
+                queryParams.tournaments = (queryParams.tournaments as string).split(',').filter(id => id.trim() !== '');
+            }
+            
+            // Handle comma-separated tours parameter
+            if (queryParams.tours && typeof queryParams.tours === 'string') {
+                queryParams.tours = (queryParams.tours as string).split(',').filter(id => id.trim() !== '');
+            }
+            
+            // Handle comma-separated teams parameter
+            if (queryParams.teams && typeof queryParams.teams === 'string') {
+                queryParams.teams = (queryParams.teams as string).split(',').filter(id => id.trim() !== '');
+            }
+            
+            const filterDto = plainToClass(PhotoFilterDto, queryParams);
             const errors = await validate(filterDto);
             if (errors.length > 0) {
                 throw new AppError(errors.map((e) => e.toString()).join(', '), 400);

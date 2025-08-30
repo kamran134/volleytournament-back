@@ -42,9 +42,24 @@ export class PhotoService {
         try {
             const query: any = {};
             const { page = 1, size = 10 } = filter;
-            if (filter.tournament) query.tournament = filter.tournament;
-            if (filter.tour) query.tour = filter.tour;
-            if (filter.teams) query.teams = { $in: filter.teams };
+            
+            // Handle single tournament or multiple tournaments
+            if (filter.tournament) {
+                query.tournament = filter.tournament;
+            } else if (filter.tournaments && filter.tournaments.length > 0) {
+                query.tournament = { $in: filter.tournaments };
+            }
+            
+            // Handle single tour or multiple tours
+            if (filter.tour) {
+                query.tour = filter.tour;
+            } else if (filter.tours && filter.tours.length > 0) {
+                query.tour = { $in: filter.tours };
+            }
+            
+            if (filter.teams && filter.teams.length > 0) {
+                query.teams = { $in: filter.teams };
+            }
 
             const totalCount = await PhotoModel.countDocuments(query);
             const data = await PhotoModel.find(query)

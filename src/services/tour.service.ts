@@ -3,11 +3,12 @@ import TournamentModel from "../models/tournament.model";
 import { AppError } from "../utils/errors";
 import { MESSAGES } from "../constants/messages";
 import { logger } from "../utils/logger";
+import { TourFilterDto } from "../interfaces/tour.dto";
 
 export class TourService {
     constructor() {}
 
-    async getFilteredTours(filter: any): Promise<{ data: ITour[]; totalCount: number }> {
+    async getFilteredTours(filter: TourFilterDto): Promise<{ data: ITour[]; totalCount: number }> {
         try {
             const query: any = {};
             if (filter.name) query.name = { $regex: filter.name, $options: 'i' };
